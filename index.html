@@ -15,9 +15,20 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%}
-body,input,button,select{font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
-button{cursor:pointer;border:none;background:none;color:inherit;font:inherit}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body,input,button,select,textarea{font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+button{cursor:pointer;border:none;background:none;color:inherit;font:inherit;touch-action:manipulation}
+input,textarea,select{appearance:none;-webkit-appearance:none}
+/* Focus visible global (accessibilité clavier) */
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{
+  outline:2px solid var(--acc);
+  outline-offset:2px;
+}
+button:focus:not(:focus-visible){outline:none}
+/* Anti-zoom iOS : sur mobile, force tous les inputs >= 16px pour éviter le zoom auto au focus */
+@media (max-width: 900px) {
+  input, textarea, select { font-size: 16px !important; }
+}
 
 :root{
   --bg:#0f1117;
@@ -2470,8 +2481,16 @@ const state = {
 };
 
 function regenerateData(){
-  // ~90 jours de M15 = 8640 bougies (mais on en garde un peu moins pour éviter trop de poids)
-  state.m15 = generateM15Candles(7000);
+  // Clear caches et bases dérivées
+  state.m1 = null;
+  if(typeof _computeCache !== 'undefined' && _computeCache.clear) _computeCache.clear();
+  // Génère selon le mode choisi (réaliste ou random)
+  const mode = localStorage.getItem('mock_mode') || 'realistic';
+  if(mode === 'realistic' && typeof generateRealisticM15 === 'function'){
+    state.m15 = generateRealisticM15(7000);
+  } else {
+    state.m15 = generateM15Candles(7000);
+  }
   rebuildCurrentTf();
 }
 
@@ -3852,9 +3871,22 @@ function addTrade(){
 }
 
 function deleteTrade(id){
+  const trade = state.trades.find(t => t.id === id);
+  if(!trade) return;
+  state.lastDeletedTrade = trade;
   state.trades = state.trades.filter(t => t.id !== id);
   saveTrades();
   renderJournal();
+  // Undo toast (était dans un wrapper)
+  if(typeof showToast === 'function'){
+    showToast(`🗑 "${trade.setup} ${trade.side}" supprimé`, () => {
+      state.trades.push(state.lastDeletedTrade);
+      state.trades.sort((a, b) => a.id - b.id);
+      saveTrades();
+      renderJournal();
+      state.lastDeletedTrade = null;
+    }, 6000);
+  }
 }
 
 function getFilteredTrades(){
@@ -4005,13 +4037,18 @@ async function fetchTwelveData(tfKey, size = 800){
   const j = await r.json();
   if(j.status === 'error' || j.code) throw new Error(j.message || 'Erreur API');
   if(!j.values || !Array.isArray(j.values)) throw new Error('Format de réponse inattendu');
-  return j.values.reverse().map(v => ({
+  const candles = j.values.reverse().map(v => ({
     time: Math.floor(new Date(v.datetime.replace(' ', 'T') + 'Z').getTime() / 1000),
     open: parseFloat(v.open),
     high: parseFloat(v.high),
     low: parseFloat(v.low),
     close: parseFloat(v.close),
   })).filter(c => !isNaN(c.open));
+  // Intégré directement (était un wrapper _originalFetchTwelveData)
+  if(typeof incrementQuota === 'function') incrementQuota();
+  state.lastRefreshTs = Date.now();
+  if(typeof updateLiveMeta === 'function') updateLiveMeta();
+  return candles;
 }
 
 async function enableLiveMode(){
@@ -5620,17 +5657,7 @@ function updateStatusBadgeWithPulse(){
 // Patch updateStatusBadge to use our new version
 updateStatusBadge = updateStatusBadgeWithPulse;
 
-// Patch fetchTwelveData to increment quota + update refresh time
-const _originalFetchTwelveData = fetchTwelveData;
-fetchTwelveData = async function(tfKey, size){
-  const result = await _originalFetchTwelveData(tfKey, size);
-  incrementQuota();
-  state.lastRefreshTs = Date.now();
-  updateLiveMeta();
-  return result;
-};
-
-// Tick to refresh "il y a Xs"
+// Tick to refresh "il y a Xs" (les incréments quota/lastRefreshTs sont intégrés directement dans fetchTwelveData)
 setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 // ============================================================
@@ -7582,21 +7609,7 @@ function wireQuickWins(){
     });
   });
 
-  // Undo journal — wrapper sur deleteTrade (#15)
-  const _origDeleteTrade = deleteTrade;
-  window.deleteTrade = function(id){
-    const trade = state.trades.find(t => t.id === id);
-    if(!trade) return;
-    state.lastDeletedTrade = trade;
-    _origDeleteTrade(id);
-    showToast(`🗑 "${trade.setup} ${trade.side}" supprimé`, () => {
-      state.trades.push(state.lastDeletedTrade);
-      state.trades.sort((a, b) => a.id - b.id);
-      saveTrades();
-      renderJournal();
-      state.lastDeletedTrade = null;
-    }, 6000);
-  };
+  // (Undo journal intégré directement dans deleteTrade, plus de wrapper)
 
   // Mock mode setting
   const mockMode = document.getElementById('mock-mode');
@@ -7624,19 +7637,7 @@ function wireQuickWins(){
   });
 }
 
-// Patch regenerateData to use realistic generator if setting says so
-const _origRegenerateData = regenerateData;
-regenerateData = function(){
-  const mode = localStorage.getItem('mock_mode') || 'realistic';
-  // Clear la base M1 pour qu'elle soit re-générée au prochain switch M1/M5
-  state.m1 = null;
-  if(mode === 'realistic'){
-    state.m15 = generateRealisticM15(7000);
-    rebuildCurrentTf();
-  } else {
-    _origRegenerateData();
-  }
-};
+// (regenerateData intégré directement, plus de wrappers)
 
 // ============================================================
 // Générateur M1 réaliste pour scalping (cycles AMD plus courts)
@@ -7763,9 +7764,7 @@ recomputeAll = function(){
   _computeCache.set(hash, JSON.parse(JSON.stringify(state.computed)));
 };
 
-// Reset cache quand on régénère mock ou change live mode
-const _origRegenerateData2 = regenerateData;
-regenerateData = function(){ _computeCache.clear(); _origRegenerateData2(); };
+// (Cache cleared dans regenerateData directement)
 
 // ============================================================
 // VALIDATION INPUTS (#14)
