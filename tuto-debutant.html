@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1117">
+<title>Tuto débutant · Trading forex</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body,input,button{font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+button{cursor:pointer;border:none;background:none;color:inherit;font:inherit}
+a{color:inherit;text-decoration:none}
+
+:root{
+  --bg:#0f1117;
+  --surface:#1a1d27;
+  --surface2:#22263a;
+  --surface3:#2a2f45;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.14);
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --muted2:#94a3b8;
+  --acc:#10b981;
+  --acc-dim:rgba(16,185,129,0.12);
+  --acc-dark:#059669;
+  --red:#ef4444;
+  --red-dim:rgba(239,68,68,0.12);
+  --orange:#f97316;
+  --orange-dim:rgba(249,115,22,0.18);
+  --blue:#3b82f6;
+  --blue-dim:rgba(59,130,246,0.12);
+  --yellow:#fbbf24;
+  --purple:#a78bfa;
+}
+
+body{background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Topbar ── */
+.topbar{
+  height:58px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;
+  padding:0 20px;
+  position:sticky;top:0;z-index:50;
+}
+.logo{font-weight:800;font-size:1.02rem;color:var(--acc);letter-spacing:-0.01em}
+.logo-sub{font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-left:6px}
+.topbar-sep{flex:1}
+.btn-back{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  font-size:0.82rem;color:var(--muted2);
+  transition:all 0.15s;
+}
+.btn-back:hover{color:var(--text);border-color:var(--acc)}
+
+/* ── Layout ── */
+.layout{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  max-width:1200px;
+  margin:0 auto;
+  min-height:calc(100vh - 58px);
+}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .toc-wrap{position:static;display:none}
+  .toc-wrap.mobile-open{display:block;position:fixed;inset:58px 0 0 0;z-index:30;background:var(--bg);overflow-y:auto;padding:20px}
+}
+
+/* ── TOC (sommaire) ── */
+.toc-wrap{
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:24px 0;
+  position:sticky;top:58px;
+  height:calc(100vh - 58px);
+  overflow-y:auto;
+}
+.toc-wrap::-webkit-scrollbar{width:6px}
+.toc-wrap::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+.toc-title{
+  padding:0 22px 14px;
+  font-size:0.7rem;font-weight:700;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--muted);
+}
+.toc-module{margin-bottom:6px}
+.toc-module-header{
+  padding:8px 22px;
+  font-size:0.78rem;font-weight:700;
+  color:var(--text);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.toc-module-header:hover{background:var(--surface2)}
+.toc-module-header::after{content:'▾';font-size:0.7rem;color:var(--muted);transition:transform 0.2s}
+.toc-module.collapsed .toc-module-header::after{transform:rotate(-90deg)}
+.toc-module.collapsed .toc-chapters{display:none}
+.toc-chapters{padding:4px 0}
+.toc-chapter{
+  display:block;
+  padding:7px 22px 7px 38px;
+  font-size:0.78rem;color:var(--muted2);
+  cursor:pointer;
+  border-left:3px solid transparent;
+}
+.toc-chapter:hover{background:var(--surface2);color:var(--text)}
+.toc-chapter.active{
+  background:var(--acc-dim);color:var(--acc);
+  border-left-color:var(--acc);
+  font-weight:600;
+}
+
+/* ── Content ── */
+.content{
+  padding:36px 48px 80px;
+  max-width:760px;
+  line-height:1.7;
+}
+@media(max-width:900px){
+  .content{padding:24px 20px 60px}
+}
+
+.lesson-tag{
+  display:inline-block;
+  font-size:0.65rem;font-weight:700;
+  letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--acc);background:var(--acc-dim);
+  padding:4px 10px;border-radius:99px;
+  margin-bottom:16px;
+}
+.content h1{
+  font-size:1.85rem;letter-spacing:-0.02em;
+  margin-bottom:14px;font-weight:800;
+}
+.content h2{
+  font-size:1.2rem;margin:28px 0 12px;
+  color:var(--acc);font-weight:700;
+}
+.content h3{font-size:1.02rem;margin:20px 0 10px;color:var(--text);font-weight:600}
+.content p{margin-bottom:14px;color:var(--text);font-size:0.94rem}
+.content ul,.content ol{margin:10px 0 14px 24px}
+.content li{margin-bottom:6px;color:var(--text);font-size:0.92rem}
+.content strong{color:var(--acc);font-weight:700}
+.content em{color:var(--muted2);font-style:normal;background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:0.86rem}
+.content code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:0.86em;color:var(--yellow);font-family:'SF Mono',Consolas,monospace}
+
+.callout{
+  background:var(--surface);
+  border-left:3px solid var(--acc);
+  padding:14px 18px;border-radius:0 10px 10px 0;
+  margin:16px 0;font-size:0.88rem;
+}
+.callout strong{color:var(--acc)}
+.callout.warn{border-left-color:var(--orange);background:var(--orange-dim)}
+.callout.warn strong{color:var(--orange)}
+.callout.danger{border-left-color:var(--red);background:var(--red-dim)}
+.callout.danger strong{color:var(--red)}
+.callout.info{border-left-color:var(--blue);background:var(--blue-dim)}
+.callout.info strong{color:var(--blue)}
+
+table{
+  width:100%;border-collapse:collapse;
+  margin:14px 0;font-size:0.86rem;
+  background:var(--surface);border-radius:8px;
+  overflow:hidden;
+}
+th,td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--border)}
+th{
+  color:var(--muted2);font-weight:700;font-size:0.7rem;
+  text-transform:uppercase;letter-spacing:0.05em;
+  background:var(--surface2);
+}
+tr:last-child td{border-bottom:none}
+
+.example-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px 18px;
+  margin:16px 0;
+}
+.example-box-title{
+  font-size:0.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--muted2);margin-bottom:8px;
+}
+
+.lesson-nav{
+  display:flex;justify-content:space-between;
+  margin-top:40px;padding-top:20px;
+  border-top:1px solid var(--border);
+  gap:12px;
+}
+.lesson-nav button{
+  padding:10px 16px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-size:0.84rem;font-weight:500;
+  transition:all 0.15s;
+  flex:1;text-align:center;
+}
+.lesson-nav button:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.lesson-nav button:disabled{opacity:0.3;cursor:not-allowed}
+.lesson-nav .next{background:var(--acc);color:white;border-color:var(--acc)}
+.lesson-nav .next:hover:not(:disabled){background:var(--acc-dark)}
+
+/* ── Mobile drawer ── */
+.mobile-toc-btn{display:none}
+@media(max-width:900px){
+  .mobile-toc-btn{
+    display:flex;align-items:center;gap:6px;
+    padding:7px 14px;border-radius:9px;
+    background:var(--surface2);border:1px solid var(--border);
+    font-size:0.82rem;color:var(--muted2);
+  }
+}
+
+/* ── Hero section pour la page d'accueil ── */
+.hero{
+  text-align:center;
+  padding:40px 20px 30px;
+  margin-bottom:24px;
+  border-bottom:1px solid var(--border);
+}
+.hero h1{font-size:2.2rem;margin-bottom:10px}
+.hero p{color:var(--muted2);font-size:1rem;max-width:560px;margin:0 auto}
+.hero-icon{font-size:3rem;margin-bottom:12px;display:block}
+.progress-bar{
+  height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;
+  margin-top:24px;max-width:300px;margin-left:auto;margin-right:auto;
+}
+.progress-bar-fill{
+  height:100%;background:var(--acc);
+  width:0%;transition:width 0.3s;
+}
+.progress-text{
+  font-size:0.74rem;color:var(--muted);
+  margin-top:8px;
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">🎓 Tuto débutant <span class="logo-sub">Forex from scratch</span></div>
+  <div class="topbar-sep"></div>
+  <button class="mobile-toc-btn" id="mobile-toc-btn">📚 Sommaire</button>
+  <a href="./index.html" class="btn-back">← Dashboard</a>
+</header>
+
+<div class="layout">
+
+  <aside class="toc-wrap" id="toc-wrap">
+    <div class="toc-title">Programme complet</div>
+    <div id="toc"></div>
+  </aside>
+
+  <main class="content" id="content"></main>
+
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// MODULES & CHAPITRES
+// ============================================================
+const MODULES = [
+  { id: 'M0', title: '0. Le marché, c\'est quoi vraiment ?', chapters: [
+    { id: '0.1', title: 'Qu\'est-ce qu\'un marché financier ?' },
+    { id: '0.2', title: 'Les acteurs : qui fait quoi ?' },
+    { id: '0.3', title: 'Forex vs Bourse vs Crypto' },
+    { id: '0.4', title: 'D\'où viennent les prix ?' },
+  ]},
+  { id: 'M1', title: '1. Démarrer concrètement', chapters: [
+    { id: '1.1', title: 'Le broker, ton intermédiaire' },
+    { id: '1.2', title: 'Choisir un bon broker' },
+    { id: '1.3', title: 'Compte démo vs compte réel' },
+    { id: '1.4', title: 'Combien il faut pour commencer ?' },
+  ]},
+  { id: 'M2', title: '2. Mécanique d\'un trade', chapters: [
+    { id: '2.1', title: 'Acheter / vendre : long et short' },
+    { id: '2.2', title: 'Le spread (commission cachée)' },
+    { id: '2.3', title: 'Le levier : ami et ennemi' },
+    { id: '2.4', title: 'Marge et appel de marge' },
+    { id: '2.5', title: 'Commissions, spread, swap' },
+  ]},
+  { id: 'M3', title: '3. Les types d\'ordres', chapters: [
+    { id: '3.1', title: 'Ordre au marché (market)' },
+    { id: '3.2', title: 'Ordre limite (limit)' },
+    { id: '3.3', title: 'Ordre stop' },
+    { id: '3.4', title: 'Stop Loss et Take Profit' },
+  ]},
+  { id: 'M4', title: '4. Les vrais chiffres et pièges', chapters: [
+    { id: '4.1', title: 'La stat qui fait peur (90% perdent)' },
+    { id: '4.2', title: 'Les 5 pièges du débutant' },
+    { id: '4.3', title: 'Combien de temps en démo ?' },
+    { id: '4.4', title: 'Combien gagne un trader vraiment ?' },
+  ]},
+  { id: 'M5', title: '5. Ton parcours vers le dashboard', chapters: [
+    { id: '5.1', title: 'Pourquoi ICT et pas autre chose ?' },
+    { id: '5.2', title: 'Comment utiliser le dashboard' },
+    { id: '5.3', title: 'Ton chemin étape par étape' },
+  ]},
+];
+
+const CHAPTERS = {
+  // ============= MODULE 0 =============
+  '0.1': `
+    <span class="lesson-tag">Module 0 · Bases du marché</span>
+    <h1>Qu'est-ce qu'un marché financier ?</h1>
+    <p>Imagine un <strong>énorme supermarché mondial</strong>, ouvert 24h/24 (du dimanche soir au vendredi soir pour le forex), où des millions de personnes échangent des choses : des devises, des actions d'entreprises, des matières premières (pétrole, or), des cryptomonnaies…</p>
+    <p>Ce n'est pas un lieu physique. C'est un <strong>réseau électronique mondial</strong> qui relie banques, hedge funds, entreprises, particuliers. Tout le monde achète et vend à tout le monde, à toute vitesse.</p>
+    <h2>Pourquoi ce marché existe ?</h2>
+    <ul>
+      <li>Une entreprise française qui vend aux USA reçoit des dollars → elle doit les convertir en euros → elle vend ses $ sur le marché forex</li>
+      <li>Un investisseur veut placer son argent dans Apple → il achète des actions Apple sur le NASDAQ</li>
+      <li>Un raffineur a besoin de pétrole → il achète des contrats sur le marché des matières premières</li>
+    </ul>
+    <p><strong>Le marché existe pour répondre à ces besoins réels.</strong> Les traders particuliers (toi, moi) viennent en plus, en essayant de profiter des variations de prix.</p>
+    <div class="callout">
+      <strong>L'image clé.</strong> Quand tu trades, tu n'es pas seul. Tu es un tout petit poisson dans un océan où nagent aussi des baleines (banques centrales, fonds souverains, gros hedge funds). Comprendre comment elles nagent = la clé.
+    </div>
+  `,
+  '0.2': `
+    <span class="lesson-tag">Module 0 · Bases du marché</span>
+    <h1>Les acteurs : qui fait quoi ?</h1>
+    <p>Sur le marché, plusieurs types d'acteurs cohabitent. Comprendre qui fait quoi t'aide à voir <em>pourquoi</em> les prix bougent.</p>
+    <table>
+      <tr><th>Acteur</th><th>Rôle</th><th>Volume</th></tr>
+      <tr><td>🏦 Banques centrales</td><td>Politique monétaire (taux d'intérêt). BCE, Fed, BoE…</td><td>Énorme</td></tr>
+      <tr><td>🏛 Banques commerciales</td><td>JP Morgan, Deutsche Bank… Font le marché entre elles.</td><td>40% du forex</td></tr>
+      <tr><td>💼 Hedge funds</td><td>Spéculation pure. Bridgewater, Citadel…</td><td>~20%</td></tr>
+      <tr><td>🏢 Entreprises</td><td>Conversion de devises pour leurs opérations</td><td>~10%</td></tr>
+      <tr><td>👤 Particuliers</td><td>Toi, moi. Via brokers retail.</td><td>~5%</td></tr>
+    </table>
+    <h2>Smart Money vs Retail</h2>
+    <p>Tu vas souvent entendre ces deux termes :</p>
+    <ul>
+      <li><strong>Smart Money</strong> = banques, hedge funds, "ceux qui savent". Ont accès aux meilleures données, paient des analystes à plein temps.</li>
+      <li><strong>Retail</strong> = particuliers. La grande majorité perd. Tradent à l'instinct ou avec des stratégies basiques.</li>
+    </ul>
+    <p>L'ICT (Inner Circle Trader, la méthode du dashboard) part d'un principe : <strong>au lieu de traders contre le Smart Money, copions-les</strong>. Les zones OB, FVG, killzones que tu vois sur le dashboard sont des <em>signatures</em> des actions Smart Money.</p>
+    <div class="callout info">
+      <strong>Statistique parlante.</strong> Sur le forex, 80% du volume est fait par seulement 10 acteurs (gros banques). C'est <em>eux</em> qui font les prix. Le retail ne fait que subir.
+    </div>
+  `,
+  '0.3': `
+    <span class="lesson-tag">Module 0 · Bases du marché</span>
+    <h1>Forex vs Bourse vs Crypto</h1>
+    <p>Trois marchés très différents. Comprends les différences avant de choisir.</p>
+    <table>
+      <tr><th></th><th>Forex</th><th>Bourse (actions)</th><th>Crypto</th></tr>
+      <tr><td>Quoi</td><td>Devises (EUR/USD…)</td><td>Parts d'entreprises (Apple…)</td><td>Bitcoin, ETH…</td></tr>
+      <tr><td>Horaires</td><td>24h/24 sauf week-end</td><td>9h-17h selon bourse</td><td>24h/24 7j/7</td></tr>
+      <tr><td>Volume jour</td><td>7000 milliards $</td><td>~500 milliards $</td><td>~50 milliards $</td></tr>
+      <tr><td>Volatilité</td><td>Modérée (0.5-1%/jour)</td><td>Modérée à forte</td><td>Très forte (5-15%/jour)</td></tr>
+      <tr><td>Levier dispo</td><td>Jusqu'à 30:1 (EU)</td><td>2-5:1</td><td>10-100:1 (offshore)</td></tr>
+      <tr><td>Régulation</td><td>Forte</td><td>Très forte</td><td>Faible</td></tr>
+    </table>
+    <h2>Pourquoi EUR/USD pour débuter ?</h2>
+    <ul>
+      <li><strong>Le plus liquide</strong> : tu peux entrer/sortir instantanément, sans glissement</li>
+      <li><strong>Spread minuscule</strong> : ~0.5 pip chez un bon broker (vs 5-10 pips sur des paires exotiques)</li>
+      <li><strong>Comportement prévisible</strong> : réagit aux nouvelles US/européennes, suit des patterns ICT clairs</li>
+      <li><strong>Beaucoup de matériel pédagogique</strong> en français/anglais</li>
+    </ul>
+    <div class="callout warn">
+      <strong>Attention crypto.</strong> Si tu vois des pubs "20 000€ devenus 2M€ avec le Bitcoin en 6 mois" — c'est l'exception, jamais la règle. La crypto est extrêmement volatile et risquée pour un débutant. <em>Commence par le forex, pas la crypto.</em>
+    </div>
+  `,
+  '0.4': `
+    <span class="lesson-tag">Module 0 · Bases du marché</span>
+    <h1>D'où viennent les prix ?</h1>
+    <p>Question fondamentale : <strong>quand EUR/USD est à 1.0850, qui a décidé ça ?</strong></p>
+    <h2>La loi de l'offre et de la demande</h2>
+    <p>Le prix d'une paire monte quand il y a <strong>plus d'acheteurs que de vendeurs</strong>, et baisse dans le cas inverse. C'est tout.</p>
+    <p>Concrètement, à chaque instant :</p>
+    <ul>
+      <li>Les <strong>acheteurs</strong> proposent un prix max qu'ils veulent payer (le <em>bid</em>)</li>
+      <li>Les <strong>vendeurs</strong> proposent un prix min auquel ils veulent vendre (le <em>ask</em>)</li>
+      <li>Le <em>spread</em> = la différence entre les deux. Quand ils se rencontrent → trade exécuté → le prix bouge.</li>
+    </ul>
+    <h2>Qu'est-ce qui fait bouger les prix ?</h2>
+    <ol>
+      <li><strong>Actualités économiques</strong> : annonces des banques centrales, chômage US, inflation EU, etc.</li>
+      <li><strong>Sentiment du marché</strong> : peur, euphorie, incertitude (guerres, crises politiques)</li>
+      <li><strong>Flux institutionnels</strong> : quand une banque exécute un gros ordre, le prix bouge — même sans nouvelle. C'est <em>ça</em> que l'ICT traque.</li>
+    </ol>
+    <h2>Le piège du débutant</h2>
+    <p>Le débutant pense que les prix bougent <strong>parce que des graphiques le disent</strong>. Faux. Les graphiques ne sont qu'un <strong>résultat</strong> de ce qui se passe dans le carnet d'ordres.</p>
+    <div class="callout">
+      <strong>L'image clé.</strong> Le graphique en bougies, c'est comme regarder une vidéo en accéléré d'un bras de fer entre acheteurs et vendeurs. Toi en tant que trader, tu essaies de deviner <em>qui va gagner</em> sur la prochaine période.
+    </div>
+  `,
+
+  // ============= MODULE 1 =============
+  '1.1': `
+    <span class="lesson-tag">Module 1 · Démarrer</span>
+    <h1>Le broker, ton intermédiaire</h1>
+    <p>Tu ne peux pas trader le forex directement avec les banques. Tu passes par un <strong>broker</strong> (courtier en français).</p>
+    <h2>Que fait un broker ?</h2>
+    <ul>
+      <li>Il te <strong>donne accès</strong> au marché via une plateforme (MetaTrader, cTrader, app web)</li>
+      <li>Il te prête le <strong>levier</strong> pour que tu trades plus que ton capital</li>
+      <li>Il <strong>exécute</strong> tes ordres (achète/vend pour toi)</li>
+      <li>Il prend des <strong>commissions</strong> et/ou élargit le <strong>spread</strong> pour gagner sa vie</li>
+    </ul>
+    <h2>Types de brokers</h2>
+    <table>
+      <tr><th>Type</th><th>Comment ça marche</th><th>Bon/mauvais</th></tr>
+      <tr><td>Market Maker</td><td>Le broker est ta contrepartie. Il "fait le marché".</td><td>Conflit d'intérêt : si tu gagnes, il perd.</td></tr>
+      <tr><td>ECN/STP</td><td>Le broker route ton ordre vers le marché réel.</td><td>Plus transparent, mais commissions.</td></tr>
+    </table>
+    <p>Pour débuter : préfère un <strong>broker régulé ECN/STP</strong>. Tu paies un peu plus en commissions, mais ton broker ne joue pas contre toi.</p>
+    <div class="callout info">
+      <strong>Régulation.</strong> En Europe, vérifie que le broker est régulé par AMF (France), BaFin (Allemagne), CySEC (Chypre), FCA (UK). Pas de régulation = pas la peine, c'est risqué.
+    </div>
+  `,
+  '1.2': `
+    <span class="lesson-tag">Module 1 · Démarrer</span>
+    <h1>Choisir un bon broker</h1>
+    <p>Le choix du broker est <strong>crucial</strong>. Un mauvais broker peut te faire perdre de l'argent même avec une bonne stratégie.</p>
+    <h2>Les 5 critères absolus</h2>
+    <ol>
+      <li><strong>Régulation forte</strong> : AMF, FCA, ASIC, BaFin. Évite les régulateurs offshore (Vanuatu, îles Caïmans…)</li>
+      <li><strong>Spreads bas</strong> sur EUR/USD : &lt; 1 pip idéalement</li>
+      <li><strong>Pas de commissions cachées</strong> : tout doit être affiché clairement</li>
+      <li><strong>Retraits faciles</strong> : sans frais excessifs, en quelques jours max</li>
+      <li><strong>Service client</strong> en français qui répond</li>
+    </ol>
+    <h2>Brokers réputés sérieux (Europe, début 2026)</h2>
+    <ul>
+      <li><strong>IC Markets</strong> (Australie/EU) — spreads parmi les plus bas, ECN</li>
+      <li><strong>Pepperstone</strong> (Australie/UK) — bon support, plateforme propre</li>
+      <li><strong>OANDA</strong> (US/UK) — historique solide, transparent</li>
+      <li><strong>XTB</strong> (Pologne, coté en bourse) — bonne réputation en Europe</li>
+      <li><strong>Interactive Brokers</strong> — pour traders plus avancés</li>
+    </ul>
+    <div class="callout danger">
+      <strong>À FUIR.</strong> Tout broker qui te démarche par téléphone, te promet "des rendements garantis", refuse les retraits, ou n'est régulé que par un pays exotique. Si quelqu'un sur Instagram te propose de "trader pour toi" → arnaque garantie.
+    </div>
+  `,
+  '1.3': `
+    <span class="lesson-tag">Module 1 · Démarrer</span>
+    <h1>Compte démo vs compte réel</h1>
+    <p>Tous les brokers proposent deux types de comptes :</p>
+    <table>
+      <tr><th></th><th>Démo</th><th>Réel</th></tr>
+      <tr><td>Argent</td><td>Virtuel (10k$ par défaut)</td><td>Le tien</td></tr>
+      <tr><td>Prix marché</td><td>Réels, en temps réel</td><td>Réels, en temps réel</td></tr>
+      <tr><td>Exécution</td><td>Souvent plus rapide (pas réelle)</td><td>Vraie, avec slippage</td></tr>
+      <tr><td>Stress</td><td>Aucun</td><td>Énorme</td></tr>
+    </table>
+    <h2>Pourquoi commencer en démo ?</h2>
+    <ul>
+      <li>Apprendre la plateforme sans risque (où sont les boutons, comment placer un ordre)</li>
+      <li>Tester ta stratégie sur de vraies données</li>
+      <li>Voir tes statistiques de winrate, R moyen, sans perdre un centime</li>
+    </ul>
+    <h2>Pourquoi la démo a ses limites</h2>
+    <p>Le piège : <strong>quand l'argent n'est pas réel, ton cerveau ne le prend pas au sérieux</strong>. Tu prends des risques que tu ne prendrais jamais en réel. Tu deviens "bon en démo" mais "nul en réel".</p>
+    <p>C'est pour ça qu'on dit : passe au réel <strong>avec un petit compte</strong> (200-500€) <em>dès que tu as une routine</em>. Mieux vaut perdre 100€ en réel et apprendre vraiment que faire +10 000$ en démo et perdre tout en réel.</p>
+    <div class="callout warn">
+      <strong>Règle.</strong> Démo : 2-3 mois minimum, le temps d'avoir au moins 50 trades loggés dans ton journal. Puis micro-compte réel avec 1% de risque par trade (donc 5€/trade sur 500€).
+    </div>
+  `,
+  '1.4': `
+    <span class="lesson-tag">Module 1 · Démarrer</span>
+    <h1>Combien il faut pour commencer ?</h1>
+    <p>La question que tout le monde se pose. Réponse honnête : <strong>tu peux commencer avec 100€</strong>, mais ça dépend de tes objectifs.</p>
+    <table>
+      <tr><th>Capital</th><th>Risque par trade (1%)</th><th>Gain typique/mois (5R)</th></tr>
+      <tr><td>100€</td><td>1€</td><td>5€</td></tr>
+      <tr><td>500€</td><td>5€</td><td>25€</td></tr>
+      <tr><td>2 000€</td><td>20€</td><td>100€</td></tr>
+      <tr><td>10 000€</td><td>100€</td><td>500€</td></tr>
+      <tr><td>50 000€</td><td>500€</td><td>2 500€</td></tr>
+    </table>
+    <h2>Le piège</h2>
+    <p>Avec 100€, gagner 5€/mois c'est démotivant. La tentation : <strong>augmenter le risque</strong> à 10% par trade pour gagner plus. Mauvaise idée — tu vas exploser ton compte rapidement.</p>
+    <p>L'alternative : <strong>traiter le petit compte comme un terrain d'entraînement</strong>. L'objectif n'est pas de gagner de l'argent au début, c'est de <em>ne pas en perdre</em> tout en accumulant des stats valides.</p>
+    <h2>Plan recommandé</h2>
+    <ol>
+      <li><strong>Mois 1-2</strong> : démo, apprendre la plateforme et les concepts ICT (cours du dashboard)</li>
+      <li><strong>Mois 3-6</strong> : démo avec routine stricte, 50+ trades loggés, R moyen positif</li>
+      <li><strong>Mois 7+</strong> : passage réel avec 200-500€, taille de position calculée à 0.5-1% de risque</li>
+      <li><strong>Année 2</strong> : si profitable, augmenter progressivement le capital</li>
+    </ol>
+    <div class="callout danger">
+      <strong>N'investis JAMAIS de l'argent dont tu as besoin pour vivre.</strong> Trader avec ton loyer, c'est statistiquement perdre ton loyer. Trade uniquement avec de l'argent que tu peux te permettre de perdre <em>totalement</em>.
+    </div>
+  `,
+
+  // ============= MODULE 2 =============
+  '2.1': `
+    <span class="lesson-tag">Module 2 · Mécanique</span>
+    <h1>Acheter / vendre : long et short</h1>
+    <p>Sur le forex, tu peux <strong>parier dans les deux sens</strong>. C'est la différence avec un simple compte épargne où tu ne peux qu'attendre que ça monte.</p>
+    <h2>Position LONG (achat)</h2>
+    <p>Tu <strong>achètes</strong> EUR/USD à 1.0850. Tu paries que ça va monter. Si ça monte à 1.0900, tu vends et tu gagnes la différence (50 pips).</p>
+    <ul>
+      <li><span style="color:var(--acc)">Long</span> = paris à la hausse</li>
+      <li>Bouton "Buy" / "Acheter" sur la plateforme</li>
+    </ul>
+    <h2>Position SHORT (vente)</h2>
+    <p>Tu <strong>vends</strong> EUR/USD à 1.0850 alors que tu ne l'as pas. Le broker te prête virtuellement les euros pour les vendre. Si le prix baisse à 1.0800, tu rachètes plus bas et tu gardes la différence.</p>
+    <ul>
+      <li><span style="color:var(--red)">Short</span> = paris à la baisse</li>
+      <li>Bouton "Sell" / "Vendre" sur la plateforme</li>
+    </ul>
+    <h2>Une fois entré, comment fermer ?</h2>
+    <p>Tu peux fermer la position <em>manuellement</em> à n'importe quel moment. Ou laisser le marché toucher ton <em>Stop Loss</em> (perte max) ou ton <em>Take Profit</em> (gain max) que tu as définis à l'entrée.</p>
+    <div class="callout info">
+      <strong>Vocabulaire pro.</strong> "Je suis long EUR/USD" = j'ai acheté. "Je suis short" = j'ai vendu. "Je suis flat" = je n'ai aucune position ouverte.
+    </div>
+  `,
+  '2.2': `
+    <span class="lesson-tag">Module 2 · Mécanique</span>
+    <h1>Le spread — la commission cachée</h1>
+    <p>Quand tu regardes un prix EUR/USD, ce n'est pas <em>un</em> prix mais <em>deux</em> :</p>
+    <ul>
+      <li><strong>Bid</strong> (achat marché) : 1.08500 — le prix auquel tu peux vendre tout de suite</li>
+      <li><strong>Ask</strong> (vente marché) : 1.08510 — le prix auquel tu peux acheter tout de suite</li>
+    </ul>
+    <p>La différence (0.00010 = <strong>1 pip</strong>) c'est le <strong>spread</strong>. C'est ce que le broker prend à chaque trade.</p>
+    <h2>Conséquence concrète</h2>
+    <p>Tu achètes EUR/USD à 1.08510. Le prix doit <strong>monter à 1.08520</strong> juste pour que tu sois à break-even (le spread t'a déjà coûté 1 pip).</p>
+    <h2>Spread typique selon les conditions</h2>
+    <table>
+      <tr><th>Conditions</th><th>Spread EUR/USD</th></tr>
+      <tr><td>Heures calmes (Asia)</td><td>0.8 - 1.5 pips</td></tr>
+      <tr><td>Killzone London / NY</td><td>0.3 - 0.8 pips</td></tr>
+      <tr><td>Pendant une news majeure</td><td>5 - 30 pips ! (à éviter)</td></tr>
+      <tr><td>Vendredi 22h - Dimanche 22h</td><td>Marché fermé</td></tr>
+    </table>
+    <div class="callout warn">
+      <strong>Évite de trader 5 min avant/après une grosse news.</strong> Les spreads explosent, les exécutions sont mauvaises, et le marché part dans tous les sens. Calendrier économique : <em>Forex Factory</em> est la référence gratuite.
+    </div>
+  `,
+  '2.3': `
+    <span class="lesson-tag">Module 2 · Mécanique</span>
+    <h1>Le levier — ami et ennemi</h1>
+    <p>Le <strong>levier</strong>, c'est la possibilité de <strong>trader bien plus gros que ton capital</strong>. C'est <em>la</em> spécificité du forex.</p>
+    <h2>Exemple concret</h2>
+    <p>Tu as 1 000€ sur ton compte. Avec un <strong>levier 30:1</strong> (max légal en EU), tu peux ouvrir une position de <strong>30 000€</strong> de valeur. Le broker met les 29 000€ manquants en garantie.</p>
+    <h2>L'effet multiplicateur</h2>
+    <p>Si EUR/USD monte de 1%, ta position de 30 000€ génère 300€ de profit. <strong>30% de gain sur ton compte de 1 000€ !</strong></p>
+    <p>Génial ? Oui… <em>tant que ça va dans ton sens</em>. Parce que c'est aussi vrai dans l'autre sens : si ça baisse de 1%, tu perds 300€ → -30%.</p>
+    <h2>Le levier ne change PAS ton risque</h2>
+    <p>Erreur classique : croire qu'un gros levier = beaucoup de risque. <strong>FAUX</strong>. Le risque vient de la <em>taille de position</em>, pas du levier dispo.</p>
+    <p>Avec 1 000€ et un levier 30:1, tu peux très bien ouvrir une position de seulement 1 000€ (sans utiliser le levier). Le risque sera le même qu'en cash. Le levier ne fait que <em>permettre</em> d'aller plus gros — c'est <strong>à toi de décider</strong> si tu l'utilises.</p>
+    <div class="callout danger">
+      <strong>Règle absolue.</strong> Calcule TOUJOURS ta taille de position selon ton risque max (1-2%), <em>jamais</em> selon "combien tu peux te permettre avec le levier". Le calculateur du dashboard fait ça pour toi.
+    </div>
+  `,
+  '2.4': `
+    <span class="lesson-tag">Module 2 · Mécanique</span>
+    <h1>Marge et appel de marge</h1>
+    <p>La <strong>marge</strong>, c'est l'argent <em>bloqué</em> dans une position ouverte (la garantie demandée par le broker).</p>
+    <h2>Calcul</h2>
+    <p>Avec un levier 30:1, la marge requise = <strong>1/30 = 3.33%</strong> de la taille de position.</p>
+    <p>Position de 30 000€ → marge requise = 1 000€ bloqués pendant que la position est ouverte.</p>
+    <h2>Marge libre vs utilisée</h2>
+    <ul>
+      <li><strong>Marge utilisée</strong> : ce qui est bloqué dans tes positions ouvertes</li>
+      <li><strong>Marge libre</strong> : ce qui reste pour ouvrir d'autres trades</li>
+      <li><strong>Niveau de marge</strong> = (équity / marge utilisée) × 100. Doit rester &gt; 100% sinon problèmes.</li>
+    </ul>
+    <h2>L'appel de marge (Margin Call)</h2>
+    <p>Si tes positions ouvertes commencent à perdre beaucoup, ton niveau de marge baisse. Quand il atteint un seuil critique (ex: 50%), le broker te notifie : "rajoute de l'argent ou je ferme tes positions".</p>
+    <h2>La liquidation (Stop Out)</h2>
+    <p>Si tu ne fais rien et que ça continue de perdre, à un niveau encore plus bas (ex: 20%), le broker <strong>ferme automatiquement tes positions</strong> pour limiter ses pertes (et les tiennes).</p>
+    <div class="callout warn">
+      <strong>Comment éviter ça.</strong> Toujours mettre un <em>Stop Loss</em> à l'ouverture du trade. Si SL placé correctement et taille de position à 1% de risque, jamais de margin call possible. Le margin call arrive uniquement aux traders qui n'utilisent pas de SL.
+    </div>
+  `,
+  '2.5': `
+    <span class="lesson-tag">Module 2 · Mécanique</span>
+    <h1>Commissions, spread, swap</h1>
+    <p>Trois sources de coûts dans le trading forex. Important de les connaître pour calculer ton vrai rendement.</p>
+    <h2>1. Le spread</h2>
+    <p>Déjà vu — la différence entre bid et ask. Toujours présent. 0.5-1 pip sur EUR/USD chez un bon broker.</p>
+    <h2>2. Les commissions</h2>
+    <p>Frais fixes ou variables par trade, selon le broker :</p>
+    <ul>
+      <li><strong>Comptes ECN</strong> : commission de ~$3-7 par lot par trade (ouverture + clôture). Mais spreads très bas.</li>
+      <li><strong>Comptes "spread only"</strong> : pas de commission, mais spreads plus larges (1.5+ pips). Le coût est dans le spread.</li>
+    </ul>
+    <h2>3. Le swap (rollover)</h2>
+    <p>Quand tu gardes une position ouverte <strong>après 22h GMT</strong> (changement de date dans le calendrier interbancaire), le broker applique un swap = différence de taux d'intérêt entre les deux devises.</p>
+    <ul>
+      <li>Si tu es long EUR/USD : tu reçois le taux EUR et tu paies le taux USD. Net = positif ou négatif.</li>
+      <li>Mercredi soir : swap triplé (compense le week-end fermé)</li>
+    </ul>
+    <h2>Impact réel</h2>
+    <p>Pour du <strong>day trading</strong> (entrée/sortie dans la journée) : tu ne payes pas de swap. Tu n'as que spread + commissions = ~1-2 pips de coût total par trade.</p>
+    <p>Pour du <strong>swing trading</strong> (positions sur plusieurs jours) : swaps cumulés peuvent grignoter ton profit. Calcule à l'avance.</p>
+    <div class="callout info">
+      <strong>Sur le dashboard.</strong> Tous ces coûts sont <em>en plus</em> de tes calculs. Si ton TP est à +20 pips mais le spread est de 1 pip + commission 0.5 pip = ton vrai gain est +18.5 pips.
+    </div>
+  `,
+
+  // ============= MODULE 3 =============
+  '3.1': `
+    <span class="lesson-tag">Module 3 · Ordres</span>
+    <h1>Ordre au marché (market)</h1>
+    <p>Le type d'ordre le plus simple : <strong>"achète/vends MAINTENANT au prix actuel"</strong>.</p>
+    <h2>Comment ça marche</h2>
+    <ul>
+      <li>Tu cliques "Buy" → ton ordre est exécuté immédiatement au prix Ask (1.08510 par ex.)</li>
+      <li>Tu cliques "Sell" → exécution immédiate au prix Bid (1.08500)</li>
+      <li>Pas de garantie sur le prix exact (peut bouger entre ton clic et l'exécution = <em>slippage</em>)</li>
+    </ul>
+    <h2>Quand l'utiliser</h2>
+    <ul>
+      <li>Quand tu veux entrer <strong>tout de suite</strong> sur un setup qui se confirme</li>
+      <li>Pendant les heures liquides (killzones London/NY) où le slippage est minimal</li>
+      <li>Quand le prix est exactement où tu veux entrer</li>
+    </ul>
+    <h2>Quand l'éviter</h2>
+    <ul>
+      <li>Pendant une news → spreads larges, slippage énorme</li>
+      <li>En heures creuses (nuit GMT) → peu de liquidité</li>
+      <li>Quand tu peux attendre un meilleur prix → utilise un ordre limit (voir chapitre suivant)</li>
+    </ul>
+    <div class="callout">
+      <strong>Tip ICT.</strong> Sur le dashboard, quand tu vois un OB bullish et que le prix arrive dessus, tu peux utiliser un ordre market dès la confirmation MSS sur LTF. Pas besoin d'ordre limit.
+    </div>
+  `,
+  '3.2': `
+    <span class="lesson-tag">Module 3 · Ordres</span>
+    <h1>Ordre limite (limit)</h1>
+    <p>Un ordre limit dit : <strong>"achète/vends UNIQUEMENT à ce prix ou mieux"</strong>.</p>
+    <h2>Buy Limit</h2>
+    <p>Tu veux acheter EUR/USD <strong>moins cher</strong> que le prix actuel (1.0850). Tu places un Buy Limit à 1.0830. Si le prix descend à 1.0830, ton ordre s'exécute. Sinon, rien.</p>
+    <h2>Sell Limit</h2>
+    <p>Tu veux vendre <strong>plus cher</strong> que le prix actuel. Tu places un Sell Limit à 1.0870. Si le prix monte à 1.0870, ton ordre s'exécute en vente.</p>
+    <h2>Usage typique en ICT</h2>
+    <p>Le prix monte vers un <strong>Order Block bearish à 1.0870</strong>. Tu sais que tu veux y vendre. Plutôt que de surveiller en direct, tu places un <strong>Sell Limit à 1.0870 avec SL à 1.0890 et TP à 1.0830</strong>. Tu peux fermer ton ordi.</p>
+    <p>Avantages :</p>
+    <ul>
+      <li>Pas besoin d'être devant l'écran</li>
+      <li>Exécution garantie au prix souhaité (ou mieux)</li>
+      <li>Discipline forcée (tu ne peux pas FOMO en sautant l'entrée)</li>
+    </ul>
+    <div class="callout info">
+      <strong>Limite des ordres limit.</strong> Si le prix ne touche jamais ton niveau, ton ordre n'est jamais exécuté. Tu peux laisser un ordre actif pendant des jours/semaines. Annule-le si la situation a changé.
+    </div>
+  `,
+  '3.3': `
+    <span class="lesson-tag">Module 3 · Ordres</span>
+    <h1>Ordre stop</h1>
+    <p>L'ordre stop = <strong>"achète/vends uniquement si le prix dépasse ce seuil"</strong>. C'est l'inverse du limit.</p>
+    <h2>Buy Stop</h2>
+    <p>Le prix est à 1.0850. Tu veux acheter <strong>seulement si ça monte au-dessus de 1.0870</strong> (= cassure haussière). Tu places un Buy Stop à 1.0870. Si le prix touche 1.0870 en montant, exécution.</p>
+    <h2>Sell Stop</h2>
+    <p>Tu veux vendre seulement si le prix casse 1.0830 (cassure baissière). Sell Stop à 1.0830.</p>
+    <h2>Usage typique</h2>
+    <p>Tu trades une <strong>cassure de structure</strong> (BOS). Le prix consolide sous une résistance à 1.0870. Tu places un Buy Stop juste au-dessus pour entrer dès la cassure.</p>
+    <p>C'est ce qu'on appelle <em>trader la cassure</em>. Risqué car beaucoup de fausses cassures (le concept ICT de "liquidity sweep" est précisément l'inverse — fade la cassure plutôt que la trader).</p>
+    <h2>Différence avec un Stop Loss</h2>
+    <p>Attention vocabulaire : "ordre stop" et "stop loss" sont différents.</p>
+    <ul>
+      <li><strong>Ordre stop</strong> : ouvre une nouvelle position quand le prix touche un seuil</li>
+      <li><strong>Stop loss</strong> : ferme une position existante pour limiter la perte</li>
+    </ul>
+    <div class="callout warn">
+      <strong>Conseil ICT.</strong> Évite les Buy Stop sur les cassures de swing high. C'est typiquement où les institutions piègent le retail (liquidity sweep). Préfère les Buy Limit sur les Order Blocks.
+    </div>
+  `,
+  '3.4': `
+    <span class="lesson-tag">Module 3 · Ordres</span>
+    <h1>Stop Loss et Take Profit</h1>
+    <p>Les deux ordres les plus importants à comprendre. Ils <strong>ferment automatiquement</strong> une position pour gérer le risque et capter le profit.</p>
+    <h2>Stop Loss (SL)</h2>
+    <p>Définit la <strong>perte maximum</strong> que tu acceptes sur ce trade. Si le prix touche ce niveau, position fermée automatiquement.</p>
+    <p>Exemple : tu achètes EUR/USD à 1.0850, SL à 1.0830 (20 pips plus bas). Si le prix touche 1.0830, le broker ferme ta position. Perte = 20 pips × ta taille.</p>
+    <h2>Take Profit (TP)</h2>
+    <p>Définit le <strong>gain auquel tu sécurises tes profits</strong>. Si le prix touche ce niveau, position fermée automatiquement (avec gain).</p>
+    <p>Tu achètes à 1.0850, TP à 1.0900 (50 pips plus haut). Le prix monte à 1.0900 → position fermée, gain = 50 pips.</p>
+    <h2>Pourquoi obligatoire dès l'ouverture</h2>
+    <ul>
+      <li><strong>Pas besoin d'être devant l'écran</strong> : tu peux dormir, le SL te protège</li>
+      <li><strong>Discipline émotionnelle</strong> : le SL est défini à froid, avant que tu sois dans le feu de l'action</li>
+      <li><strong>Risque chiffré</strong> : tu sais exactement ce que tu risques (1% du capital)</li>
+    </ul>
+    <h2>Où placer le SL ?</h2>
+    <p>Pas "à 20 pips au hasard" mais à un <strong>endroit logique</strong> où ton setup est invalidé :</p>
+    <ul>
+      <li>Long sur un OB bullish → SL juste en dessous de l'OB</li>
+      <li>Long après sweep d'un SSL → SL sous le low du sweep</li>
+      <li>Short sur OB bearish → SL au-dessus de l'OB</li>
+    </ul>
+    <div class="callout danger">
+      <strong>Règle non-négociable.</strong> Ne déplace JAMAIS ton SL contre toi pour "donner une chance au trade". 95% du temps, ça finit pire. Si le SL est touché, accepte la perte et passe au suivant.
+    </div>
+  `,
+
+  // ============= MODULE 4 =============
+  '4.1': `
+    <span class="lesson-tag">Module 4 · Réalité</span>
+    <h1>La statistique qui fait peur</h1>
+    <p>Les régulateurs européens obligent les brokers à <strong>afficher</strong> le pourcentage de clients qui perdent. Tu peux le voir en bas de leur site :</p>
+    <div class="example-box">
+      <div class="example-box-title">Exemples réels (2025)</div>
+      <p>"<strong>74% des comptes investisseurs particuliers perdent de l'argent</strong> en tradant des CFD chez ce courtier."</p>
+      <p>"<strong>78% des comptes...</strong>"</p>
+      <p>"<strong>82% des comptes...</strong>"</p>
+    </div>
+    <p>Selon le broker, c'est <strong>70 à 85% des particuliers qui perdent</strong>. C'est énorme. Ça veut dire que si 100 personnes commencent aujourd'hui, dans 1 an, 70-85 auront perdu de l'argent.</p>
+    <h2>Pourquoi tant ?</h2>
+    <ol>
+      <li><strong>Trader sans formation</strong> : "ça a l'air facile, je clique acheter/vendre"</li>
+      <li><strong>Mauvaise gestion du risque</strong> : risque 10-20% par trade, exploser le compte en 5 trades</li>
+      <li><strong>Émotionnel</strong> : revenge trade, FOMO, déplacement de SL</li>
+      <li><strong>Sur-trading</strong> : 20 trades par jour au lieu de 2</li>
+      <li><strong>Pas de stratégie testée</strong> : tradent à l'instinct</li>
+    </ol>
+    <h2>Comment être dans les 15-30% qui gagnent ?</h2>
+    <p>C'est <strong>faisable</strong>, mais ça demande :</p>
+    <ul>
+      <li>3-6 mois d'apprentissage théorique + démo avant de risquer un centime</li>
+      <li>Une stratégie claire (par ex. ICT, comme on apprend ici)</li>
+      <li>Gestion du risque <strong>religieuse</strong> (1-2% max par trade, jamais d'exception)</li>
+      <li>Journal et stats pour s'améliorer</li>
+      <li>Patience pour ne trader que des setups A+ (pas tout ce qui bouge)</li>
+    </ul>
+    <div class="callout">
+      <strong>Pourquoi je te dis ça ?</strong> Pour que tu prennes ce sport au sérieux. Ce n'est pas un jeu, ce n'est pas une roulette, ce n'est pas une promesse de richesse rapide. Mais c'est apprenable.
+    </div>
+  `,
+  '4.2': `
+    <span class="lesson-tag">Module 4 · Réalité</span>
+    <h1>Les 5 pièges du débutant</h1>
+    <p>Si tu évites ces 5 pièges, tu es déjà <strong>au-dessus de 80% des débutants</strong>.</p>
+    <h2>Piège 1 : Risquer trop par trade</h2>
+    <p>Tu vois un "super setup", tu mets 20% de ton capital. Le trade rate → tu as perdu 20%. 5 trades comme ça → compte explosé.</p>
+    <p><strong>Solution</strong> : 1-2% MAX par trade. Toujours. Sans exception.</p>
+    <h2>Piège 2 : Trader sans plan</h2>
+    <p>Tu ouvres la plateforme, tu regardes le chart, tu cliques "ça à l'air de monter, j'achète". <em>Sans entrée définie, sans SL, sans TP</em>.</p>
+    <p><strong>Solution</strong> : avant chaque trade, écris (mentalement ou physiquement) : "j'entre à X parce que [setup], SL à Y parce que [invalidation], TP à Z parce que [cible logique]". Si tu ne peux pas remplir les trois, ne trade pas.</p>
+    <h2>Piège 3 : Le revenge trade</h2>
+    <p>Tu prends une perte. Frustré, tu prends un trade <em>immédiatement après</em>, plus gros, "pour te refaire". Tu doubles la perte.</p>
+    <p><strong>Solution</strong> : règle stricte — après une perte, pause de 1h minimum. Va marcher, mange un truc. Reviens à froid.</p>
+    <h2>Piège 4 : Sur-trader</h2>
+    <p>"Plus je trade, plus je gagne". Faux. Plus tu trades, plus tu paies de spreads et plus tu prends de mauvais setups.</p>
+    <p><strong>Solution</strong> : maximum 2-3 trades par jour. Mieux : 5-10 trades par semaine. Qualité > quantité.</p>
+    <h2>Piège 5 : Déplacer le SL</h2>
+    <p>Le prix approche de ton SL. "Bon, je vais le déplacer un peu plus loin, ça va revenir". 9 fois sur 10, ça continue de descendre. La perte initiale devient catastrophique.</p>
+    <p><strong>Solution</strong> : ton SL est sacré. Tu peux le <em>resserrer</em> en ta faveur (déplacer vers ton entrée pour sécuriser), jamais le <em>déplacer contre toi</em>.</p>
+    <div class="callout warn">
+      <strong>Imprime cette liste.</strong> Garde-la à côté de ton écran. Avant chaque trade, vérifie : suis-je en train de tomber dans un de ces pièges ?
+    </div>
+  `,
+  '4.3': `
+    <span class="lesson-tag">Module 4 · Réalité</span>
+    <h1>Combien de temps en démo ?</h1>
+    <p>Question pragmatique : <strong>quand passer en réel ?</strong></p>
+    <h2>Trop tôt</h2>
+    <p>Tu connais à peine la plateforme, tu ne sais pas placer un ordre limit, tu n'as jamais calculé une taille de position. Tu passes en réel → tu paniques au premier trade perdant → tu fais des erreurs basiques → tu perds.</p>
+    <h2>Trop tard</h2>
+    <p>2 ans en démo. Tu deviens "trader virtuel". Quand tu passes en réel, le stress est nouveau, tes belles stats s'écroulent.</p>
+    <h2>Le bon moment</h2>
+    <p>Quand tu coches <strong>tous</strong> ces critères :</p>
+    <ul>
+      <li>✓ Tu connais ta stratégie par cœur (ici ICT)</li>
+      <li>✓ Tu sais placer un ordre limit, un SL, un TP sans réfléchir</li>
+      <li>✓ Tu as <strong>au moins 50 trades</strong> dans ton journal démo</li>
+      <li>✓ Tes stats démo sur 3 mois : <strong>R moyen positif</strong> (même 0.2R c'est suffisant)</li>
+      <li>✓ Tu as une routine quotidienne stable</li>
+      <li>✓ Tu acceptes mentalement de perdre l'argent</li>
+    </ul>
+    <h2>Le passage progressif</h2>
+    <ol>
+      <li><strong>Mois 1-2 démo</strong> : 10k$ virtuels, apprendre les bases</li>
+      <li><strong>Mois 3-6 démo</strong> : routine + journal + stats</li>
+      <li><strong>Mois 7 micro-compte</strong> : 200€ réels, 1% risque (= 2€/trade). Objectif : <em>survivre</em>, pas gagner.</li>
+      <li><strong>Mois 9-12 petit compte</strong> : 500-1000€, toujours 1% risque. Si profitable sur 3 mois → augmenter.</li>
+      <li><strong>Année 2+</strong> : augmenter le capital progressivement, par 25% tous les 3 mois si profitable.</li>
+    </ol>
+    <div class="callout">
+      <strong>Le test ultime.</strong> Tu peux passer en réel quand tu <em>n'es plus excité</em> à l'idée de prendre un trade. Quand c'est devenu mécanique, presque ennuyeux. C'est là que tu es prêt.
+    </div>
+  `,
+  '4.4': `
+    <span class="lesson-tag">Module 4 · Réalité</span>
+    <h1>Combien gagne un trader vraiment ?</h1>
+    <p>Sur les réseaux, on voit des Lamborghini et des liasses. <strong>Réalité, beaucoup moins fun</strong> :</p>
+    <h2>Les chiffres réalistes (annuels)</h2>
+    <table>
+      <tr><th>Niveau</th><th>Rendement /an</th><th>Pourquoi</th></tr>
+      <tr><td>Trader très bon</td><td>20-50%</td><td>Routine + discipline + bonne stratégie</td></tr>
+      <tr><td>Trader pro</td><td>15-30%</td><td>Hedge funds visent 15-20% net</td></tr>
+      <tr><td>Trader débutant rentable</td><td>5-15%</td><td>Si déjà rentable, c'est super</td></tr>
+      <tr><td>Trader débutant moyen</td><td>-10 à -30%</td><td>Perd plus qu'il ne gagne</td></tr>
+      <tr><td>Trader débutant catastrophe</td><td>-50 à -100%</td><td>Compte explosé en quelques mois</td></tr>
+    </table>
+    <h2>Calcule ton "vrai" potentiel</h2>
+    <p>Si tu es rentable à 20%/an (excellent niveau), avec 5 000€ → tu gagnes 1 000€/an. <strong>Soit 83€/mois.</strong> Pas un salaire.</p>
+    <p>Pour vivre du trading (3 000€/mois nets), avec 20%/an de rendement, tu as besoin de… <strong>180 000€ de capital</strong>. Et même là, mauvaise année = stress massif.</p>
+    <h2>Que faire de cette réalité ?</h2>
+    <p>Le trading n'est <strong>pas un job rapide</strong>. Vois-le comme :</p>
+    <ul>
+      <li>Un <strong>complément</strong> de revenu (300-500€/mois en plus, sympa)</li>
+      <li>Un <strong>placement actif</strong> qui peut battre une banque (10-15%/an si bon, vs 2-3% en livret)</li>
+      <li>Une <strong>passion</strong> qui demande du temps (lecture, analyse, journal)</li>
+      <li>Pas un <strong>remplacement</strong> de salaire avant des années de pratique <em>et</em> un gros capital</li>
+    </ul>
+    <div class="callout warn">
+      <strong>Méfie-toi des coachs qui promettent X% par mois.</strong> Un trader sérieux annonce ses perfs en <em>année</em>, pas en mois. Et 50% par mois sur 1 mois = 50% de perte le mois suivant, statistiquement. Personne ne fait ça en continu.
+    </div>
+  `,
+
+  // ============= MODULE 5 =============
+  '5.1': `
+    <span class="lesson-tag">Module 5 · Vers le dashboard</span>
+    <h1>Pourquoi ICT et pas autre chose ?</h1>
+    <p>Il existe <strong>des centaines de stratégies de trading</strong>. Pourquoi avoir choisi l'ICT pour ce dashboard ?</p>
+    <h2>Les grandes familles</h2>
+    <table>
+      <tr><th>Stratégie</th><th>Principe</th><th>Difficulté débutant</th></tr>
+      <tr><td>Indicateurs classiques</td><td>RSI, MACD, moyennes mobiles</td><td>Facile mais peu efficace</td></tr>
+      <tr><td>Price action pure</td><td>Lecture des bougies</td><td>Demande des années</td></tr>
+      <tr><td>Supply &amp; Demand</td><td>Zones d'offre/demande</td><td>Bonne mais subjective</td></tr>
+      <tr><td><strong>ICT / Smart Money</strong></td><td>Suivre les institutions</td><td>Apprenable, règles claires</td></tr>
+      <tr><td>Scalping nu</td><td>Pure réactivité au tick</td><td>Très dur, fort stress</td></tr>
+      <tr><td>Trading algorithmique</td><td>Bots automatisés</td><td>Demande dev + capital</td></tr>
+    </table>
+    <h2>Pourquoi ICT est bien pour débuter</h2>
+    <ul>
+      <li><strong>Règles claires</strong> : un OB est défini de manière objective, pas "à l'instinct"</li>
+      <li><strong>Bons R:R</strong> : les setups ICT visent souvent 1:3 ou plus → tu peux perdre 60% du temps et gagner</li>
+      <li><strong>Logique</strong> : tu comprends <em>pourquoi</em> le prix réagit (manipulation institutionnelle), pas juste "ça marche"</li>
+      <li><strong>Backtestable</strong> : règles claires = tu peux vérifier sur le passé si ça marche</li>
+      <li><strong>Communauté française</strong> : HugoFX et autres, beaucoup de contenu gratuit</li>
+    </ul>
+    <h2>Limites à connaître</h2>
+    <ul>
+      <li>Subjectif sur le choix du timeframe et des swings</li>
+      <li>Marche mieux sur EUR/USD que sur paires exotiques</li>
+      <li>Risque de "over-fitting" (voir des OB partout, en imaginer)</li>
+    </ul>
+    <div class="callout info">
+      <strong>Mon conseil.</strong> Apprends UNE stratégie à fond (ICT ici) plutôt que survoler 5 méthodes. Spécialise-toi, deviens bon, puis seulement après explore.
+    </div>
+  `,
+  '5.2': `
+    <span class="lesson-tag">Module 5 · Vers le dashboard</span>
+    <h1>Comment utiliser le dashboard</h1>
+    <p>Tu connais maintenant les bases. Voici comment exploiter le dashboard ICT à 100%.</p>
+    <h2>Étape 1 — Configure ta vue</h2>
+    <ol>
+      <li>Ouvre <a href="./index.html" style="color:var(--acc)">le dashboard</a></li>
+      <li>Active <strong>en mode mock d'abord</strong> (pas besoin de clé API pour apprendre)</li>
+      <li>Active progressivement les indicateurs : commence par <em>Swing Points</em> + <em>Premium/Discount</em></li>
+    </ol>
+    <h2>Étape 2 — Apprends à les lire</h2>
+    <p>Pour chaque indicateur que tu actives, va dans <strong>📚 Cours</strong> et lis le chapitre correspondant. Tu auras des aha moments dès que tu vois "ça veut dire ça" sur un vrai chart.</p>
+    <h2>Étape 3 — Choisis ton style</h2>
+    <ul>
+      <li><strong>Tu veux le swing trading</strong> (positions sur jours/semaines) → Active H4 + D1. Indicateurs : Structure + Liquidity + OB + Premium/Discount.</li>
+      <li><strong>Tu veux le day trading</strong> (positions intraday) → H1 pour le contexte, M15 pour l'entrée. Tous les indicateurs ICT pertinents.</li>
+      <li><strong>Tu veux apprendre</strong> → Tous les indicateurs activés sur H1, juste pour observer.</li>
+    </ul>
+    <h2>Étape 4 — Branche le live</h2>
+    <p>Une fois à l'aise avec les concepts : <strong>⚙ Paramètres → clé API TwelveData</strong> (gratuit, 2 min sur leur site). Tu auras les vraies données EUR/USD.</p>
+    <h2>Étape 5 — Logge tout</h2>
+    <p>À chaque trade (papier ou réel), ouvre <strong>📝 Journal de trades</strong>. Renseigne le setup, le résultat. Avec 30+ trades, des patterns émergent.</p>
+    <h2>Étape 6 — Ajuste avec ton calculateur</h2>
+    <p>Avant chaque entrée : <strong>📐 Calculateur de position</strong>. Capital + risque% + entrée + SL → taille en lots. Jamais d'exception.</p>
+    <div class="callout">
+      <strong>Le piège à éviter.</strong> Activer tous les indicateurs en même temps au début → tu vois du bruit partout. Active 2-3 indicateurs max, comprends-les, ajoute progressivement.
+    </div>
+  `,
+  '5.3': `
+    <span class="lesson-tag">Module 5 · Vers le dashboard</span>
+    <h1>Ton chemin étape par étape</h1>
+    <p>Plan d'action concret pour les <strong>6 prochains mois</strong>. Suis ça et tu seras devant 80% des débutants.</p>
+    <h2>Semaine 1-2 : Théorie</h2>
+    <ul>
+      <li>Lis tous les chapitres du <strong>📚 Cours ICT</strong> (les 5 modules, 27 chapitres)</li>
+      <li>Re-lis ce tuto débutant si nécessaire</li>
+      <li>Regarde la vidéo HugoFX entièrement (au moins 1×)</li>
+      <li>Ne touche pas encore à un broker</li>
+    </ul>
+    <h2>Semaine 3-4 : Observation</h2>
+    <ul>
+      <li>Ouvre le dashboard en mode mock ou live</li>
+      <li>Active les indicateurs un par un, comprends ce que tu vois</li>
+      <li>Reconnaîs les patterns sur le chart sans trader</li>
+      <li>Pas encore de compte broker</li>
+    </ul>
+    <h2>Mois 2 : Compte démo</h2>
+    <ul>
+      <li>Ouvre un compte démo chez un bon broker (IC Markets, Pepperstone, OANDA)</li>
+      <li>Familiarise-toi avec la plateforme (MetaTrader 5 ou cTrader)</li>
+      <li>Trade en démo en suivant les setups vus sur ton dashboard</li>
+      <li>Logge <strong>tous</strong> tes trades dans le journal du dashboard</li>
+    </ul>
+    <h2>Mois 3-4 : Stats &amp; routine</h2>
+    <ul>
+      <li>Vise 50+ trades en démo</li>
+      <li>Calcule ton winrate, ton R moyen, ton profit factor</li>
+      <li>Identifie tes meilleurs setups (lesquels ont le meilleur R moyen ?)</li>
+      <li>Définis une routine quotidienne (avant/pendant/après session)</li>
+    </ul>
+    <h2>Mois 5-6 : Premier réel</h2>
+    <ul>
+      <li>SI ET SEULEMENT SI tu es rentable sur 50+ trades démo : passage réel</li>
+      <li><strong>200-500€ MAX</strong> au début. Pas plus.</li>
+      <li>Risque 0.5-1% par trade (donc 1-5€). C'est volontairement petit.</li>
+      <li>Objectif : <em>survivre 3 mois sans exploser le compte</em>. Pas gagner gros.</li>
+    </ul>
+    <h2>Mois 6+ : Croissance</h2>
+    <ul>
+      <li>Si profitable sur 3 mois réel : augmente le capital par 25%</li>
+      <li>Continue à logger, continue à apprendre</li>
+      <li>Lis les classiques : Mark Douglas "Trading in the Zone", Wyckoff…</li>
+      <li>Reste humble, le marché ne pardonne pas l'arrogance</li>
+    </ul>
+    <div class="callout info">
+      <strong>Le secret.</strong> Il n'y a pas de raccourci. Ceux qui réussissent ont passé 1-3 ans à étudier et pratiquer avant d'être vraiment rentables. Sois patient avec toi-même. Le trading récompense la discipline, pas la vitesse.
+    </div>
+    <p style="margin-top:32px;font-size:0.92rem">
+      <strong style="color:var(--acc)">Bonne chance.</strong> Reviens sur ce tuto et sur les cours autant que tu veux. Le savoir y est, c'est à toi de le mettre en pratique. 🎯
+    </p>
+  `,
+};
+
+// ============================================================
+// RENDU
+// ============================================================
+const LS_KEY = 'tuto_last_chapter';
+let currentChapter = localStorage.getItem(LS_KEY) || '0.1';
+
+function renderTOC(){
+  const container = document.getElementById('toc');
+  container.innerHTML = MODULES.map((m, mi) => `
+    <div class="toc-module ${mi === 0 ? '' : 'collapsed'}" data-mod="${m.id}">
+      <button class="toc-module-header">${m.title}</button>
+      <div class="toc-chapters">
+        ${m.chapters.map(c => `
+          <a class="toc-chapter ${c.id === currentChapter ? 'active' : ''}" data-chap="${c.id}">${c.title}</a>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+  container.querySelectorAll('.toc-module-header').forEach(h => {
+    h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed'));
+  });
+  container.querySelectorAll('.toc-chapter').forEach(a => {
+    a.addEventListener('click', () => loadChapter(a.dataset.chap));
+  });
+}
+
+function loadChapter(id){
+  currentChapter = id;
+  localStorage.setItem(LS_KEY, id);
+  const content = CHAPTERS[id] || '<p>Chapitre à venir.</p>';
+  const all = MODULES.flatMap(m => m.chapters.map(c => c.id));
+  const idx = all.indexOf(id);
+  const prev = idx > 0 ? all[idx - 1] : null;
+  const next = idx < all.length - 1 ? all[idx + 1] : null;
+
+  // Compute progress
+  const progress = ((idx + 1) / all.length) * 100;
+
+  document.getElementById('content').innerHTML = content + `
+    <div class="progress-bar"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
+    <div class="progress-text" style="text-align:center">Chapitre ${idx + 1} / ${all.length}</div>
+    <div class="lesson-nav">
+      <button ${!prev ? 'disabled' : ''} data-chap="${prev || ''}">← Précédent</button>
+      <button class="next" ${!next ? 'disabled' : ''} data-chap="${next || ''}">${next ? 'Suivant →' : '🎓 Fin du tuto'}</button>
+    </div>
+  `;
+  // Update TOC active state
+  document.querySelectorAll('.toc-chapter').forEach(a => {
+    a.classList.toggle('active', a.dataset.chap === id);
+  });
+  // Wire nav buttons
+  document.querySelectorAll('.lesson-nav button').forEach(b => {
+    if(b.dataset.chap) b.addEventListener('click', () => loadChapter(b.dataset.chap));
+  });
+  // Scroll to top + close mobile drawer
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('toc-wrap').classList.remove('mobile-open');
+}
+
+// Mobile toc toggle
+document.getElementById('mobile-toc-btn').addEventListener('click', () => {
+  document.getElementById('toc-wrap').classList.toggle('mobile-open');
+});
+
+// Boot
+renderTOC();
+loadChapter(currentChapter);
+</script>
+</body>
+</html>
