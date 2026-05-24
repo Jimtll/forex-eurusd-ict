@@ -277,8 +277,14 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 
 /* ── Presets bar ── */
 .presets-bar{
-  display:flex;gap:6px;
-  padding:8px 12px 4px;
+  display:flex;gap:5px;
+  padding:8px 10px 4px;
+  border-bottom:1px solid var(--border);
+}
+.presets-hint{
+  padding:6px 12px 8px;
+  font-size:0.66rem;color:var(--muted);
+  text-align:center;
   border-bottom:1px solid var(--border);
 }
 .preset-btn{
@@ -1158,19 +1164,24 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 
       <!-- Presets bar -->
       <div class="presets-bar">
-        <button class="preset-btn" data-preset="learn">
-          <span class="preset-icon">📚</span>
-          <span>Apprentissage</span>
+        <button class="preset-btn" data-preset="reset" title="Tout désactiver">
+          <span class="preset-icon">🔄</span>
+          <span>Reset</span>
         </button>
-        <button class="preset-btn" data-preset="swing">
+        <button class="preset-btn" data-preset="learn" title="Analyse de contexte : structure + range PD + killzones">
+          <span class="preset-icon">🔍</span>
+          <span>Contexte</span>
+        </button>
+        <button class="preset-btn" data-preset="swing" title="Recherche de setup swing : zones + multi-TF">
           <span class="preset-icon">📊</span>
-          <span>Swing</span>
+          <span>Setup</span>
         </button>
-        <button class="preset-btn" data-preset="scalp">
+        <button class="preset-btn" data-preset="scalp" title="Entrée précise intraday : OB + FVG + killzones">
           <span class="preset-icon">🎯</span>
-          <span>Scalping</span>
+          <span>Entrée</span>
         </button>
       </div>
+      <div class="presets-hint">💡 3-5 indicateurs max pour rester lisible</div>
 
       <div class="panel-section" data-section="ess">
         <button class="panel-section-header">
@@ -2629,8 +2640,10 @@ function drawScoreBadge(ctx, x, y, score, maxScore, hasHtf){
 
 function drawFVGs(ctx, t2x, p2y, w, h){
   ctx.lineWidth = 1;
-  const unmitigated = state.computed.fvgs.filter(f => !f.mitigated);
-  const recentMitigated = state.computed.fvgs.filter(f => f.mitigated).slice(-30);
+  // Limite le bruit visuel : 10 unmitigated les plus récentes (= les plus pertinentes)
+  // + 15 mitigated récentes pour contexte
+  const unmitigated = state.computed.fvgs.filter(f => !f.mitigated).slice(-10);
+  const recentMitigated = state.computed.fvgs.filter(f => f.mitigated).slice(-15);
   const list = [...recentMitigated, ...unmitigated];
   const maxScore = state.indicators.multitf ? 4 : 3; // killzone + PD + OTE (+HTF si multi)
   for(const fvg of list){
@@ -2670,8 +2683,9 @@ function drawFVGs(ctx, t2x, p2y, w, h){
 
 function drawOrderBlocks(ctx, t2x, p2y, w, h){
   ctx.lineWidth = 1;
-  const unmitigated = state.computed.orderBlocks.filter(o => !o.mitigated);
-  const recentMitigated = state.computed.orderBlocks.filter(o => o.mitigated).slice(-20);
+  // Limite : 10 OBs non-mitigés (les plus récents = les plus pertinents) + 10 mitigated
+  const unmitigated = state.computed.orderBlocks.filter(o => !o.mitigated).slice(-10);
+  const recentMitigated = state.computed.orderBlocks.filter(o => o.mitigated).slice(-10);
   const list = [...recentMitigated, ...unmitigated];
   const maxScore = state.indicators.multitf ? 5 : 4; // killzone + PD + OTE + FVG-in-impulse (+HTF si multi)
   for(const ob of list){
@@ -4677,44 +4691,62 @@ function injectHelpIcons(){
 // ============================================================
 // QUICK WIN 3 — Présets de toggles
 // ============================================================
+// Presets repensés : 3-5 indicateurs max par préset, focalisés sur un workflow précis
+// Chaque preset ne fait QUE ce qu'il dit, pas plus. La lisibilité d'abord.
 const PRESETS = {
+  reset: {
+    name: 'Reset',
+    tf: null, // ne change pas le TF
+    indicators: { swings: false, bos: false, liquidity: false, ob: false, fvg: false, pd: false, kz: false,
+                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false,
+                  multitf: false, news: false },
+  },
   learn: {
-    name: 'Apprentissage',
+    // "Analyse de contexte" : où on est dans le range, structure, sessions
+    name: 'Contexte',
     tf: 'H1',
-    indicators: { swings: true, bos: true, liquidity: true, ob: true, fvg: true, pd: true, kz: true,
-                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false },
+    indicators: { swings: true, bos: true, liquidity: false, ob: false, fvg: false, pd: true, kz: true,
+                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false,
+                  multitf: false, news: false },
   },
   swing: {
-    name: 'Swing',
+    // "Recherche de setup" : zones institutionnelles + PD pour swing trader
+    name: 'Setup',
     tf: 'H4',
-    indicators: { swings: true, bos: true, liquidity: true, ob: true, fvg: false, pd: true, kz: false,
-                  breaker: true, ifvg: false, ote: true, amd: false, pdarrays: true, irlerl: true },
+    indicators: { swings: false, bos: false, liquidity: true, ob: true, fvg: false, pd: true, kz: false,
+                  breaker: false, ifvg: false, ote: true, amd: false, pdarrays: false, irlerl: false,
+                  multitf: true, news: false },
   },
   scalp: {
-    name: 'Scalping',
+    // "Entrée précise" : confirmation intraday avec killzones + FVG
+    name: 'Entrée',
     tf: 'M15',
     indicators: { swings: false, bos: true, liquidity: true, ob: true, fvg: true, pd: false, kz: true,
-                  breaker: false, ifvg: true, ote: true, amd: true, pdarrays: false, irlerl: false },
+                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false,
+                  multitf: false, news: true },
   },
 };
 
 function applyPreset(name){
   const p = PRESETS[name];
   if(!p) return;
-  // Toggle TF
-  if(state.currentTf !== p.tf){
+  // Toggle TF (null = pas de changement, ex: Reset)
+  if(p.tf && state.currentTf !== p.tf){
     document.querySelectorAll('.tf-pill').forEach(b => b.classList.toggle('active', b.dataset.tf === p.tf));
     state.currentTf = p.tf;
-    rebuildCurrentTf(); // async, mais on n'attend pas — le render se fera après
+    rebuildCurrentTf();
   }
-  // Toggle indicators
+  // Toggle indicators (multitf nécessite recompute)
+  let needsRecompute = false;
   for(const [k, v] of Object.entries(p.indicators)){
+    if(!(k in state.indicators)) continue;
+    if(k === 'multitf' && state.indicators[k] !== v) needsRecompute = true;
     state.indicators[k] = v;
     const input = document.querySelector(`input[data-ind="${k}"]`);
     if(input) input.checked = v;
   }
+  if(needsRecompute) recomputeAll();
   renderAll();
-  // Visual feedback
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
   savePrefs();
 }
