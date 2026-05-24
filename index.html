@@ -738,6 +738,125 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 .alert-subtoggle:hover{background:var(--surface3)}
 .alert-subtoggle input{margin:0;cursor:pointer}
 
+/* ── Quick log buttons in R/R floating ── */
+.btn-quick-log{
+  width:30px;height:30px;border-radius:7px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted2);font-size:0.95rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.btn-quick-log:hover{color:var(--acc);border-color:var(--acc);background:var(--acc-dim)}
+
+/* ── Replay controls ── */
+.replay-controls{
+  position:absolute;
+  top:14px;left:50%;transform:translateX(-50%);
+  background:rgba(15,17,23,0.92);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--acc);
+  border-radius:10px;
+  padding:8px 10px;
+  z-index:12;
+  display:none;
+  gap:6px;align-items:center;
+  font-size:0.78rem;
+}
+.replay-controls.active{display:flex}
+.replay-btn{
+  width:32px;height:30px;border-radius:6px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text);font-size:0.85rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.replay-btn:hover{border-color:var(--acc);color:var(--acc)}
+.replay-btn.playing{background:var(--acc);color:white}
+.replay-speed{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-size:0.74rem;
+  padding:5px 6px;border-radius:6px;
+}
+.replay-info{color:var(--muted2);font-size:0.72rem;font-variant-numeric:tabular-nums;min-width:90px;text-align:center}
+.replay-exit{margin-left:4px;background:var(--red-dim);color:var(--red);border-color:var(--red-dim)}
+
+/* ── Hover tooltip pour zones ICT ── */
+.zone-tooltip{
+  position:absolute;
+  background:rgba(15,17,23,0.96);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:0.74rem;
+  color:var(--text);
+  line-height:1.5;
+  pointer-events:none;
+  z-index:20;
+  max-width:240px;
+  display:none;
+  box-shadow:0 8px 20px rgba(0,0,0,0.4);
+}
+.zone-tooltip.visible{display:block}
+.zone-tooltip .tt-title{font-weight:700;color:var(--acc);margin-bottom:4px;font-size:0.78rem}
+.zone-tooltip .tt-row{display:flex;justify-content:space-between;gap:12px;font-size:0.72rem}
+.zone-tooltip .tt-row .tt-label{color:var(--muted2)}
+.zone-tooltip .tt-row .tt-val.yes{color:var(--acc)}
+.zone-tooltip .tt-row .tt-val.no{color:var(--muted)}
+.zone-tooltip .tt-score{
+  margin-top:6px;padding-top:6px;
+  border-top:1px solid var(--border);
+  text-align:center;font-weight:700;
+}
+
+/* ── Toast undo ── */
+.toast{
+  position:fixed;
+  bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:12px 18px;
+  display:flex;align-items:center;gap:14px;
+  font-size:0.84rem;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  z-index:200;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s,transform 0.2s;
+}
+.toast.visible{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast button{
+  padding:5px 12px;border-radius:6px;
+  background:var(--acc);color:white;
+  font-size:0.78rem;font-weight:600;
+}
+.toast button:hover{background:var(--acc-dark)}
+
+/* ── Glossaire ── */
+.glossary-list{
+  flex:1;overflow-y:auto;
+  display:flex;flex-direction:column;gap:8px;
+  padding-right:6px;
+}
+.glossary-list::-webkit-scrollbar{width:6px}
+.glossary-list::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+.glossary-item{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:12px 14px;
+}
+.glossary-item.hidden{display:none}
+.glossary-term{
+  font-weight:700;color:var(--acc);
+  font-size:0.92rem;margin-bottom:5px;
+  display:flex;align-items:baseline;gap:8px;
+}
+.glossary-term .glossary-abbr{font-size:0.7rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.06em}
+.glossary-def{font-size:0.86rem;color:var(--text);line-height:1.5}
+
 /* ── Backtest modal ── */
 .backtest-grid{
   display:grid;
@@ -968,6 +1087,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
     </div>
     <button class="icon-btn" id="install-btn" title="Installer comme app" style="display:none">📲</button>
     <a class="icon-btn" href="./tuto-debutant.html" title="Tuto débutant — bases du trading">🎓</a>
+    <button class="icon-btn" id="open-glossary" title="Glossaire ICT">📖</button>
     <button class="icon-btn" id="open-courses" title="Cours ICT">📚</button>
     <button class="icon-btn drawer-toggle" id="drawer-toggle" title="Indicateurs">☰</button>
     <button class="icon-btn" id="open-settings" title="Paramètres">⚙</button>
@@ -997,7 +1117,33 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
         <label>SL<input type="number" class="sl" id="rr-sl" step="0.00001"></label>
         <label>TP<input type="number" class="tp" id="rr-tp" step="0.00001"></label>
         <div class="rr-ratio" id="rr-ratio">—</div>
+        <button class="btn-quick-log" id="rr-quick-log" title="Logger ce trade dans le journal">📝</button>
+        <button class="btn-quick-log" id="rr-to-calc" title="Envoyer au calculateur de position">📐</button>
         <button class="rr-close" id="rr-close">×</button>
+      </div>
+
+      <!-- Replay controls (mode entraînement) -->
+      <div class="replay-controls" id="replay-controls">
+        <button class="replay-btn" id="replay-step-back" title="Reculer 1 bougie">⏮</button>
+        <button class="replay-btn" id="replay-play-pause" title="Play / Pause">▶</button>
+        <button class="replay-btn" id="replay-step" title="Avancer 1 bougie">⏭</button>
+        <select id="replay-speed" class="replay-speed">
+          <option value="1500">0.5×</option>
+          <option value="800" selected>1×</option>
+          <option value="400">2×</option>
+          <option value="150">5×</option>
+        </select>
+        <span class="replay-info" id="replay-info">— / —</span>
+        <button class="replay-btn replay-exit" id="replay-exit" title="Quitter le mode replay">×</button>
+      </div>
+
+      <!-- Hover tooltip pour zones ICT -->
+      <div class="zone-tooltip" id="zone-tooltip"></div>
+
+      <!-- Toast undo journal -->
+      <div class="toast" id="toast-undo">
+        <span id="toast-msg">Trade supprimé</span>
+        <button id="toast-undo-btn">Annuler</button>
       </div>
 
       <div class="chart-overlay-info" id="chart-info">
@@ -1060,6 +1206,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
             <input type="checkbox" data-ind="kz">
             <div class="toggle-label"><span class="name">Killzones</span><span class="hint">London / NY / Asia</span></div>
           </label>
+          <label class="toggle-row">
+            <input type="checkbox" data-ind="news">
+            <div class="toggle-label"><span class="name">News events</span><span class="hint">NFP, FOMC, CPI, BCE…</span></div>
+          </label>
         </div>
       </div>
 
@@ -1110,6 +1260,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
           <button class="risk-btn" id="toggle-rr">🎯 R/R Visualizer</button>
           <button class="risk-btn" id="open-journal">📝 Journal de trades</button>
           <button class="risk-btn" id="open-backtest">🔬 Backtester</button>
+          <button class="risk-btn" id="toggle-replay">🎬 Mode Replay (entraînement)</button>
         </div>
       </div>
 
@@ -1159,7 +1310,23 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 
     <div class="modal-section">
       <h3>🎲 Données simulées</h3>
-      <button class="btn btn-ghost" id="btn-regen">🎲 Régénérer une nouvelle séquence mock</button>
+      <label style="font-size:0.74rem;color:var(--muted2);margin-bottom:4px;display:block">Type de génération</label>
+      <select id="mock-mode" class="bt-input" style="margin-bottom:10px">
+        <option value="realistic">Réaliste (cycles AMD, sweeps, OB) — pour s'entraîner</option>
+        <option value="random">Random walk pur — simplement chaotique</option>
+      </select>
+      <button class="btn btn-ghost" id="btn-regen" style="width:100%">🎲 Régénérer une nouvelle séquence mock</button>
+    </div>
+
+    <div class="modal-section">
+      <h3>⚙ Affichage</h3>
+      <label class="alert-toggle">
+        <input type="checkbox" id="setting-log-scale">
+        <span class="alert-toggle-track"></span>
+        <span class="alert-toggle-label">Échelle de prix logarithmique</span>
+      </label>
+      <label style="font-size:0.74rem;color:var(--muted2);margin-top:12px;margin-bottom:4px;display:block">Taille FVG minimum (pips, 0 = pas de filtre)</label>
+      <input type="number" id="setting-fvg-min-size" class="bt-input" value="0" min="0" max="50" step="0.5">
     </div>
 
     <div class="modal-actions" style="justify-content:flex-end;margin-top:24px">
@@ -1366,6 +1533,20 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
   </div>
 </div>
 
+<!-- Modal Glossaire -->
+<div class="modal-backdrop" id="modal-glossary">
+  <div class="modal modal-lg" style="max-width:700px">
+    <header>
+      <h2>📖 Glossaire ICT</h2>
+      <button class="icon-btn" id="btn-close-glossary" style="width:30px;height:30px;margin-left:auto">×</button>
+    </header>
+    <div class="modal-body" style="flex-direction:column;padding:20px 24px;overflow:hidden">
+      <input type="text" id="glossary-search" class="bt-input" placeholder="🔍 Rechercher un terme..." style="margin-bottom:14px;flex-shrink:0">
+      <div id="glossary-list" class="glossary-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Cours pédagogiques -->
 <div class="modal-backdrop" id="modal-courses">
   <div class="modal modal-lg">
@@ -1514,7 +1695,7 @@ const state = {
     ob: false, fvg: false, pd: false, kz: false,
     breaker: false, ifvg: false, ote: false,
     amd: false, pdarrays: false, irlerl: false,
-    multitf: false,
+    multitf: false, news: false,
   },
   computed: {
     swings: [],
@@ -4123,6 +4304,84 @@ const COURSE_READ_KEY = 'course_read_chapters';
 let readCourseChapters = new Set(JSON.parse(localStorage.getItem(COURSE_READ_KEY) || '[]'));
 
 const COURSE_QUIZZES = {
+  '1.4': {
+    title: 'Quiz — Module 1 : Bases du trading forex',
+    after: 'Avant d\'attaquer le ICT, vérifions les bases :',
+    questions: [
+      {
+        q: 'Une bougie verte signifie :',
+        options: ['Le high est plus haut que la précédente', 'Close > Open : la période s\'est terminée plus haut qu\'elle n\'a ouvert', 'Le marché est haussier'],
+        correct: 1,
+        explain: 'Vert = bullish (close > open). Le corps va de l\'open au close, les mèches indiquent les extrêmes touchés pendant la période.',
+      },
+      {
+        q: 'Le timeframe H1 sert principalement à :',
+        options: ['Définir le contexte général (biais)', 'Trouver les zones intermédiaires + entrées swing', 'Faire du scalping ultra-rapide'],
+        correct: 1,
+        explain: 'D1/H4 = biais général. H1 = zones intermédiaires + entrée swing. M15/M5 = raffinage de l\'entrée. M1 = scalping (à éviter pour débutant).',
+      },
+      {
+        q: 'L\'approche top-down ICT consiste à :',
+        options: ['Trader uniquement sur D1 pour éviter le bruit', 'Analyser du grand TF (D1/H4) vers le petit (M15)', 'Mélanger toutes les TF en même temps'],
+        correct: 1,
+        explain: 'Top-down = top (grand TF) → down (petit TF). On part du biais D1/H4, on identifie les zones H1, on raffine l\'entrée M15. Jamais l\'inverse.',
+      },
+    ],
+  },
+  '3.6': {
+    title: 'Quiz — Module 3 : ICT avancés',
+    after: 'Tu maîtrises les concepts avancés ? Test :',
+    questions: [
+      {
+        q: 'Un Breaker Block, c\'est :',
+        options: ['Un OB plus fort que les autres', 'Un OB qui s\'est fait mitigé puis cassé → flip de polarité', 'Un OB en zone Premium'],
+        correct: 1,
+        explain: 'BB = un OB qui n\'a pas tenu son rôle initial. Il a été mitigé puis cassé. Il devient alors une zone de polarité INVERSE (un OB bullish cassé → devient résistance bearish).',
+      },
+      {
+        q: 'La zone OTE (Optimal Trade Entry) se situe :',
+        options: ['Entre 0 et 50% de retracement Fibonacci', 'Entre 62% et 79% de retracement Fibonacci', 'Au-delà de 100% (extension)'],
+        correct: 1,
+        explain: 'OTE = zone fib 62-79%. C\'est un retracement profond mais pas trop. Au-delà de 79%, le trend est probablement cassé. La zone idéale pour entrer dans le sens du trend après un pullback.',
+      },
+      {
+        q: 'Dans le cycle AMD (Accumulation/Manipulation/Distribution) :',
+        options: ['Asia = vrai move, London = consolidation, NY = manipulation', 'Asia = accumulation, London = manipulation (faux move), NY = vrai move', 'Tous les marchés se valent, peu importe la session'],
+        correct: 1,
+        explain: 'AMD ICT classique : Asia accumulate (range), London manipulate (faux move pour piéger le retail), NY distribute (vrai move dans la direction macro). Si tu comprends ça, tu sais qu\'il ne faut PAS trader le breakout London.',
+      },
+      {
+        q: 'IRL → ERL signifie :',
+        options: ['Le marché va toujours vers la liquidité externe (swing highs/lows)', 'Internal Range Lows → External Range Lows', 'Pas de signification ICT'],
+        correct: 0,
+        explain: 'IRL (Internal Range Liquidity = FVG/OB intérieurs au range) attire le marché vers ERL (External Range Liquidity = swing highs/lows externes). Quand tu rentres sur un IRL, ta cible logique c\'est l\'ERL le plus proche.',
+      },
+    ],
+  },
+  '5.3': {
+    title: 'Quiz — Module 5 : Mettre tout ensemble',
+    after: 'Le test final — appliquer en pratique :',
+    questions: [
+      {
+        q: 'Setup idéal A+ pour un long :',
+        options: ['OB bullish + zone Premium + killzone Asia', 'OB bullish + zone Discount + killzone London/NY + FVG dans impulsion', 'N\'importe quel OB bullish suffit'],
+        correct: 1,
+        explain: 'A+ = max de confluences. OB bullish (zone institutionnelle), Discount (acheter pas cher), killzone (volume), FVG dans l\'impulsion (signe de displacement). Score 4-5/5 dans le dashboard.',
+      },
+      {
+        q: 'Tu vois un setup A+ mais en dehors des killzones (à 4h GMT) :',
+        options: ['Tu trades quand même, c\'est un A+', 'Tu passes ton tour. Spreads larges + manque de volume', 'Tu attends que ça vienne dans la killzone'],
+        correct: 1,
+        explain: 'Hors killzone = spreads x2-3, moves aléatoires, pas de smart money. Même un setup "parfait" sur le papier rate souvent. Mieux vaut rater un trade que prendre un mauvais moment.',
+      },
+      {
+        q: 'Combien de trades par semaine en moyenne pour un trader ICT discipliné ?',
+        options: ['20+ pour multiplier les chances', '5-10 trades A+ seulement', '50+ pour vivre du trading'],
+        correct: 1,
+        explain: 'Qualité > quantité. 5-10 trades A+ par semaine donnent souvent de meilleurs résultats que 50 trades médiocres. Les pros sélectionnent — ils sont payés pour ATTENDRE, pas pour cliquer.',
+      },
+    ],
+  },
   '2.9': {
     title: 'Quiz — Module 2 : ICT essentiels',
     after: 'Tu maîtrises les essentiels ? Vérifions :',
@@ -4545,6 +4804,626 @@ fetchTwelveData = async function(tfKey, size){
 setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 // ============================================================
+// FEATURE #1 — MOCK DATA RÉALISTE (cycles AMD, sweeps, OB)
+// ============================================================
+
+function generateRealisticM15(numCandles){
+  // Construit des bougies M15 avec délibérément des patterns ICT
+  const out = [];
+  const M15 = 15 * 60;
+  const now = Math.floor(Date.now() / 1000);
+  const endTs = now - (now % M15);
+  let ts = endTs - (numCandles - 1) * M15;
+  let price = BASE_PRICE;
+
+  // On va construire des "macro cycles" de ~5 jours = ~480 bougies M15 (480 = 5j × 96 candles)
+  // Chaque cycle : accumulation range (Asia-like) → manipulation sweep → impulsion + FVG → distribution → reversal
+  const cycleLen = 480;
+  let cycleIdx = 0;
+  let cycleStart = 0;
+  let macroDir = Math.random() < 0.5 ? 1 : -1; // direction du cycle
+  let rangeAnchor = price;
+
+  for(let i = 0; i < numCandles; i++){
+    const date = new Date(ts * 1000);
+    if(isForexClosed(date)){ ts += M15; continue; }
+    const hourGMT = date.getUTCHours() + date.getUTCMinutes()/60;
+    const sigmaPips = sigmaPipsAt(hourGMT);
+    const sigma = sigmaPips * PIP;
+
+    // Position dans le cycle (0..1)
+    const t = (cycleIdx - cycleStart) / cycleLen;
+    let bias = 0; // drift moyen par bougie
+
+    if(t < 0.3){
+      // Phase 1 (accumulation) : range serré autour de rangeAnchor
+      bias = (rangeAnchor - price) * 0.05; // mean-revert vers rangeAnchor
+    } else if(t < 0.4){
+      // Phase 2 (manipulation / sweep) : fake move dans la direction OPPOSÉE au macro
+      bias = -macroDir * sigma * 0.4; // push contre la direction
+    } else if(t < 0.45){
+      // Phase 3 (reversal post-sweep) : retour brutal dans la direction macro
+      bias = macroDir * sigma * 0.6;
+    } else if(t < 0.85){
+      // Phase 4 (distribution / impulsion) : trend prononcé
+      bias = macroDir * sigma * 0.35;
+    } else {
+      // Phase 5 (consolidation fin de cycle) : range
+      bias = 0;
+    }
+
+    // Volatilité boostée pendant les killzones
+    const inKz = (hourGMT >= 7 && hourGMT < 10) || (hourGMT >= 12 && hourGMT < 15);
+    const localSigma = sigma * (inKz ? 1.3 : 0.85);
+
+    // Détecte un gap weekend
+    const prevDate = new Date((ts - M15) * 1000);
+    const justReopened = isForexClosed(prevDate);
+    let open = price;
+    if(justReopened && i > 0){
+      const gap = (Math.random() < 0.5 ? -1 : 1) * (5 + Math.random()*15) * PIP;
+      open = price + gap;
+    }
+
+    const delta = gauss(bias, localSigma);
+    let close = open + delta;
+
+    // Wicks : pendant la phase 2 (sweep), wicks longs dans la direction de la manipulation
+    let upperWickMag = Math.abs(gauss(0, localSigma * 0.5));
+    let lowerWickMag = Math.abs(gauss(0, localSigma * 0.5));
+    if(t > 0.3 && t < 0.4){
+      // Pendant la manipulation : wicks plus longs dans la direction du fake move
+      if(macroDir === 1) lowerWickMag *= 2.5; // sweep des lows pour piéger les shorts
+      else upperWickMag *= 2.5;
+    }
+    if(t > 0.4 && t < 0.5){
+      // Reversal après sweep : grosse bougie d'impulsion (corps allongé)
+      const impulsionBoost = sigma * 0.4;
+      if(macroDir === 1) close += impulsionBoost;
+      else close -= impulsionBoost;
+    }
+
+    const high = Math.max(open, close) + upperWickMag;
+    const low = Math.min(open, close) - lowerWickMag;
+
+    out.push({ time: ts, open, high, low, close });
+    price = close;
+    ts += M15;
+    cycleIdx++;
+
+    // Nouveau cycle
+    if(cycleIdx - cycleStart >= cycleLen){
+      cycleStart = cycleIdx;
+      // Flip de direction avec 70% de proba, sinon continue
+      if(Math.random() < 0.7) macroDir *= -1;
+      rangeAnchor = price + (Math.random() - 0.5) * 50 * PIP;
+    }
+  }
+
+  return out;
+}
+
+// ============================================================
+// FEATURE #2 — HOVER TOOLTIP sur les zones OB/FVG
+// ============================================================
+
+let _hoverableZones = []; // {x, y, w, h, kind, zone, side}
+
+function rebuildHoverableZones(){
+  _hoverableZones = [];
+  if(!state.chart || !state.series) return;
+  const timeScale = state.chart.timeScale();
+  const t2x = t => timeScale.timeToCoordinate(t);
+  const p2y = p => state.series.priceToCoordinate(p);
+  const canvas = state.overlayCanvas;
+  if(!canvas) return;
+  const w = parseFloat(canvas.style.width) || canvas.clientWidth;
+
+  const addZones = (zones, kind, mitigatedOk) => {
+    const list = mitigatedOk ? zones : zones.filter(z => !z.mitigated);
+    for(const z of list){
+      const x1 = t2x(z.time);
+      if(x1 === null) continue;
+      const y1 = p2y(z.top), y2 = p2y(z.bottom);
+      if(y1 === null || y2 === null) continue;
+      const xEnd = z.mitigated && z.mitigatedTime
+        ? (t2x(z.mitigatedTime) || w)
+        : w;
+      _hoverableZones.push({
+        x1, y1: Math.min(y1, y2), x2: xEnd, y2: Math.max(y1, y2),
+        kind, zone: z,
+      });
+    }
+  };
+
+  if(state.indicators.ob) addZones(state.computed.orderBlocks, 'OB', true);
+  if(state.indicators.fvg) addZones(state.computed.fvgs, 'FVG', true);
+  if(state.indicators.breaker) addZones(state.computed.breakers, 'BB', false);
+  if(state.indicators.ifvg) addZones(state.computed.ifvgs, 'IFVG', false);
+}
+
+function showZoneTooltip(zone, kind, clientX, clientY){
+  const tt = document.getElementById('zone-tooltip');
+  const d = zone.scoreDetails || {};
+  const maxScore = state.indicators.multitf ? (kind === 'OB' ? 5 : 4) : (kind === 'OB' ? 4 : 3);
+  const yes = (v) => v ? '<span class="tt-val yes">✓</span>' : '<span class="tt-val no">—</span>';
+  const sideLabel = zone.type === 'bullish' ? 'Long ▲' : 'Short ▼';
+  const mid = ((zone.top + zone.bottom) / 2).toFixed(5);
+  const pipsHeight = ((zone.top - zone.bottom) / PIP).toFixed(1);
+  tt.innerHTML = `
+    <div class="tt-title">${kind} ${sideLabel} ${zone.mitigated ? '(mitigé)' : ''}</div>
+    <div class="tt-row"><span class="tt-label">Mid</span><span class="tt-val">${mid}</span></div>
+    <div class="tt-row"><span class="tt-label">Hauteur</span><span class="tt-val">${pipsHeight} pips</span></div>
+    <div class="tt-row"><span class="tt-label">Zone PD favorable</span>${yes(d.favorablePD)}</div>
+    <div class="tt-row"><span class="tt-label">Formé en killzone</span>${yes(d.killzone)}</div>
+    <div class="tt-row"><span class="tt-label">En zone OTE</span>${yes(d.ote)}</div>
+    ${kind === 'OB' ? `<div class="tt-row"><span class="tt-label">FVG dans impulsion</span>${yes(d.fvgInImpulse)}</div>` : ''}
+    <div class="tt-row"><span class="tt-label">Confirmé HTF</span>${yes(d.htf)}</div>
+    <div class="tt-score">Score : ${zone.score || 0} / ${maxScore}</div>
+  `;
+  const chartRect = document.getElementById('chart').getBoundingClientRect();
+  const x = clientX - chartRect.left + 14;
+  const y = clientY - chartRect.top + 14;
+  tt.style.left = Math.min(x, chartRect.width - 260) + 'px';
+  tt.style.top = Math.min(y, chartRect.height - 200) + 'px';
+  tt.classList.add('visible');
+}
+
+function hideZoneTooltip(){ document.getElementById('zone-tooltip').classList.remove('visible'); }
+
+function setupZoneHover(){
+  const chart = document.getElementById('chart');
+  chart.addEventListener('mousemove', e => {
+    const rect = chart.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    let hit = null;
+    // Itérer à l'envers : les zones plus récentes (dessinées en dernier) ont priorité
+    for(let i = _hoverableZones.length - 1; i >= 0; i--){
+      const z = _hoverableZones[i];
+      if(mx >= z.x1 && mx <= z.x2 && my >= z.y1 && my <= z.y2){
+        hit = z; break;
+      }
+    }
+    if(hit) showZoneTooltip(hit.zone, hit.kind, e.clientX, e.clientY);
+    else hideZoneTooltip();
+  });
+  chart.addEventListener('mouseleave', hideZoneTooltip);
+}
+
+// ============================================================
+// FEATURE #4 — NEWS EVENTS OVERLAY
+// ============================================================
+// Calendrier hardcodé des news majeures forex 2026 (récurrents + connus)
+// Format : { name, importance, schedule } avec schedule = "weekly|monthly|date"
+
+const NEWS_EVENTS = [
+  // Mensuels typiques (US)
+  { name: 'NFP', impact: 'high', currency: 'USD', dayOfMonth: 'first-friday', hour: 12.5 }, // 1er vendredi du mois 12h30 GMT
+  { name: 'CPI US', impact: 'high', currency: 'USD', dayOfMonth: 12, hour: 12.5 },
+  { name: 'FOMC', impact: 'high', currency: 'USD', dayOfMonth: 'fomc-dates', hour: 18 },
+  { name: 'BCE', impact: 'high', currency: 'EUR', dayOfMonth: 'ecb-dates', hour: 12.25 },
+  // Hebdomadaires
+  { name: 'Unemployment Claims', impact: 'medium', currency: 'USD', dayOfWeek: 4, hour: 12.5 }, // Jeudi
+  { name: 'Crude Oil Inventories', impact: 'low', currency: 'USD', dayOfWeek: 3, hour: 14.5 }, // Mercredi
+];
+
+// FOMC dates 2026 typiques (réunions Fed) — approximatives
+const FOMC_DATES_2026 = ['2026-01-28', '2026-03-18', '2026-04-29', '2026-06-17', '2026-07-29', '2026-09-16', '2026-10-28', '2026-12-09'];
+const ECB_DATES_2026 = ['2026-01-22', '2026-03-12', '2026-04-30', '2026-06-04', '2026-07-23', '2026-09-10', '2026-10-29', '2026-12-17'];
+
+function firstFridayOfMonth(year, month){
+  const d = new Date(Date.UTC(year, month, 1));
+  let day = 1;
+  while(d.getUTCDay() !== 5){ d.setUTCDate(++day); }
+  return d;
+}
+
+function getNewsInRange(fromTime, toTime){
+  const out = [];
+  const fromDate = new Date(fromTime * 1000);
+  const toDate = new Date(toTime * 1000);
+  const startYear = fromDate.getUTCFullYear();
+  const endYear = toDate.getUTCFullYear();
+  // Parcours par jour
+  const oneDay = 86400 * 1000;
+  for(let dms = fromDate.getTime() - oneDay; dms <= toDate.getTime() + oneDay; dms += oneDay){
+    const d = new Date(dms);
+    const dow = d.getUTCDay();
+    const dom = d.getUTCDate();
+    const month = d.getUTCMonth();
+    const year = d.getUTCFullYear();
+    const dateStr = d.toISOString().slice(0, 10);
+
+    for(const ev of NEWS_EVENTS){
+      let match = false;
+      if(ev.dayOfWeek === dow) match = true;
+      else if(typeof ev.dayOfMonth === 'number' && ev.dayOfMonth === dom) match = true;
+      else if(ev.dayOfMonth === 'first-friday'){
+        const ff = firstFridayOfMonth(year, month);
+        if(ff.getUTCDate() === dom) match = true;
+      }
+      else if(ev.dayOfMonth === 'fomc-dates' && FOMC_DATES_2026.includes(dateStr)) match = true;
+      else if(ev.dayOfMonth === 'ecb-dates' && ECB_DATES_2026.includes(dateStr)) match = true;
+      if(match){
+        const eventTs = Math.floor(Date.UTC(year, month, dom, Math.floor(ev.hour), (ev.hour % 1) * 60) / 1000);
+        if(eventTs >= fromTime && eventTs <= toTime){
+          out.push({ ...ev, time: eventTs });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function drawNewsEvents(ctx, t2x, w, h){
+  const vr = state.chart.timeScale().getVisibleRange();
+  if(!vr) return;
+  const events = getNewsInRange(vr.from, vr.to);
+  ctx.font = 'bold 9px Segoe UI, system-ui';
+  for(const ev of events){
+    const x = t2x(ev.time);
+    if(x === null || x < 0 || x > w) continue;
+    const color = ev.impact === 'high' ? 'rgba(239,68,68,0.7)' : ev.impact === 'medium' ? 'rgba(251,191,36,0.5)' : 'rgba(148,163,184,0.3)';
+    const fillColor = ev.impact === 'high' ? 'rgba(239,68,68,0.04)' : ev.impact === 'medium' ? 'rgba(251,191,36,0.03)' : 'rgba(148,163,184,0.02)';
+    ctx.fillStyle = fillColor;
+    ctx.fillRect(x - 2, 0, 4, h);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    ctx.setLineDash([]);
+    // Label
+    ctx.fillStyle = color.replace('0.7', '1').replace('0.5', '0.95').replace('0.3', '0.7');
+    ctx.textBaseline = 'top';
+    ctx.save();
+    ctx.translate(x + 3, 30);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillText(ev.name, 0, 0);
+    ctx.restore();
+  }
+}
+
+// ============================================================
+// FEATURE #5 — REPLAY MODE
+// ============================================================
+
+state.replay = {
+  active: false,
+  fullCandles: null,
+  currentIdx: 0,
+  playing: false,
+  timer: null,
+  speed: 800,
+};
+
+function startReplay(){
+  if(state.candles.length < 100) return;
+  state.replay.active = true;
+  state.replay.fullCandles = state.candles.slice();
+  // Démarre à 70% des bougies (pour avoir du futur à découvrir)
+  state.replay.currentIdx = Math.floor(state.replay.fullCandles.length * 0.7);
+  state.replay.playing = false;
+  applyReplayCandles();
+  document.getElementById('replay-controls').classList.add('active');
+  document.getElementById('toggle-replay').classList.add('active');
+}
+
+function exitReplay(){
+  state.replay.active = false;
+  state.replay.playing = false;
+  if(state.replay.timer){ clearInterval(state.replay.timer); state.replay.timer = null; }
+  if(state.replay.fullCandles){
+    state.candles = state.replay.fullCandles;
+    state.series.setData(state.candles);
+    recomputeAll();
+    renderAll();
+  }
+  state.replay.fullCandles = null;
+  document.getElementById('replay-controls').classList.remove('active');
+  document.getElementById('toggle-replay').classList.remove('active');
+}
+
+function applyReplayCandles(){
+  if(!state.replay.active || !state.replay.fullCandles) return;
+  const visible = state.replay.fullCandles.slice(0, state.replay.currentIdx + 1);
+  state.candles = visible;
+  state.series.setData(visible);
+  updatePriceDisplay();
+  recomputeAll();
+  renderAll();
+  const info = document.getElementById('replay-info');
+  const last = visible[visible.length - 1];
+  const date = new Date(last.time * 1000).toISOString().slice(5, 16).replace('T', ' ');
+  info.textContent = `${state.replay.currentIdx + 1} / ${state.replay.fullCandles.length} — ${date}`;
+}
+
+function replayStep(direction = 1){
+  if(!state.replay.active) return;
+  const total = state.replay.fullCandles.length;
+  state.replay.currentIdx = Math.max(0, Math.min(total - 1, state.replay.currentIdx + direction));
+  applyReplayCandles();
+}
+
+function replayPlayPause(){
+  if(!state.replay.active) return;
+  state.replay.playing = !state.replay.playing;
+  const btn = document.getElementById('replay-play-pause');
+  if(state.replay.playing){
+    btn.textContent = '⏸'; btn.classList.add('playing');
+    state.replay.timer = setInterval(() => {
+      replayStep(1);
+      if(state.replay.currentIdx >= state.replay.fullCandles.length - 1){
+        replayPlayPause(); // auto-pause à la fin
+      }
+    }, state.replay.speed);
+  } else {
+    btn.textContent = '▶'; btn.classList.remove('playing');
+    if(state.replay.timer){ clearInterval(state.replay.timer); state.replay.timer = null; }
+  }
+}
+
+function wireReplay(){
+  document.getElementById('toggle-replay').addEventListener('click', () => {
+    if(state.replay.active) exitReplay();
+    else startReplay();
+  });
+  document.getElementById('replay-step-back').addEventListener('click', () => replayStep(-1));
+  document.getElementById('replay-step').addEventListener('click', () => replayStep(1));
+  document.getElementById('replay-play-pause').addEventListener('click', replayPlayPause);
+  document.getElementById('replay-exit').addEventListener('click', exitReplay);
+  document.getElementById('replay-speed').addEventListener('change', e => {
+    state.replay.speed = parseInt(e.target.value, 10);
+    if(state.replay.playing){
+      replayPlayPause(); // pause
+      replayPlayPause(); // replay avec nouvelle vitesse
+    }
+  });
+}
+
+// ============================================================
+// FEATURE #12 — GLOSSAIRE ICT
+// ============================================================
+
+const GLOSSARY = [
+  { term: 'OB', abbr: 'Order Block', def: 'Dernière bougie de couleur opposée juste avant une impulsion qui casse structure. Zone où les institutions ont placé leurs ordres.' },
+  { term: 'FVG', abbr: 'Fair Value Gap', def: 'Gap de prix entre 3 bougies consécutives (low[i+1] > high[i-1] pour bullish). Déséquilibre que le marché tend à combler.' },
+  { term: 'BOS', abbr: 'Break of Structure', def: 'Cassure d\'un swing high/low dans le sens du trend → continuation confirmée.' },
+  { term: 'MSS / CHoCH', abbr: 'Market Structure Shift / Change of Character', def: 'Cassure d\'un swing contre le trend → premier indice de changement de direction.' },
+  { term: 'BSL / SSL', abbr: 'Buy/Sell Side Liquidity', def: 'Liquidité au-dessus des swing highs (buy stops) ou sous les swing lows (sell stops). Cibles des institutions.' },
+  { term: 'Sweep', abbr: 'Liquidity sweep', def: 'Wick au-delà d\'un niveau de liquidité puis close de l\'autre côté = manipulation pour collecter la liquidité.' },
+  { term: 'Premium / Discount', abbr: '', def: 'Au-dessus du milieu d\'un range = Premium (zone de vente). En dessous = Discount (zone d\'achat).' },
+  { term: 'Equilibrium', abbr: '50% fib', def: 'Milieu du range courant. Sépare Premium et Discount.' },
+  { term: 'OTE', abbr: 'Optimal Trade Entry', def: 'Zone de retracement Fibonacci 62-79% sur la dernière jambe. Sweet spot pour entrer dans le sens du trend.' },
+  { term: 'BB', abbr: 'Breaker Block', def: 'OB qui s\'est fait mitigé puis cassé → flip de polarité (devient résistance s\'il était support).' },
+  { term: 'IFVG', abbr: 'Inverted FVG', def: 'FVG comblé entièrement puis traversé → flip de polarité.' },
+  { term: 'AMD', abbr: 'Accumulation / Manipulation / Distribution', def: 'Cycle journalier ICT : Asia = accumulation, London = manipulation (faux move), NY = distribution (vrai move).' },
+  { term: 'Killzone', abbr: '', def: 'Fenêtre horaire où le marché bouge le plus. London 07-10h GMT, NY 12-15h GMT, Asia 20-00h GMT.' },
+  { term: 'PD Array', abbr: 'Premium/Discount Array', def: 'Terme générique pour toute zone Smart Money (OB, FVG, BB, IFVG).' },
+  { term: 'IRL / ERL', abbr: 'Internal / External Range Liquidity', def: 'IRL = liquidité interne au range (FVG, OB). ERL = liquidité externe (swing highs/lows). Le marché alterne entre les deux.' },
+  { term: 'Displacement', abbr: '', def: 'Mouvement impulsif et large (grandes bougies) qui casse structure. Crée souvent un FVG.' },
+  { term: 'Mitigation', abbr: '', def: 'Quand le prix revient toucher une zone (OB, FVG) après s\'en être éloigné. Souvent un bon point d\'entrée.' },
+  { term: 'Pip', abbr: '', def: '4ème décimale sur EUR/USD (1.0850 → 1.0851 = +1 pip). Unité standard de mesure des mouvements.' },
+  { term: 'Spread', abbr: '', def: 'Différence entre bid (achat marché) et ask (vente marché). Commission cachée du broker.' },
+  { term: 'Levier', abbr: '', def: 'Permet d\'ouvrir une position plus grosse que ton capital (broker prête la différence). Max 30:1 en EU.' },
+  { term: 'Lot', abbr: '', def: '1 lot standard = 100 000 unités de la devise de base. Sur EUR/USD : 1 pip = 10$ par lot.' },
+  { term: 'SL / TP', abbr: 'Stop Loss / Take Profit', def: 'Ordres automatiques qui ferment la position à un prix défini, pour limiter la perte (SL) ou sécuriser le gain (TP).' },
+  { term: 'R / R:R', abbr: 'Risk / Risk:Reward', def: '1R = ce que tu risques sur le trade. R:R 1:2 = tu vises 2× ce que tu risques. Minimum 1:2 en ICT.' },
+  { term: 'Smart Money', abbr: '', def: 'Banques, hedge funds, gros acteurs. ICT consiste à tracer leur empreinte sur les graphiques pour les suivre.' },
+  { term: 'Retail', abbr: '', def: 'Traders particuliers (toi, moi). 70-85% perdent en trading CFD selon les régulateurs.' },
+];
+
+function renderGlossary(filter = ''){
+  const list = document.getElementById('glossary-list');
+  const f = filter.toLowerCase().trim();
+  list.innerHTML = GLOSSARY.map(g => {
+    const matches = !f || g.term.toLowerCase().includes(f) || (g.abbr || '').toLowerCase().includes(f) || g.def.toLowerCase().includes(f);
+    return `<div class="glossary-item${matches ? '' : ' hidden'}">
+      <div class="glossary-term">${g.term}${g.abbr ? `<span class="glossary-abbr">${g.abbr}</span>` : ''}</div>
+      <div class="glossary-def">${g.def}</div>
+    </div>`;
+  }).join('');
+}
+
+function wireGlossary(){
+  const modal = document.getElementById('modal-glossary');
+  document.getElementById('open-glossary').addEventListener('click', () => {
+    modal.classList.add('open');
+    renderGlossary();
+    setTimeout(() => document.getElementById('glossary-search').focus(), 100);
+  });
+  document.getElementById('btn-close-glossary').addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('open'); });
+  document.getElementById('glossary-search').addEventListener('input', e => renderGlossary(e.target.value));
+}
+
+// ============================================================
+// QUICK WINS (#3 quick log, #7 fvg filter, #8 calc↔rr, #14 validation, #15 undo, #16 log scale)
+// ============================================================
+
+state.fvgMinSizePips = parseFloat(localStorage.getItem('fvg_min_size') || '0');
+state.lastDeletedTrade = null;
+state.toastTimer = null;
+
+function showToast(msg, undoAction = null, duration = 5000){
+  const toast = document.getElementById('toast-undo');
+  document.getElementById('toast-msg').textContent = msg;
+  const btn = document.getElementById('toast-undo-btn');
+  if(undoAction){
+    btn.style.display = 'inline-block';
+    btn.onclick = () => { undoAction(); hideToast(); };
+  } else {
+    btn.style.display = 'none';
+  }
+  toast.classList.add('visible');
+  if(state.toastTimer) clearTimeout(state.toastTimer);
+  state.toastTimer = setTimeout(hideToast, duration);
+}
+function hideToast(){ document.getElementById('toast-undo').classList.remove('visible'); }
+
+function wireQuickWins(){
+  // Quick log R/R → journal (#3)
+  document.getElementById('rr-quick-log').addEventListener('click', () => {
+    const e = parseFloat(document.getElementById('rr-entry').value);
+    const s = parseFloat(document.getElementById('rr-sl').value);
+    const t = parseFloat(document.getElementById('rr-tp').value);
+    if(isNaN(e) || isNaN(s) || isNaN(t)){ showToast('⚠ Remplis entry/SL/TP avant de logger'); return; }
+    document.getElementById('open-journal').click();
+    setTimeout(() => {
+      document.getElementById('jr-entry').value = e.toFixed(5);
+      document.getElementById('jr-sl').value = s.toFixed(5);
+      document.getElementById('jr-tp').value = t.toFixed(5);
+      // Auto-détecte le sens : si TP > entry → long, sinon short
+      const isLong = t > e;
+      document.getElementById('jr-side-' + (isLong ? 'long' : 'short')).checked = true;
+      document.querySelectorAll('#jr-side-group label').forEach(l => l.classList.remove('selected'));
+      document.querySelector(`label[for="jr-side-${isLong ? 'long' : 'short'}"]`).classList.add('selected');
+    }, 100);
+  });
+
+  // R/R → Position size calc (#8)
+  document.getElementById('rr-to-calc').addEventListener('click', () => {
+    const e = parseFloat(document.getElementById('rr-entry').value);
+    const s = parseFloat(document.getElementById('rr-sl').value);
+    if(isNaN(e) || isNaN(s)){ showToast('⚠ Remplis entry/SL avant'); return; }
+    document.getElementById('open-position-size').click();
+    setTimeout(() => {
+      document.getElementById('ps-entry').value = e.toFixed(5);
+      document.getElementById('ps-sl').value = s.toFixed(5);
+      if(document.getElementById('ps-capital').value && document.getElementById('ps-risk').value){
+        calcPositionSize();
+      }
+    }, 100);
+  });
+
+  // FVG min size filter (#7)
+  const fvgInput = document.getElementById('setting-fvg-min-size');
+  fvgInput.value = state.fvgMinSizePips;
+  fvgInput.addEventListener('change', e => {
+    state.fvgMinSizePips = Math.max(0, parseFloat(e.target.value) || 0);
+    localStorage.setItem('fvg_min_size', state.fvgMinSizePips);
+    recomputeAll();
+    renderAll();
+  });
+
+  // Log scale (#16)
+  const logToggle = document.getElementById('setting-log-scale');
+  logToggle.checked = localStorage.getItem('log_scale') === 'true';
+  if(logToggle.checked){
+    state.chart.applyOptions({
+      rightPriceScale: { mode: LightweightCharts.PriceScaleMode.Logarithmic },
+    });
+  }
+  logToggle.addEventListener('change', e => {
+    const log = e.target.checked;
+    localStorage.setItem('log_scale', log);
+    state.chart.applyOptions({
+      rightPriceScale: { mode: log ? LightweightCharts.PriceScaleMode.Logarithmic : LightweightCharts.PriceScaleMode.Normal },
+    });
+  });
+
+  // Undo journal — wrapper sur deleteTrade (#15)
+  const _origDeleteTrade = deleteTrade;
+  window.deleteTrade = function(id){
+    const trade = state.trades.find(t => t.id === id);
+    if(!trade) return;
+    state.lastDeletedTrade = trade;
+    _origDeleteTrade(id);
+    showToast(`🗑 "${trade.setup} ${trade.side}" supprimé`, () => {
+      state.trades.push(state.lastDeletedTrade);
+      state.trades.sort((a, b) => a.id - b.id);
+      saveTrades();
+      renderJournal();
+      state.lastDeletedTrade = null;
+    }, 6000);
+  };
+
+  // Mock mode setting
+  const mockMode = document.getElementById('mock-mode');
+  mockMode.value = localStorage.getItem('mock_mode') || 'realistic';
+  mockMode.addEventListener('change', e => localStorage.setItem('mock_mode', e.target.value));
+}
+
+// Patch regenerateData to use realistic generator if setting says so
+const _origRegenerateData = regenerateData;
+regenerateData = function(){
+  const mode = localStorage.getItem('mock_mode') || 'realistic';
+  if(mode === 'realistic'){
+    state.m15 = generateRealisticM15(7000);
+    rebuildCurrentTf();
+  } else {
+    _origRegenerateData();
+  }
+};
+
+// Patch detectFVG to respect fvgMinSizePips (#7)
+const _origDetectFVG = detectFVG;
+detectFVG = function(candles){
+  const all = _origDetectFVG(candles);
+  if(!state.fvgMinSizePips || state.fvgMinSizePips <= 0) return all;
+  return all.filter(f => (f.top - f.bottom) / PIP >= state.fvgMinSizePips);
+};
+
+// Patch drawCanvasOverlays to also draw news + rebuild hoverable zones
+const _origDrawCanvasOverlays = drawCanvasOverlays;
+drawCanvasOverlays = function(){
+  _origDrawCanvasOverlays();
+  if(state.indicators.news && state.chart && state.series){
+    const ctx = state.overlayCtx;
+    const w = parseFloat(state.overlayCanvas.style.width) || state.overlayCanvas.clientWidth;
+    const h = parseFloat(state.overlayCanvas.style.height) || state.overlayCanvas.clientHeight;
+    const t2x = t => state.chart.timeScale().timeToCoordinate(t);
+    drawNewsEvents(ctx, t2x, w, h);
+  }
+  rebuildHoverableZones();
+};
+
+// ============================================================
+// LAZY COMPUTE CACHE (#13)
+// ============================================================
+const _computeCache = new Map();
+
+function candlesHash(){
+  if(state.candles.length === 0) return '0';
+  const first = state.candles[0];
+  const last = state.candles[state.candles.length - 1];
+  return `${state.currentTf}-${state.candles.length}-${first.time}-${last.time}-${last.close.toFixed(5)}-${state.fvgMinSizePips}-${state.indicators.multitf}`;
+}
+
+const _origRecomputeAll = recomputeAll;
+recomputeAll = function(){
+  const hash = candlesHash();
+  if(_computeCache.has(hash)){
+    const cached = _computeCache.get(hash);
+    state.computed = JSON.parse(JSON.stringify(cached));
+    return;
+  }
+  _origRecomputeAll();
+  // Limit cache size
+  if(_computeCache.size > 12){
+    const firstKey = _computeCache.keys().next().value;
+    _computeCache.delete(firstKey);
+  }
+  _computeCache.set(hash, JSON.parse(JSON.stringify(state.computed)));
+};
+
+// Reset cache quand on régénère mock ou change live mode
+const _origRegenerateData2 = regenerateData;
+regenerateData = function(){ _computeCache.clear(); _origRegenerateData2(); };
+
+// ============================================================
+// VALIDATION INPUTS (#14)
+// ============================================================
+const _origAddTrade = addTrade;
+addTrade = function(){
+  const result = parseFloat(document.getElementById('jr-result').value);
+  if(isNaN(result)){ showToast('⚠ Résultat (R) requis'); return; }
+  if(Math.abs(result) > 100){ showToast('⚠ R suspect (>100). Vérifie ta saisie.'); return; }
+  _origAddTrade();
+};
+
+// ============================================================
 // BOOT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -4564,6 +5443,10 @@ document.addEventListener('DOMContentLoaded', () => {
   wirePresets();
   wirePwaInstall();
   registerServiceWorker();
+  wireGlossary();
+  wireReplay();
+  wireQuickWins();
+  setupZoneHover();
   injectHelpIcons();
   loadPrefs();       // applique state + DOM avant que regenerateData ne render
   regenerateData(); // utilise state.currentTf + state.indicators restaurés

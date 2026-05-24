@@ -240,8 +240,80 @@ Index.html étendu : `<link rel="manifest">`, meta apple-touch-icon, register SW
 
 ---
 
-## 🎯 État final
+## 🎯 État après session 5
 **Toutes les features prévues (1-16) sont livrées.** Voir [GitHub](https://github.com/Jimtll/forex-eurusd-ict).
+
+---
+
+## Session 6 — Améliorations post-analyse (15 features) ✅
+
+### Quick UX wins
+- **#3 Quick log R/R → Journal** : bouton 📝 dans la barre R/R qui pré-remplit le journal (entry/SL/TP, side auto-détecté)
+- **#8 R/R → Calculateur** : bouton 📐 qui pré-remplit le calculateur de position
+- **#14 Validation inputs** : protections contre valeurs aberrantes (NaN, R > 100)
+- **#15 Undo journal** : toast avec bouton "Annuler" pendant 6s après suppression
+- **#7 Filtre FVG par taille min** : input dans Paramètres (skip les FVG < N pips = bruit)
+- **#16 Échelle log** : toggle dans Paramètres → priceScale logarithmique
+
+### Feature 2 — Hover tooltip ICT
+Au survol d'un OB/FVG/BB/IFVG, mini-bulle qui affiche :
+- Type + sens + mitigation status
+- Prix médian + hauteur en pips
+- ✓/— pour chaque critère du score (PD favorable, killzone, OTE, FVG dans impulsion, HTF)
+- Score final N/maxScore
+
+Détection des zones via `_hoverableZones[]` rebuild à chaque redraw du canvas.
+
+### Feature 13 — Lazy compute cache
+`_computeCache` Map indexée par hash des candles + TF + indicateurs. Switch TF / re-render instantané sans recompute si même état. Max 12 entrées (LRU).
+
+### Feature 1 — Mock data réaliste
+Nouveau générateur `generateRealisticM15()` qui construit délibérément des **cycles AMD** :
+- Phase 1 (30%) : accumulation range
+- Phase 2 (10%) : manipulation sweep (faux move + wicks longs)
+- Phase 3 (5%) : reversal post-sweep (impulsion vive)
+- Phase 4 (40%) : distribution / trend prononcé
+- Phase 5 (15%) : consolidation fin de cycle
+
+Cycles de ~5 jours avec direction macro qui flip 70% du temps. Volatilité boostée pendant killzones. Toggle "Réaliste / Random walk pur" dans Paramètres.
+
+### Feature 4 — News events overlay
+Bandeaux verticaux sur le chart aux heures des news majeures :
+- NFP (1er vendredi du mois, 12h30 GMT)
+- CPI US (12 du mois, 12h30 GMT)
+- FOMC (8 dates 2026 hardcodées, 18h GMT)
+- BCE (8 dates 2026 hardcodées, 12h15 GMT)
+- Unemployment Claims (jeudi 12h30 GMT)
+- Crude Oil Inventories (mercredi 14h30 GMT)
+
+Couleur selon importance (rouge high, jaune medium, gris low). Labels rotated.
+
+### Feature 5 — Replay mode
+Mode "entraînement" : bouton 🎬 dans Risk → coupe le chart à 70% des bougies → contrôles ⏮ ▶ ⏭ 1×/2×/5× + info bougie actuelle.
+- Step manuel ou play auto
+- Recompute + render à chaque step (tu vois les indicateurs apparaître progressivement)
+- Sortie restore l'historique complet
+
+### Feature 12 — Glossaire ICT
+Bouton 📖 dans la topbar → modal avec **25 termes ICT** définis (OB, FVG, BOS, MSS, BSL/SSL, Sweep, Premium/Discount, OTE, BB, IFVG, AMD, Killzone, PD Array, IRL/ERL, Displacement, Mitigation, Pip, Spread, Levier, Lot, SL/TP, R:R, Smart Money, Retail, Equilibrium).
+Recherche en temps réel (filtre par terme/abbr/définition).
+
+### Feature 11 — Quiz additionnels
++6 quiz couvrant tous les modules :
+- Tuto : modules 1, 3, 5
+- Cours ICT : modules 1, 3, 5
+
+Total final : **11 quiz / 33+ questions** avec explications pédagogiques détaillées.
+
+### Service Worker v2
+Bump `CACHE = eurusd-ict-v2` pour purger automatiquement l'ancienne version chez les utilisateurs ayant installé la PWA.
+
+---
+
+## 🎯 État final
+Toutes les améliorations identifiées dans l'analyse post-mortem sont livrées. Le projet est à un niveau de maturité comparable à une vraie app de trading retail.
+
+**Skipped intentionnellement** (trop nichés ou disproportionnés) : #6 annotations dessinables (= TradingView mini), #9 tool de mesure, #10 MSS strict, #17 multi-source, #18 WebSocket, #19-22 concepts ICT très avancés (NWOG/SMT/Silver Bullet).
 
 ---
 

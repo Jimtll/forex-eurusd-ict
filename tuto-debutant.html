@@ -1070,6 +1070,78 @@ const QUIZZES = {
       },
     ],
   },
+  '1.4': {
+    title: 'Quiz — Module 1 : Démarrer concrètement',
+    after: 'Avant de toucher un broker, vérifie ces bases :',
+    questions: [
+      {
+        q: 'Quel est le meilleur choix pour débuter ?',
+        options: ['Un broker offshore sans régulation, levier 500:1', 'Un broker régulé (AMF/FCA/BaFin) sur compte démo d\'abord', 'Une plateforme crypto avec un bot automatique'],
+        correct: 1,
+        explain: 'Régulation = ta seule protection. AMF (France), FCA (UK), BaFin (Allemagne), ASIC (Australie) sont les references. Les brokers offshore avec gros leviers sont presque tous des arnaques.',
+      },
+      {
+        q: 'Avec 500€ de capital, tu vises :',
+        options: ['Multiplier ton compte par 10 en 6 mois', 'Apprendre sans exploser le compte (objectif : survivre, pas gagner)', 'Trader 10 fois par jour pour profiter de toutes les opportunités'],
+        correct: 1,
+        explain: 'Avec un petit compte, l\'objectif n°1 c\'est de NE PAS LE PERDRE. Les gains réels viennent après des mois de pratique disciplinée. Promettre x10 = piège.',
+      },
+      {
+        q: 'Quelqu\'un sur Instagram te propose de "trader pour toi" contre 30% des bénéfices. Réponse :',
+        options: ['Pourquoi pas, ça peut marcher', 'Arnaque garantie, je bloque le compte', 'Je demande son historique d\'abord'],
+        correct: 1,
+        explain: 'C\'est 100% une arnaque. Aucun vrai trader pro ne te démarche sur Instagram pour gérer ton argent. Tu peux pas non plus "déléguer" le trading légalement sans un mandat de gestion strictement encadré.',
+      },
+    ],
+  },
+  '3.4': {
+    title: 'Quiz — Module 3 : Types d\'ordres',
+    after: 'Vérifie que tu maîtrises les types d\'ordres :',
+    questions: [
+      {
+        q: 'Tu veux acheter EUR/USD si le prix descend à 1.0830 (actuellement à 1.0850). Tu places :',
+        options: ['Un Buy Market à 1.0830', 'Un Buy Limit à 1.0830', 'Un Buy Stop à 1.0830'],
+        correct: 1,
+        explain: 'Buy Limit = "achète à ce prix OU MIEUX (moins cher)". Buy Stop = "achète quand le prix monte au-dessus de ce niveau". Buy Market = exécution immédiate au prix actuel.',
+      },
+      {
+        q: 'Le Stop Loss doit être placé :',
+        options: ['À 20 pips parce que c\'est ma règle', 'À un endroit logique où ton setup est invalidé', 'Au plus loin possible pour donner de la marge au trade'],
+        correct: 1,
+        explain: 'Le SL est placé là où ton SETUP est invalidé (ex : sous l\'OB bullish). Si "20 pips au pif" tombe au milieu d\'une consolidation, tu vas te faire balayer pour rien. La distance dépend du setup, pas d\'une règle fixe.',
+      },
+      {
+        q: 'Pendant un trade, tu peux déplacer ton SL :',
+        options: ['Toujours, ça t\'évite de prendre la perte', 'Jamais contre toi. Tu peux le resserrer en ta faveur (vers entry)', 'Une fois par trade max'],
+        correct: 1,
+        explain: 'Règle d\'or : ne jamais déplacer le SL contre soi pour "donner une chance". 9 fois sur 10 ça finit pire. Tu peux le resserrer (déplacer vers ton entry pour sécuriser) une fois le trade en profit.',
+      },
+    ],
+  },
+  '5.3': {
+    title: 'Quiz — Module 5 : Mise en pratique',
+    after: 'Le dernier test — ta routine et discipline :',
+    questions: [
+      {
+        q: 'Tu as ouvert un compte démo. Combien de temps avant de passer en réel ?',
+        options: ['1 semaine si je suis profitable', '2-3 mois minimum avec 50+ trades loggés et stats positives', '1 an minimum'],
+        correct: 1,
+        explain: 'Trop tôt → tu n\'as pas internalisé ta stratégie. Trop tard → tu deviens "bon en démo" mais nul en réel à cause du stress. 2-3 mois avec 50+ trades, c\'est le sweet spot.',
+      },
+      {
+        q: 'Top-down analysis ICT, c\'est :',
+        options: ['Regarder seulement M15 pour entrer vite', 'Partir de D1/H4 pour le biais → zoom sur H1 → entrée sur M15', 'Mélanger toutes les TF sans ordre'],
+        correct: 1,
+        explain: 'On part du grand TF (biais directionnel) et on zoome. Le M15 sert UNIQUEMENT à raffiner l\'entrée. Jamais le M15 contre le H4. C\'est la règle qui sauve.',
+      },
+      {
+        q: 'Ta limite quotidienne idéale :',
+        options: ['10 trades par jour pour saisir toutes les opportunités', '2 trades max. Après 2 pertes, arrêt pour la journée', 'Pas de limite si je suis discipliné'],
+        correct: 1,
+        explain: 'Sur-trader = piège n°1 du débutant. 2 trades max par jour. Et après 2 pertes consécutives, tu arrêtes pour la journée — c\'est probablement ton mental qui est compromis, pas le marché qui est mauvais.',
+      },
+    ],
+  },
   '4.4': {
     title: 'Quiz — Module 4 : Pièges et réalité',
     after: 'Le test le plus important — la mentalité.',
