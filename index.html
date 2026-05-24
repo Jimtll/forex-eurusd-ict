@@ -878,6 +878,79 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 }
 .toast button:hover{background:var(--acc-dark)}
 
+/* ── Bottom navigation mobile (style MT5) ── */
+.mobile-bottom-nav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  padding:5px 4px;
+  padding-bottom:calc(5px + env(safe-area-inset-bottom));
+  z-index:50;
+  gap:2px;
+}
+@media(max-width:900px){
+  .mobile-bottom-nav{display:flex}
+  .layout{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+  .drawer-toggle{display:none !important}
+  /* Ajuste les positions absolues pour pas être derrière la nav */
+  .rr-floating{bottom:calc(70px + env(safe-area-inset-bottom))}
+  .pd-arrays-panel{bottom:calc(60px + env(safe-area-inset-bottom))}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+  .mobile-hint{display:none}  /* obsolète avec la bottom nav */
+  /* Modals : padding-bottom pour ne pas masquer les boutons sous la nav */
+  .modal{margin-bottom:calc(60px + env(safe-area-inset-bottom))}
+}
+.mbn-btn{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;
+  border:none;background:transparent;
+  color:var(--muted2);
+  font-size:0.62rem;font-weight:500;
+  padding:6px 2px;border-radius:8px;
+  cursor:pointer;
+  transition:color 0.15s,background 0.15s;
+  min-height:48px;
+}
+.mbn-btn:active{transform:scale(0.94)}
+.mbn-btn.active{color:var(--acc);background:var(--acc-dim)}
+.mbn-btn.active .mbn-icon{transform:scale(1.05)}
+.mbn-icon{font-size:1.15rem;line-height:1;transition:transform 0.15s}
+.mbn-label{font-weight:600;letter-spacing:0.02em}
+
+/* Mini sheet "Plus" — slide-up depuis le bas */
+.mbn-more-sheet{
+  position:fixed;
+  bottom:calc(60px + env(safe-area-inset-bottom));
+  left:0;right:0;
+  background:var(--surface);
+  border-top:1px solid var(--border2);
+  border-radius:16px 16px 0 0;
+  padding-bottom:8px;
+  z-index:48;
+  transform:translateY(100%);
+  transition:transform 0.22s;
+  box-shadow:0 -8px 30px rgba(0,0,0,0.4);
+  max-height:60vh;
+  overflow-y:auto;
+  display:none;
+}
+.mbn-more-sheet.open{display:block;transform:translateY(0)}
+.mbn-more-content{padding-bottom:8px}
+.mbn-more-item{
+  display:flex;align-items:center;gap:14px;
+  width:100%;padding:14px 18px;
+  background:transparent;border:none;
+  color:var(--text);font-size:0.92rem;font-weight:500;
+  text-align:left;cursor:pointer;
+  border-radius:0;
+  text-decoration:none;
+}
+.mbn-more-item:hover,.mbn-more-item:active{background:var(--surface2)}
+.mbn-more-item > span:first-child{font-size:1.2rem;width:24px;text-align:center}
+
 /* ── Annotations toolbar ── */
 .annot-toolbar{
   position:absolute;
@@ -2027,6 +2100,45 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Bottom navigation mobile (style MT5) -->
+<nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+  <button class="mbn-btn active" data-nav="chart">
+    <span class="mbn-icon">📈</span>
+    <span class="mbn-label">Chart</span>
+  </button>
+  <button class="mbn-btn" data-nav="tools">
+    <span class="mbn-icon">🛠</span>
+    <span class="mbn-label">Outils</span>
+  </button>
+  <button class="mbn-btn" data-nav="paper">
+    <span class="mbn-icon">💼</span>
+    <span class="mbn-label">Trade</span>
+  </button>
+  <button class="mbn-btn" data-nav="journal">
+    <span class="mbn-icon">📝</span>
+    <span class="mbn-label">Journal</span>
+  </button>
+  <button class="mbn-btn" data-nav="more">
+    <span class="mbn-icon">⋯</span>
+    <span class="mbn-label">Plus</span>
+  </button>
+</nav>
+
+<!-- Mini menu "Plus" (ouvert depuis la bottom nav) -->
+<div class="mbn-more-sheet" id="mbn-more-sheet">
+  <div class="mbn-more-content">
+    <h3 style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:14px 16px 10px;margin:0">Plus d'options</h3>
+    <button class="mbn-more-item" data-action="settings"><span>⚙</span><span>Paramètres</span></button>
+    <button class="mbn-more-item" data-action="courses"><span>📚</span><span>Cours ICT</span></button>
+    <a class="mbn-more-item" href="./tuto-debutant.html"><span>🎓</span><span>Tuto débutant</span></a>
+    <button class="mbn-more-item" data-action="glossary"><span>📖</span><span>Glossaire</span></button>
+    <button class="mbn-more-item" data-action="position-size"><span>📐</span><span>Calculateur de position</span></button>
+    <button class="mbn-more-item" data-action="backtest"><span>🔬</span><span>Backtester</span></button>
+    <button class="mbn-more-item" data-action="replay"><span>🎬</span><span>Mode Replay</span></button>
+    <button class="mbn-more-item" data-action="rr"><span>🎯</span><span>R/R Visualizer</span></button>
   </div>
 </div>
 
@@ -5522,6 +5634,113 @@ fetchTwelveData = async function(tfKey, size){
 setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 // ============================================================
+// MOBILE BOTTOM NAV (style MT5)
+// ============================================================
+
+function wireMobileBottomNav(){
+  const buttons = document.querySelectorAll('.mbn-btn');
+  const moreSheet = document.getElementById('mbn-more-sheet');
+
+  const setActive = (nav) => {
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.nav === nav));
+  };
+
+  const closeAll = () => {
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('open'));
+    document.getElementById('side-panel').classList.remove('open');
+    moreSheet.classList.remove('open');
+  };
+
+  buttons.forEach(b => {
+    b.addEventListener('click', () => {
+      const nav = b.dataset.nav;
+      const wasActive = b.classList.contains('active');
+      closeAll();
+      if(nav === 'chart'){
+        setActive('chart');
+        return;
+      }
+      if(nav === 'tools'){
+        // Toggle drawer
+        if(wasActive){ setActive('chart'); return; }
+        document.getElementById('side-panel').classList.add('open');
+        setActive('tools');
+        return;
+      }
+      if(nav === 'paper'){
+        document.getElementById('open-paper-trading').click();
+        setActive('paper');
+        return;
+      }
+      if(nav === 'journal'){
+        document.getElementById('open-journal').click();
+        setActive('journal');
+        return;
+      }
+      if(nav === 'more'){
+        if(wasActive){ setActive('chart'); return; }
+        moreSheet.classList.add('open');
+        setActive('more');
+        return;
+      }
+    });
+  });
+
+  // Mini menu "Plus" actions
+  moreSheet.querySelectorAll('.mbn-more-item').forEach(item => {
+    item.addEventListener('click', e => {
+      // Si c'est un link <a>, laisser naviguer normalement
+      if(item.tagName === 'A') return;
+      e.preventDefault();
+      const action = item.dataset.action;
+      moreSheet.classList.remove('open');
+      const map = {
+        'settings': 'open-settings',
+        'courses': 'open-courses',
+        'glossary': 'open-glossary',
+        'position-size': 'open-position-size',
+        'backtest': 'open-backtest',
+        'rr': 'toggle-rr',
+      };
+      if(action === 'replay'){
+        document.getElementById('toggle-replay').click();
+        setActive('chart');
+        return;
+      }
+      const targetId = map[action];
+      if(targetId){
+        const btn = document.getElementById(targetId);
+        if(btn) btn.click();
+      }
+    });
+  });
+
+  // Tap outside the more sheet to close it
+  document.addEventListener('click', e => {
+    if(!moreSheet.classList.contains('open')) return;
+    if(moreSheet.contains(e.target)) return;
+    if(e.target.closest('.mbn-btn[data-nav="more"]')) return;
+    moreSheet.classList.remove('open');
+    setActive('chart');
+  });
+
+  // Quand le user ferme une modal manuellement, repasse en "chart"
+  document.querySelectorAll('.modal-backdrop').forEach(modal => {
+    modal.addEventListener('click', e => {
+      if(e.target === modal){
+        setTimeout(() => setActive('chart'), 50);
+      }
+    });
+    const closeBtns = modal.querySelectorAll('[id^="btn-close-"], [id^="open-settings"]');
+    closeBtns.forEach(b => {
+      if(b.id && b.id.startsWith('btn-close-')){
+        b.addEventListener('click', () => setTimeout(() => setActive('chart'), 50));
+      }
+    });
+  });
+}
+
+// ============================================================
 // SYNC GITHUB GIST — annotations + paper + journal multi-device
 // ============================================================
 
@@ -7586,6 +7805,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireOnboarding();
   wireAnnotations();
   wireGistSync();
+  wireMobileBottomNav();
   setupZoneHover();
   // Auto-pull au boot si Gist connecté et auto-sync activé (background, non-bloquant)
   if(state.gistToken && state.gistId && state.gistAutoSync){
