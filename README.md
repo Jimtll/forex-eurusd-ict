@@ -2,6 +2,13 @@
 
 Dashboard de trading **EUR/USD** avec analyse **Smart Money Concepts** (méthodologie ICT) et cours pédagogiques intégrés pour débutants.
 
+## 🚀 Démo en ligne
+
+- 📊 **Dashboard** : https://jimtll.github.io/forex-eurusd-ict/
+- 🎓 **Tuto débutant** : https://jimtll.github.io/forex-eurusd-ict/tuto-debutant.html
+
+Aucune installation requise — tout tourne dans le navigateur.
+
 ## ✨ Fonctionnalités
 
 ### 📊 Dashboard ([`index.html`](index.html))
@@ -32,9 +39,13 @@ Dashboard de trading **EUR/USD** avec analyse **Smart Money Concepts** (méthodo
 
 ## 🚀 Utilisation
 
-1. Ouvrir `index.html` dans un navigateur moderne
-2. Mode mock par défaut → tu peux tout explorer immédiatement
-3. Pour les données live : ⚙ Paramètres → coller ta [clé TwelveData gratuite](https://twelvedata.com/) → "Activer mode Live"
+**Option 1 — En ligne** : ouvre https://jimtll.github.io/forex-eurusd-ict/
+
+**Option 2 — En local** :
+1. Clone le repo : `git clone https://github.com/Jimtll/forex-eurusd-ict.git`
+2. Ouvre `index.html` dans un navigateur moderne (ou sers avec `python3 -m http.server`)
+
+**Pour les données live** : ⚙ Paramètres → coller ta [clé TwelveData gratuite](https://twelvedata.com/) → "Activer mode Live"
 
 ## 🧠 Stack technique
 
