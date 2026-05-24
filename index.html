@@ -1417,6 +1417,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
     </div>
     <div class="topbar-sep"></div>
     <div class="tf-pills" id="tf-pills">
+      <button class="tf-pill" data-tf="M1" title="1 minute (scalping)">M1</button>
+      <button class="tf-pill" data-tf="M5" title="5 minutes (scalping)">M5</button>
       <button class="tf-pill" data-tf="M15">M15</button>
       <button class="tf-pill active" data-tf="H1">H1</button>
       <button class="tf-pill" data-tf="H4">H4</button>
@@ -2225,7 +2227,7 @@ function aggregate(m15, tfSeconds){
 // ============================================================
 // STATE
 // ============================================================
-const TF_SECONDS = { M15: 900, H1: 3600, H4: 14400, D1: 86400 };
+const TF_SECONDS = { M1: 60, M5: 300, M15: 900, H1: 3600, H4: 14400, D1: 86400 };
 const state = {
   m15: [],
   currentTf: 'H1',
@@ -2271,17 +2273,15 @@ function regenerateData(){
 
 async function rebuildCurrentTf(){
   if(state.liveMode){
-    // Fetch from API for the new TF
     try {
       const candles = await fetchTwelveData(state.currentTf, 800);
       state.candles = candles;
     } catch(err){
       console.warn('[TF switch] fallback mock :', err.message);
-      state.candles = state.currentTf === 'M15' ? state.m15.slice() : aggregate(state.m15, TF_SECONDS[state.currentTf]);
+      state.candles = buildMockTf(state.currentTf);
     }
   } else {
-    if(state.currentTf === 'M15') state.candles = state.m15.slice();
-    else state.candles = aggregate(state.m15, TF_SECONDS[state.currentTf]);
+    state.candles = buildMockTf(state.currentTf);
   }
   if(state.series) state.series.setData(state.candles);
   updatePriceDisplay();
@@ -2289,6 +2289,19 @@ async function rebuildCurrentTf(){
   recomputeAll();
   renderAll();
   if(state.liveMode) startLivePolling();
+}
+
+function buildMockTf(tf){
+  // M1 / M5 : base M1 dédiée (générée à la demande, ~5 jours scalping)
+  if(tf === 'M1' || tf === 'M5'){
+    if(!state.m1 || state.m1.length === 0){
+      state.m1 = generateRealisticM1(5000);
+    }
+    return tf === 'M1' ? state.m1.slice() : aggregate(state.m1, 300);
+  }
+  // M15 base : aggrège vers M15/H1/H4/D1
+  if(tf === 'M15') return state.m15.slice();
+  return aggregate(state.m15, TF_SECONDS[tf]);
 }
 
 // ============================================================
@@ -3777,7 +3790,7 @@ function wireJournal(){
 // PHASE 5 — TwelveData live data
 // ============================================================
 
-const TWELVE_TF_MAP = { M15: '15min', H1: '1h', H4: '4h', D1: '1day' };
+const TWELVE_TF_MAP = { M1: '1min', M5: '5min', M15: '15min', H1: '1h', H4: '4h', D1: '1day' };
 
 async function fetchTwelveData(tfKey, size = 800){
   const interval = TWELVE_TF_MAP[tfKey];
@@ -7085,6 +7098,8 @@ function wireQuickWins(){
 const _origRegenerateData = regenerateData;
 regenerateData = function(){
   const mode = localStorage.getItem('mock_mode') || 'realistic';
+  // Clear la base M1 pour qu'elle soit re-générée au prochain switch M1/M5
+  state.m1 = null;
   if(mode === 'realistic'){
     state.m15 = generateRealisticM15(7000);
     rebuildCurrentTf();
@@ -7092,6 +7107,80 @@ regenerateData = function(){
     _origRegenerateData();
   }
 };
+
+// ============================================================
+// Générateur M1 réaliste pour scalping (cycles AMD plus courts)
+// ============================================================
+function generateRealisticM1(numCandles){
+  const out = [];
+  const M1 = 60;
+  const now = Math.floor(Date.now() / 1000);
+  const endTs = now - (now % M1);
+  let ts = endTs - (numCandles - 1) * M1;
+  let price = BASE_PRICE;
+
+  // Cycles AMD courts : 8h par cycle = 480 minutes (vs 5 jours pour M15)
+  const cycleLen = 480;
+  let cycleStart = 0;
+  let macroDir = Math.random() < 0.5 ? 1 : -1;
+  let rangeAnchor = price;
+
+  for(let i = 0; i < numCandles; i++){
+    const date = new Date(ts * 1000);
+    if(isForexClosed(date)){ ts += M1; continue; }
+    const hourGMT = date.getUTCHours() + date.getUTCMinutes()/60;
+    // Sigma M1 ≈ sigma M15 / sqrt(15) ≈ /3.9 (mais en pratique /3 marche mieux visuellement)
+    const sigmaPips = sigmaPipsAt(hourGMT) / 3;
+    const sigma = sigmaPips * PIP;
+
+    const t = (i - cycleStart) / cycleLen;
+    let bias = 0;
+    if(t < 0.3)        bias = (rangeAnchor - price) * 0.03;
+    else if(t < 0.4)   bias = -macroDir * sigma * 0.4;
+    else if(t < 0.45)  bias = macroDir * sigma * 0.6;
+    else if(t < 0.85)  bias = macroDir * sigma * 0.25;
+
+    const inKz = (hourGMT >= 7 && hourGMT < 10) || (hourGMT >= 12 && hourGMT < 15);
+    const localSigma = sigma * (inKz ? 1.4 : 0.8);
+
+    const prevDate = new Date((ts - M1) * 1000);
+    const justReopened = isForexClosed(prevDate);
+    let open = price;
+    if(justReopened && i > 0){
+      const gap = (Math.random() < 0.5 ? -1 : 1) * (5 + Math.random()*15) * PIP;
+      open = price + gap;
+    }
+
+    const delta = gauss(bias, localSigma);
+    let close = open + delta;
+
+    let upperWickMag = Math.abs(gauss(0, localSigma * 0.55));
+    let lowerWickMag = Math.abs(gauss(0, localSigma * 0.55));
+    if(t > 0.3 && t < 0.4){
+      if(macroDir === 1) lowerWickMag *= 2.5;
+      else upperWickMag *= 2.5;
+    }
+    if(t > 0.4 && t < 0.5){
+      const impulsionBoost = sigma * 0.35;
+      if(macroDir === 1) close += impulsionBoost;
+      else close -= impulsionBoost;
+    }
+
+    const high = Math.max(open, close) + upperWickMag;
+    const low = Math.min(open, close) - lowerWickMag;
+
+    out.push({ time: ts, open, high, low, close });
+    price = close;
+    ts += M1;
+
+    if(i - cycleStart >= cycleLen){
+      cycleStart = i;
+      if(Math.random() < 0.7) macroDir *= -1;
+      rangeAnchor = price + (Math.random() - 0.5) * 50 * PIP;
+    }
+  }
+  return out;
+}
 
 // Patch detectFVG to respect fvgMinSizePips (#7)
 const _origDetectFVG = detectFVG;
