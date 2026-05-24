@@ -317,6 +317,43 @@ Toutes les améliorations identifiées dans l'analyse post-mortem sont livrées.
 
 ---
 
+## Session 7 — Paper Trading ✅
+
+### Feature — Paper Trading (compte fictif)
+Bouton **💼 Paper Trading** dans le panel Risk (highlighted en vert).
+
+**Compte fictif** :
+- Balance initiale 10 000 € (configurable via reset)
+- Dépôt / retrait de fonds à la volée
+- Equity = balance + P&L flottant des positions ouvertes
+- Persistance localStorage (`paper_balance`, `paper_positions`, `paper_history`)
+
+**Placement de positions** :
+- Long (acheter pour vendre plus haut) ou Short (vendre pour racheter plus bas)
+- Ordre Market (entry au prix actuel) ou Limit (entry à un prix futur, statut "pending" jusqu'à ce que le prix touche le niveau)
+- SL + TP avec validation cohérence (SL > entry pour short, etc.)
+- Auto-TP selon R:R cible (1:1, 1:2 défaut, 1:3, 1:5)
+- Calcul auto du nombre de lots selon `% risque du compte`
+- Preview détaillée avant placement : taille, risque max, gain max, R:R
+
+**Live tracking** :
+- À chaque update de prix (renderAll), `checkPaperPositions()` :
+  - Pour les pending : check si entry est touché → bascule en open
+  - Pour les open : check si SL ou TP touché (conservateur : SL d'abord si les deux dans la même bougie)
+- Fermeture manuelle disponible au prix actuel
+- P&L flottant calculé en temps réel : pips × lots × 10€/pip
+
+**Stats** :
+- Trades total, winrate, profit factor, % évolution du compte
+- Equity curve Chart.js (visible dès 2 trades fermés)
+- Historique des 30 derniers trades avec emoji (🎯 TP / 🛑 SL / ✋ manuel)
+
+**Approximation** : 1 pip × 1 lot = 10 € (réel ≈ 10$ ≈ 9.3€ mais on simplifie pour paper).
+
+SW bump v4 pour propager.
+
+---
+
 ## ⏱ Estimation
 - Phase 1 : socle visuel — court (1 itération)
 - Phase 2 : ICT essentiels — gros morceau (probablement 2-3 itérations, c'est le cœur)

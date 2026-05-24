@@ -840,6 +840,158 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 }
 .toast button:hover{background:var(--acc-dark)}
 
+/* ── Paper Trading ── */
+.paper-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  padding:20px;
+  height:100%;
+  overflow:hidden;
+}
+.paper-col{display:flex;flex-direction:column;gap:14px;overflow-y:auto;padding-right:6px}
+.paper-col::-webkit-scrollbar{width:6px}
+.paper-col::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+
+.paper-section h3{
+  font-size:0.84rem;color:var(--muted2);
+  text-transform:uppercase;letter-spacing:0.06em;
+  font-weight:700;margin-bottom:10px;
+}
+
+.paper-balance-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+}
+.paper-balance-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;
+  border-bottom:1px solid var(--border);
+}
+.paper-balance-row:last-of-type{border-bottom:none}
+.paper-label{font-size:0.8rem;color:var(--muted2)}
+.paper-value{font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums}
+.paper-value.up{color:var(--acc)}
+.paper-value.down{color:var(--red)}
+.paper-deposit-row{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:6px;
+  margin-top:10px;
+}
+.paper-deposit-row input{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-size:0.84rem;
+  padding:8px 10px;border-radius:7px;font-variant-numeric:tabular-nums;
+}
+.paper-deposit-row button{padding:8px 12px;font-size:0.78rem}
+
+.paper-input-lbl{font-size:0.7rem;color:var(--muted2);display:block;margin-bottom:4px}
+
+.paper-preview{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
+  margin-top:10px;
+  font-size:0.78rem;
+  font-variant-numeric:tabular-nums;
+  display:none;
+}
+.paper-preview.visible{display:block}
+.paper-preview .pp-row{display:flex;justify-content:space-between;padding:2px 0}
+.paper-preview .pp-row .pp-label{color:var(--muted2)}
+.paper-preview .pp-row .pp-val{font-weight:600}
+.paper-preview .pp-row .pp-val.up{color:var(--acc)}
+.paper-preview .pp-row .pp-val.down{color:var(--red)}
+
+.paper-positions-list,.paper-history-list{
+  display:flex;flex-direction:column;gap:5px;
+  max-height:240px;overflow-y:auto;
+  padding-right:6px;
+}
+.paper-positions-list::-webkit-scrollbar,
+.paper-history-list::-webkit-scrollbar{width:5px}
+.paper-positions-list::-webkit-scrollbar-thumb,
+.paper-history-list::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+
+.paper-position{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:0.78rem;
+}
+.paper-position.long{border-left:3px solid var(--acc)}
+.paper-position.short{border-left:3px solid var(--red)}
+.paper-position-header{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:6px;
+}
+.paper-position .side-badge{
+  font-size:0.62rem;font-weight:700;
+  padding:2px 7px;border-radius:99px;
+}
+.paper-position.long .side-badge{background:var(--acc-dim);color:var(--acc)}
+.paper-position.short .side-badge{background:var(--red-dim);color:var(--red)}
+.paper-position .pos-time{color:var(--muted2);font-size:0.7rem;margin-left:auto}
+.paper-position .pnl-live{
+  font-size:1.05rem;font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.paper-position .pnl-live.up{color:var(--acc)}
+.paper-position .pnl-live.down{color:var(--red)}
+.paper-position-details{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  font-size:0.7rem;
+  color:var(--muted2);
+  margin-top:6px;
+}
+.paper-position-details .pd-row{display:flex;flex-direction:column}
+.paper-position-details .pd-row .pd-val{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.paper-position-actions{
+  display:flex;gap:6px;margin-top:8px;
+}
+.paper-position-actions button{
+  flex:1;padding:5px 8px;
+  font-size:0.72rem;border-radius:6px;
+  background:var(--surface3);color:var(--muted2);
+  border:1px solid var(--border);
+  transition:all 0.15s;
+}
+.paper-position-actions button:hover{color:var(--text)}
+.paper-position-actions .btn-close-pos:hover{background:var(--red-dim);color:var(--red);border-color:var(--red)}
+
+.paper-history-item{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 10px;border-radius:7px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  font-size:0.74rem;
+}
+.paper-history-item .side-badge{
+  font-size:0.6rem;font-weight:700;
+  padding:1px 5px;border-radius:99px;
+  flex-shrink:0;
+}
+.paper-history-item.long .side-badge{background:var(--acc-dim);color:var(--acc)}
+.paper-history-item.short .side-badge{background:var(--red-dim);color:var(--red)}
+.paper-history-item .pnl-final{
+  margin-left:auto;font-weight:700;font-size:0.84rem;
+  font-variant-numeric:tabular-nums;
+}
+.paper-history-item .pnl-final.up{color:var(--acc)}
+.paper-history-item .pnl-final.down{color:var(--red)}
+
+@media(max-width:900px){
+  .paper-grid{grid-template-columns:1fr;overflow-y:auto;height:auto}
+  .paper-col{overflow:visible}
+}
+
 /* ── Glossaire ── */
 .glossary-list{
   flex:1;overflow-y:auto;
@@ -1267,6 +1419,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
           <span class="chev">▼</span>
         </button>
         <div class="panel-section-body">
+          <button class="risk-btn" id="open-paper-trading" style="background:var(--acc-dim);color:var(--acc);border-color:var(--acc)">💼 Paper Trading (compte fictif)</button>
           <button class="risk-btn" id="open-position-size">📐 Calculateur de position</button>
           <button class="risk-btn" id="toggle-rr">🎯 R/R Visualizer</button>
           <button class="risk-btn" id="open-journal">📝 Journal de trades</button>
@@ -1537,6 +1690,119 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 
           <h3 id="bt-trades-title" style="font-size:0.8rem;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 8px;display:none">Trades simulés</h3>
           <div id="bt-trades" class="bt-trades-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Paper Trading -->
+<div class="modal-backdrop" id="modal-paper">
+  <div class="modal modal-lg" style="max-width:1000px">
+    <header>
+      <h2>💼 Paper Trading</h2>
+      <span style="font-size:0.74rem;color:var(--muted);margin-left:8px">Compte fictif pour s'entraîner sans risque</span>
+      <button class="icon-btn" id="btn-close-paper" style="width:30px;height:30px;margin-left:auto">×</button>
+    </header>
+    <div class="modal-body">
+      <div class="paper-grid">
+
+        <!-- Colonne 1 : Capital + Nouvelle position -->
+        <div class="paper-col">
+
+          <!-- Capital -->
+          <div class="paper-section">
+            <h3>💰 Capital</h3>
+            <div class="paper-balance-card">
+              <div class="paper-balance-row">
+                <span class="paper-label">Solde</span>
+                <span class="paper-value" id="paper-balance">10 000 €</span>
+              </div>
+              <div class="paper-balance-row">
+                <span class="paper-label">Equity <span style="color:var(--muted);font-weight:400">(solde + P&L flottant)</span></span>
+                <span class="paper-value" id="paper-equity">10 000 €</span>
+              </div>
+              <div class="paper-balance-row">
+                <span class="paper-label">P&L total réalisé</span>
+                <span class="paper-value" id="paper-total-pnl">+0 €</span>
+              </div>
+              <div class="paper-deposit-row">
+                <input type="number" id="paper-amount" placeholder="Montant €" step="100">
+                <button class="btn btn-primary" id="btn-deposit" title="Ajouter au solde">+ Dépôt</button>
+                <button class="btn btn-ghost" id="btn-withdraw" title="Retirer du solde">- Retrait</button>
+              </div>
+              <button class="btn btn-ghost" id="btn-paper-reset" style="width:100%;margin-top:6px;font-size:0.74rem">🔄 Reset compte (10 000 €)</button>
+            </div>
+          </div>
+
+          <!-- Nouvelle position -->
+          <div class="paper-section">
+            <h3>📋 Nouvelle position</h3>
+
+            <div class="form-radio-group" id="paper-side-group" style="margin-bottom:10px">
+              <input type="radio" name="paper-side" value="long" id="paper-side-long" checked>
+              <label for="paper-side-long" class="long selected">▲ LONG (acheter)</label>
+              <input type="radio" name="paper-side" value="short" id="paper-side-short">
+              <label for="paper-side-short" class="short">▼ SHORT (vendre)</label>
+            </div>
+
+            <label style="font-size:0.72rem;color:var(--muted2);margin-bottom:4px;display:block">Type d'ordre</label>
+            <select id="paper-order-type" class="bt-input" style="margin-bottom:10px">
+              <option value="market" selected>Market (entry au prix actuel)</option>
+              <option value="limit">Limit (entry à un prix futur)</option>
+            </select>
+
+            <div class="form-row" style="margin-bottom:8px">
+              <div><label class="paper-input-lbl">Entry</label><input type="number" id="paper-entry" class="bt-input" step="0.00001" placeholder="prix actuel"></div>
+              <div><label class="paper-input-lbl">SL (Stop Loss)</label><input type="number" id="paper-sl" class="bt-input" step="0.00001"></div>
+            </div>
+            <div class="form-row" style="margin-bottom:10px">
+              <div><label class="paper-input-lbl">TP (Take Profit)</label><input type="number" id="paper-tp" class="bt-input" step="0.00001"></div>
+              <div><label class="paper-input-lbl">R:R cible</label>
+                <select id="paper-rr" class="bt-input">
+                  <option value="1">1:1</option>
+                  <option value="2" selected>1:2 (min ICT)</option>
+                  <option value="3">1:3</option>
+                  <option value="5">1:5</option>
+                </select>
+              </div>
+            </div>
+
+            <label class="paper-input-lbl">% Risque du compte</label>
+            <div class="form-row" style="margin-bottom:8px">
+              <input type="number" id="paper-risk-pct" class="bt-input" value="1" step="0.1" min="0.1" max="10">
+              <button class="btn btn-ghost" id="paper-auto-tp" style="padding:8px 12px;font-size:0.78rem" title="Calcule TP automatiquement selon R:R">⚡ Auto TP</button>
+            </div>
+
+            <div class="paper-preview" id="paper-preview"></div>
+
+            <button class="btn btn-primary" id="btn-place-order" style="width:100%;margin-top:10px;padding:11px">▶ Placer la position</button>
+          </div>
+
+        </div>
+
+        <!-- Colonne 2 : Positions ouvertes + Historique -->
+        <div class="paper-col">
+
+          <div class="paper-section">
+            <h3>📈 Positions ouvertes <span id="paper-open-count" style="color:var(--muted2);font-size:0.8rem;font-weight:400">(0)</span></h3>
+            <div id="paper-positions" class="paper-positions-list"></div>
+          </div>
+
+          <div class="paper-section">
+            <h3>📊 Stats</h3>
+            <div class="backtest-stats" id="paper-stats"></div>
+            <div id="paper-equity-wrap" style="height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;display:none">
+              <canvas id="paper-equity-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="paper-section">
+            <h3>📜 Historique <span id="paper-history-count" style="color:var(--muted2);font-size:0.8rem;font-weight:400">(0)</span></h3>
+            <div id="paper-history" class="paper-history-list"></div>
+          </div>
+
         </div>
 
       </div>
@@ -2780,6 +3046,7 @@ function renderAll(){
   renderPDArraysPanel();
   drawCanvasOverlays();
   if(state.alerts && state.alerts.enabled) checkAlerts();
+  if(state.paper) checkPaperPositions();
 }
 
 // ============================================================
@@ -4836,6 +5103,382 @@ fetchTwelveData = async function(tfKey, size){
 setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 // ============================================================
+// PAPER TRADING — compte fictif avec positions live
+// ============================================================
+// Approximation : 1 pip × 1 lot ≈ 10€ (vraie valeur ~10$ ≈ 9.3€ mais on simplifie)
+const PIP_VALUE_EUR = 10;
+
+state.paper = {
+  balance: parseFloat(localStorage.getItem('paper_balance') || '10000'),
+  positions: JSON.parse(localStorage.getItem('paper_positions') || '[]'),
+  history: JSON.parse(localStorage.getItem('paper_history') || '[]'),
+};
+let _paperEquityChart = null;
+
+function savePaper(){
+  localStorage.setItem('paper_balance', state.paper.balance);
+  localStorage.setItem('paper_positions', JSON.stringify(state.paper.positions));
+  localStorage.setItem('paper_history', JSON.stringify(state.paper.history));
+}
+
+function paperCurrentPrice(){
+  if(state.candles.length === 0) return null;
+  return state.candles[state.candles.length - 1].close;
+}
+
+function calcLotsForRisk(balance, riskPct, entry, sl){
+  if(!entry || !sl || balance <= 0) return 0;
+  const slPips = Math.abs(entry - sl) / PIP;
+  if(slPips < 0.1) return 0;
+  const riskEur = balance * riskPct / 100;
+  return riskEur / (slPips * PIP_VALUE_EUR);
+}
+
+function calcPositionPnL(pos, currentPrice){
+  if(!currentPrice) return 0;
+  const pips = pos.side === 'long'
+    ? (currentPrice - pos.entry) / PIP
+    : (pos.entry - currentPrice) / PIP;
+  return pips * pos.lots * PIP_VALUE_EUR;
+}
+
+function placePaperOrder(){
+  const side = document.querySelector('input[name="paper-side"]:checked').value;
+  const orderType = document.getElementById('paper-order-type').value;
+  const entry = parseFloat(document.getElementById('paper-entry').value);
+  const sl = parseFloat(document.getElementById('paper-sl').value);
+  const tp = parseFloat(document.getElementById('paper-tp').value);
+  const riskPct = parseFloat(document.getElementById('paper-risk-pct').value);
+
+  // Validation
+  if(isNaN(entry) || isNaN(sl) || isNaN(tp)){
+    showToast('⚠ Remplis Entry, SL et TP');
+    return;
+  }
+  if(side === 'long' && sl >= entry){ showToast('⚠ Pour un LONG, le SL doit être SOUS l\'entry'); return; }
+  if(side === 'long' && tp <= entry){ showToast('⚠ Pour un LONG, le TP doit être AU-DESSUS de l\'entry'); return; }
+  if(side === 'short' && sl <= entry){ showToast('⚠ Pour un SHORT, le SL doit être AU-DESSUS de l\'entry'); return; }
+  if(side === 'short' && tp >= entry){ showToast('⚠ Pour un SHORT, le TP doit être SOUS l\'entry'); return; }
+
+  const lots = calcLotsForRisk(state.paper.balance, riskPct || 1, entry, sl);
+  if(lots <= 0){ showToast('⚠ Taille de position invalide'); return; }
+  if(lots > 100){ showToast('⚠ Position trop grosse (>100 lots). Réduis le % risque.'); return; }
+
+  const currentPrice = paperCurrentPrice();
+  const status = orderType === 'limit' ? 'pending' : 'open';
+  // Pour un market order, on ignore l'entry et on prend le prix actuel
+  const realEntry = orderType === 'market' ? currentPrice : entry;
+  // Pour un limit, on attend que le prix atteigne entry
+
+  const pos = {
+    id: Date.now(),
+    side, orderType,
+    entry: realEntry,
+    sl, tp, lots,
+    openTime: Math.floor(Date.now() / 1000),
+    openPrice: realEntry,
+    status,
+  };
+  state.paper.positions.push(pos);
+  savePaper();
+  renderPaperTrading();
+  showToast(`✓ ${side === 'long' ? '▲ LONG' : '▼ SHORT'} ${lots.toFixed(2)} lots placé`);
+
+  // Clear le formulaire mais garde les valeurs utiles
+  document.getElementById('paper-entry').value = '';
+  document.getElementById('paper-sl').value = '';
+  document.getElementById('paper-tp').value = '';
+  document.getElementById('paper-preview').classList.remove('visible');
+}
+
+function checkPaperPositions(){
+  if(state.paper.positions.length === 0) return;
+  if(state.candles.length === 0) return;
+  const last = state.candles[state.candles.length - 1];
+  let changed = false;
+
+  for(const pos of state.paper.positions){
+    if(pos.status === 'pending'){
+      // Limit order : check si entry est touché
+      if(pos.side === 'long' && last.low <= pos.entry){
+        pos.status = 'open';
+        pos.openTime = last.time;
+        pos.openPrice = pos.entry;
+        changed = true;
+      } else if(pos.side === 'short' && last.high >= pos.entry){
+        pos.status = 'open';
+        pos.openTime = last.time;
+        pos.openPrice = pos.entry;
+        changed = true;
+      }
+    }
+    if(pos.status === 'open'){
+      // Check SL puis TP (conservateur : SL d'abord si les deux touchés)
+      if(pos.side === 'long'){
+        if(last.low <= pos.sl){ closePaperPosition(pos.id, pos.sl, 'sl'); changed = true; }
+        else if(last.high >= pos.tp){ closePaperPosition(pos.id, pos.tp, 'tp'); changed = true; }
+      } else {
+        if(last.high >= pos.sl){ closePaperPosition(pos.id, pos.sl, 'sl'); changed = true; }
+        else if(last.low <= pos.tp){ closePaperPosition(pos.id, pos.tp, 'tp'); changed = true; }
+      }
+    }
+  }
+  if(changed){
+    savePaper();
+    renderPaperTrading();
+  }
+}
+
+function closePaperPosition(id, exitPrice, reason){
+  const idx = state.paper.positions.findIndex(p => p.id === id);
+  if(idx === -1) return;
+  const pos = state.paper.positions[idx];
+  const pnl = calcPositionPnL(pos, exitPrice);
+  pos.status = 'closed';
+  pos.exitTime = Math.floor(Date.now() / 1000);
+  pos.exitPrice = exitPrice;
+  pos.exitReason = reason; // 'sl' | 'tp' | 'manual'
+  pos.pnl = pnl;
+  state.paper.balance += pnl;
+  state.paper.history.unshift(pos);
+  if(state.paper.history.length > 200) state.paper.history.pop();
+  state.paper.positions.splice(idx, 1);
+  savePaper();
+  const sign = pnl >= 0 ? '+' : '';
+  const emoji = reason === 'tp' ? '🎯' : reason === 'sl' ? '🛑' : '✋';
+  showToast(`${emoji} Position fermée : ${sign}${pnl.toFixed(2)} €`);
+}
+
+function depositFunds(amount){
+  if(!amount || amount <= 0) return;
+  state.paper.balance += amount;
+  savePaper();
+  renderPaperTrading();
+  showToast(`+${amount.toFixed(0)} € déposés`);
+}
+
+function withdrawFunds(amount){
+  if(!amount || amount <= 0) return;
+  if(amount > state.paper.balance){ showToast('⚠ Solde insuffisant'); return; }
+  state.paper.balance -= amount;
+  savePaper();
+  renderPaperTrading();
+  showToast(`-${amount.toFixed(0)} € retirés`);
+}
+
+function resetPaperAccount(){
+  if(state.paper.positions.length > 0 || state.paper.history.length > 0){
+    if(!confirm('Reset le compte ? Toutes tes positions ouvertes et l\'historique seront perdus.')) return;
+  }
+  state.paper = { balance: 10000, positions: [], history: [] };
+  savePaper();
+  renderPaperTrading();
+  showToast('🔄 Compte réinitialisé à 10 000 €');
+}
+
+function updatePaperPreview(){
+  const preview = document.getElementById('paper-preview');
+  const entry = parseFloat(document.getElementById('paper-entry').value);
+  const sl = parseFloat(document.getElementById('paper-sl').value);
+  const tp = parseFloat(document.getElementById('paper-tp').value);
+  const riskPct = parseFloat(document.getElementById('paper-risk-pct').value) || 1;
+  const side = document.querySelector('input[name="paper-side"]:checked').value;
+  if(isNaN(entry) || isNaN(sl)){ preview.classList.remove('visible'); return; }
+
+  const lots = calcLotsForRisk(state.paper.balance, riskPct, entry, sl);
+  const riskEur = state.paper.balance * riskPct / 100;
+  const slPips = Math.abs(entry - sl) / PIP;
+  const tpPips = !isNaN(tp) ? Math.abs(tp - entry) / PIP : null;
+  const rr = (slPips > 0 && tpPips !== null) ? (tpPips / slPips) : null;
+  const potentialGain = (tpPips !== null) ? tpPips * lots * PIP_VALUE_EUR : null;
+
+  preview.innerHTML = `
+    <div class="pp-row"><span class="pp-label">Taille</span><span class="pp-val">${lots.toFixed(3)} lots (${(lots*100000).toLocaleString('fr-FR',{maximumFractionDigits:0})} €)</span></div>
+    <div class="pp-row"><span class="pp-label">Risque max (si SL)</span><span class="pp-val down">-${riskEur.toFixed(2)} € (${slPips.toFixed(1)} pips)</span></div>
+    ${potentialGain !== null ? `<div class="pp-row"><span class="pp-label">Gain max (si TP)</span><span class="pp-val up">+${potentialGain.toFixed(2)} € (${tpPips.toFixed(1)} pips)</span></div>` : ''}
+    ${rr !== null ? `<div class="pp-row"><span class="pp-label">R:R</span><span class="pp-val ${rr >= 2 ? 'up' : rr >= 1 ? '' : 'down'}">1 : ${rr.toFixed(2)}</span></div>` : ''}
+  `;
+  preview.classList.add('visible');
+}
+
+function autoCalcTP(){
+  const entry = parseFloat(document.getElementById('paper-entry').value);
+  const sl = parseFloat(document.getElementById('paper-sl').value);
+  const rr = parseFloat(document.getElementById('paper-rr').value);
+  const side = document.querySelector('input[name="paper-side"]:checked').value;
+  if(isNaN(entry) || isNaN(sl)){ showToast('⚠ Remplis Entry et SL d\'abord'); return; }
+  const slDist = Math.abs(entry - sl);
+  const tp = side === 'long' ? entry + slDist * rr : entry - slDist * rr;
+  document.getElementById('paper-tp').value = tp.toFixed(5);
+  updatePaperPreview();
+}
+
+function renderPaperTrading(){
+  // Capital
+  const balance = state.paper.balance;
+  const currentPrice = paperCurrentPrice();
+  const floatingPnL = state.paper.positions
+    .filter(p => p.status === 'open')
+    .reduce((sum, p) => sum + calcPositionPnL(p, currentPrice), 0);
+  const equity = balance + floatingPnL;
+  const totalRealized = state.paper.history.reduce((s, p) => s + (p.pnl || 0), 0);
+
+  document.getElementById('paper-balance').textContent = balance.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' €';
+  const equityEl = document.getElementById('paper-equity');
+  equityEl.textContent = equity.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' €';
+  equityEl.className = 'paper-value ' + (equity > balance ? 'up' : equity < balance ? 'down' : '');
+  const totalEl = document.getElementById('paper-total-pnl');
+  totalEl.textContent = (totalRealized >= 0 ? '+' : '') + totalRealized.toFixed(2) + ' €';
+  totalEl.className = 'paper-value ' + (totalRealized > 0 ? 'up' : totalRealized < 0 ? 'down' : '');
+
+  // Positions ouvertes
+  const openPositions = state.paper.positions;
+  document.getElementById('paper-open-count').textContent = `(${openPositions.length})`;
+  const posListEl = document.getElementById('paper-positions');
+  if(openPositions.length === 0){
+    posListEl.innerHTML = '<div style="font-size:0.78rem;color:var(--muted);text-align:center;padding:14px">Aucune position ouverte. Place ta première position ci-contre.</div>';
+  } else {
+    posListEl.innerHTML = openPositions.map(p => {
+      const pnl = p.status === 'open' ? calcPositionPnL(p, currentPrice) : 0;
+      const sign = pnl >= 0 ? '+' : '';
+      const pips = currentPrice && p.status === 'open' ? (
+        p.side === 'long' ? (currentPrice - p.entry) / PIP : (p.entry - currentPrice) / PIP
+      ).toFixed(1) : '—';
+      const statusBadge = p.status === 'pending' ? '<span style="font-size:0.6rem;color:var(--orange);background:var(--orange-dim);padding:2px 6px;border-radius:99px">⏳ EN ATTENTE</span>' : '';
+      return `
+        <div class="paper-position ${p.side}">
+          <div class="paper-position-header">
+            <span class="side-badge">${p.side === 'long' ? '▲ LONG' : '▼ SHORT'}</span>
+            ${statusBadge}
+            <span class="pos-time">${new Date(p.openTime * 1000).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+            <span class="pnl-live ${pnl > 0 ? 'up' : pnl < 0 ? 'down' : ''}" style="margin-left:auto">${p.status === 'open' ? sign + pnl.toFixed(2) + ' €' : '—'}</span>
+          </div>
+          <div class="paper-position-details">
+            <div class="pd-row"><span>Entry</span><span class="pd-val">${p.entry.toFixed(5)}</span></div>
+            <div class="pd-row"><span>SL</span><span class="pd-val" style="color:var(--red)">${p.sl.toFixed(5)}</span></div>
+            <div class="pd-row"><span>TP</span><span class="pd-val" style="color:var(--blue)">${p.tp.toFixed(5)}</span></div>
+            <div class="pd-row"><span>Lots</span><span class="pd-val">${p.lots.toFixed(3)}</span></div>
+            <div class="pd-row"><span>Pips</span><span class="pd-val">${pips}</span></div>
+            <div class="pd-row"><span>Type</span><span class="pd-val">${p.orderType}</span></div>
+          </div>
+          <div class="paper-position-actions">
+            <button class="btn-close-pos" data-id="${p.id}">✋ Fermer manuellement (au prix actuel)</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    posListEl.querySelectorAll('.btn-close-pos').forEach(b => {
+      b.addEventListener('click', () => {
+        if(!currentPrice){ showToast('⚠ Pas de prix actuel'); return; }
+        closePaperPosition(parseInt(b.dataset.id), currentPrice, 'manual');
+      });
+    });
+  }
+
+  // Stats
+  const closed = state.paper.history;
+  const n = closed.length;
+  const wins = closed.filter(t => t.pnl > 0);
+  const losses = closed.filter(t => t.pnl < 0);
+  const winrate = n > 0 ? (wins.length / n) * 100 : 0;
+  const totalProfit = wins.reduce((s, t) => s + t.pnl, 0);
+  const totalLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
+  const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : (totalProfit > 0 ? Infinity : 0);
+
+  document.getElementById('paper-stats').innerHTML = `
+    <div class="bt-stat"><div class="label">Trades</div><div class="value">${n}</div><div class="sub">${wins.length}W / ${losses.length}L</div></div>
+    <div class="bt-stat"><div class="label">Winrate</div><div class="value ${winrate >= 50 ? 'up' : winrate > 0 ? 'down' : ''}">${n > 0 ? winrate.toFixed(0) + '%' : '—'}</div></div>
+    <div class="bt-stat"><div class="label">Profit factor</div><div class="value ${profitFactor >= 1.5 ? 'up' : profitFactor >= 1 ? '' : 'down'}">${n > 0 ? (isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞') : '—'}</div></div>
+    <div class="bt-stat"><div class="label">Évolution</div><div class="value ${balance > 10000 ? 'up' : balance < 10000 ? 'down' : ''}">${((balance / 10000 - 1) * 100).toFixed(1)}%</div></div>
+  `;
+
+  // Equity curve
+  if(closed.length > 1){
+    document.getElementById('paper-equity-wrap').style.display = 'block';
+    const data = [];
+    let acc = 10000;
+    for(const t of closed.slice().reverse()){ acc += t.pnl; data.push(acc); }
+    if(_paperEquityChart) _paperEquityChart.destroy();
+    _paperEquityChart = new Chart(document.getElementById('paper-equity-chart'), {
+      type: 'line',
+      data: { labels: data.map((_, i) => i + 1), datasets: [{
+        data, borderColor: data[data.length-1] >= 10000 ? '#10b981' : '#ef4444',
+        backgroundColor: data[data.length-1] >= 10000 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+        fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2,
+      }]},
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } }},
+      },
+    });
+  } else {
+    document.getElementById('paper-equity-wrap').style.display = 'none';
+  }
+
+  // Historique
+  document.getElementById('paper-history-count').textContent = `(${closed.length})`;
+  const histEl = document.getElementById('paper-history');
+  if(closed.length === 0){
+    histEl.innerHTML = '<div style="font-size:0.74rem;color:var(--muted);text-align:center;padding:10px">Aucun trade fermé.</div>';
+  } else {
+    histEl.innerHTML = closed.slice(0, 30).map(t => {
+      const sign = t.pnl >= 0 ? '+' : '';
+      const date = new Date(t.openTime * 1000).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+      const emoji = t.exitReason === 'tp' ? '🎯' : t.exitReason === 'sl' ? '🛑' : '✋';
+      return `<div class="paper-history-item ${t.side}">
+        <span class="side-badge">${t.side === 'long' ? '▲' : '▼'} ${t.side}</span>
+        <span style="font-size:0.7rem;color:var(--muted2)">${date}</span>
+        <span style="font-size:0.7rem;color:var(--muted2)">${emoji} ${t.exitReason}</span>
+        <span style="font-size:0.7rem;color:var(--muted2)">${t.lots.toFixed(2)} lots</span>
+        <span class="pnl-final ${t.pnl >= 0 ? 'up' : 'down'}">${sign}${t.pnl.toFixed(2)} €</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function wirePaperTrading(){
+  const modal = document.getElementById('modal-paper');
+  document.getElementById('open-paper-trading').addEventListener('click', () => {
+    modal.classList.add('open');
+    // Pre-fill entry with current price for market orders
+    const cp = paperCurrentPrice();
+    if(cp && !document.getElementById('paper-entry').value){
+      document.getElementById('paper-entry').value = cp.toFixed(5);
+    }
+    renderPaperTrading();
+  });
+  document.getElementById('btn-close-paper').addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('open'); });
+
+  document.getElementById('btn-place-order').addEventListener('click', placePaperOrder);
+  document.getElementById('paper-auto-tp').addEventListener('click', autoCalcTP);
+  document.getElementById('btn-paper-reset').addEventListener('click', resetPaperAccount);
+
+  document.getElementById('btn-deposit').addEventListener('click', () => {
+    const amount = parseFloat(document.getElementById('paper-amount').value);
+    if(!isNaN(amount)){ depositFunds(amount); document.getElementById('paper-amount').value = ''; }
+  });
+  document.getElementById('btn-withdraw').addEventListener('click', () => {
+    const amount = parseFloat(document.getElementById('paper-amount').value);
+    if(!isNaN(amount)){ withdrawFunds(amount); document.getElementById('paper-amount').value = ''; }
+  });
+
+  // Preview update
+  ['paper-entry', 'paper-sl', 'paper-tp', 'paper-risk-pct'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePaperPreview);
+  });
+
+  // Side radio visual
+  document.querySelectorAll('input[name="paper-side"]').forEach(r => {
+    r.addEventListener('change', () => {
+      document.querySelectorAll('#paper-side-group label').forEach(l => l.classList.remove('selected'));
+      document.querySelector(`label[for="${r.id}"]`).classList.add('selected');
+      updatePaperPreview();
+    });
+  });
+}
+
+// ============================================================
 // FEATURE #1 — MOCK DATA RÉALISTE (cycles AMD, sweeps, OB)
 // ============================================================
 
@@ -5478,6 +6121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireGlossary();
   wireReplay();
   wireQuickWins();
+  wirePaperTrading();
   setupZoneHover();
   injectHelpIcons();
   loadPrefs();       // applique state + DOM avant que regenerateData ne render
