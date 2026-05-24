@@ -349,6 +349,46 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 .pd-array-item .kind{font-size:0.66rem;color:var(--muted2);text-transform:uppercase}
 .pd-array-item .price{font-weight:600}
 
+/* ── R/R draggable handles ── */
+.rr-handles{
+  position:absolute;inset:0;
+  pointer-events:none;
+  z-index:8;
+  display:none;
+}
+.rr-handles.active{display:block}
+.rr-handle{
+  position:absolute;
+  right:64px;
+  width:36px;height:20px;
+  border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.62rem;font-weight:700;
+  cursor:ns-resize;
+  pointer-events:auto;
+  transform:translateY(-50%);
+  user-select:none;-webkit-user-select:none;
+  transition:transform 0.1s,box-shadow 0.15s;
+  letter-spacing:0.04em;
+  touch-action:none;
+  color:white;
+}
+.rr-handle::before{
+  content:'';position:absolute;
+  left:-12px;top:50%;
+  width:0;height:0;
+  border-top:5px solid transparent;
+  border-bottom:5px solid transparent;
+  border-right:8px solid currentColor;
+  transform:translateY(-50%);
+  opacity:0.7;
+}
+.rr-handle.entry{background:var(--acc)}
+.rr-handle.sl{background:var(--red)}
+.rr-handle.tp{background:var(--blue)}
+.rr-handle:hover{transform:translateY(-50%) scale(1.12);box-shadow:0 0 0 2px rgba(255,255,255,0.15)}
+.rr-handle.dragging{transform:translateY(-50%) scale(1.2);box-shadow:0 0 0 3px rgba(255,255,255,0.25);z-index:9}
+
 /* ── R/R Floating Panel ── */
 .rr-floating{
   position:absolute;
@@ -530,6 +570,16 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 .journal-stat .value.up{color:var(--acc)}
 .journal-stat .value.down{color:var(--red)}
 .journal-trades{flex:1;overflow-y:auto;padding-right:6px}
+.journal-filters{
+  display:flex;gap:6px;margin:8px 0;
+}
+.jr-filter{
+  flex:1;background:var(--surface2);
+  border:1px solid var(--border);color:var(--text);
+  font-size:0.74rem;padding:5px 8px;border-radius:6px;
+  font-family:inherit;
+}
+.jr-filter:focus{outline:none;border-color:var(--acc)}
 .journal-trade{
   display:flex;align-items:center;gap:8px;
   padding:8px 10px;border-radius:8px;
@@ -651,12 +701,59 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
   .chart-overlay-info{font-size:0.66rem;padding:8px 10px;gap:8px}
   .logo-sub{display:none}
   :root{--side-w:280px}
+
+  /* PD Arrays panel → bottom sheet */
+  .pd-arrays-panel{
+    top:auto;bottom:0;
+    left:0;right:0;
+    width:auto;max-height:50vh;
+    border-radius:14px 14px 0 0;
+    border-bottom:0;
+  }
+  .pd-arrays-panel header{padding:12px 14px}
+
+  /* R/R Floating → barre en bas */
+  .rr-floating{
+    top:auto;bottom:8px;
+    left:8px;right:8px;
+    transform:none;
+    flex-wrap:wrap;
+    padding:8px 10px;gap:6px;
+    z-index:15;
+  }
+  .rr-floating input{width:auto;flex:1;min-width:80px}
+  .rr-floating label{flex:1;min-width:90px}
+  .rr-floating .rr-ratio{order:99;flex-basis:100%;text-align:center}
+
+  /* Modal Journal → grid empilée */
+  .journal-grid{
+    grid-template-columns:1fr;
+    gap:14px;padding:14px;
+    overflow-y:auto;height:auto;
+  }
+  .modal.modal-lg{max-height:92vh}
+  .modal.modal-lg .modal-body{overflow-y:auto}
+  .journal-stats{grid-template-columns:repeat(2,1fr)}
+
+  /* Modal général → padding réduit */
+  .modal-backdrop{padding:10px}
+  .modal{padding:18px}
 }
 @media(max-width:520px){
-  .topbar{padding:0 12px;gap:8px}
-  .tf-pill{padding:5px 8px;font-size:0.72rem}
+  .topbar{padding:0 10px;gap:6px}
+  .tf-pill{padding:4px 7px;font-size:0.7rem}
+  .tf-pills{padding:2px}
   .price-block{min-width:auto}
   #price-display{font-size:0.92rem}
+  #price-change{font-size:0.68rem}
+  .live-meta{display:none !important}  /* trop serré sur tiny screens */
+  .icon-btn{width:32px;height:32px;font-size:0.9rem}
+  .chart-overlay-info{display:none}  /* OHLC overlay caché — le prix top-right suffit */
+}
+@media(max-width:380px){
+  .logo{font-size:0.92rem}
+  .topbar{gap:4px}
+  .status-badge{font-size:0.58rem;padding:2px 6px}
 }
 </style>
 </head>
@@ -698,6 +795,13 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
         <header>PD Arrays<button class="icon-btn" style="margin-left:auto;width:24px;height:24px;font-size:0.75rem" id="close-pdarrays">×</button></header>
         <div class="pd-arrays-list" id="pd-arrays-list"></div>
       </aside>
+
+      <!-- R/R draggable handles -->
+      <div class="rr-handles" id="rr-handles">
+        <div class="rr-handle entry" data-line="entry" title="Drag pour ajuster Entry">E</div>
+        <div class="rr-handle sl" data-line="sl" title="Drag pour ajuster SL">SL</div>
+        <div class="rr-handle tp" data-line="tp" title="Drag pour ajuster TP">TP</div>
+      </div>
 
       <!-- R/R Floating panel -->
       <div class="rr-floating" id="rr-floating">
@@ -800,6 +904,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
           <label class="toggle-row">
             <input type="checkbox" data-ind="irlerl">
             <div class="toggle-label"><span class="name">IRL → ERL</span><span class="hint">Liquidité interne → externe</span></div>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" data-ind="multitf">
+            <div class="toggle-label"><span class="name">Multi-TF confluence</span><span class="hint">Badge HTF + bonus au score</span></div>
           </label>
         </div>
       </div>
@@ -939,7 +1047,24 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
           <h3 style="font-size:0.8rem;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Statistiques</h3>
           <div class="journal-stats" id="journal-stats"></div>
           <div id="equity-chart-wrap"><canvas id="equity-chart"></canvas></div>
-          <h3 style="font-size:0.8rem;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin:6px 0 8px">Historique</h3>
+          <div class="journal-filters">
+            <select id="jr-filter-setup" class="jr-filter">
+              <option value="">Tous setups</option>
+              <option value="OB">OB</option>
+              <option value="FVG">FVG</option>
+              <option value="BB">Breaker</option>
+              <option value="IFVG">IFVG</option>
+              <option value="OTE">OTE</option>
+              <option value="Sweep">Sweep</option>
+              <option value="Other">Autre</option>
+            </select>
+            <select id="jr-filter-side" class="jr-filter">
+              <option value="">Long + Short</option>
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+            </select>
+            <button class="btn btn-ghost" id="btn-export-csv" style="padding:6px 10px;font-size:0.74rem">📥 CSV</button>
+          </div>
           <div class="journal-trades" id="journal-trades"></div>
         </div>
 
@@ -1096,6 +1221,7 @@ const state = {
     ob: false, fvg: false, pd: false, kz: false,
     breaker: false, ifvg: false, ote: false,
     amd: false, pdarrays: false, irlerl: false,
+    multitf: false,
   },
   computed: {
     swings: [],
@@ -1555,6 +1681,101 @@ function detectOTE(swings){
   };
 }
 
+// ============================================================
+// SCORE QUALITÉ — confluences ICT pour OB/FVG
+// ============================================================
+
+function isInKillzoneTime(time){
+  const date = new Date(time * 1000);
+  const h = date.getUTCHours() + date.getUTCMinutes() / 60;
+  return (h >= 7 && h < 10) || (h >= 12 && h < 15);
+}
+
+function inFavorablePD(zone, pd){
+  if(!pd) return false;
+  if(zone.type === 'bullish') return (zone.top + zone.bottom) / 2 < pd.equilibrium;
+  return (zone.top + zone.bottom) / 2 > pd.equilibrium;
+}
+
+function inOteZone(zone, ote){
+  if(!ote) return false;
+  const mid = (zone.top + zone.bottom) / 2;
+  const lo = Math.min(ote.fib62, ote.fib79);
+  const hi = Math.max(ote.fib62, ote.fib79);
+  return mid >= lo && mid <= hi
+    && ((zone.type === 'bullish' && ote.direction === 'up') || (zone.type === 'bearish' && ote.direction === 'down'));
+}
+
+function obContainsFvgInImpulse(ob, fvgs, structureEvents){
+  // Trouve l'event BOS qui a créé cet OB (le premier après ob.idx avec dir correspondante)
+  const ev = structureEvents.find(e =>
+    e.type === 'BOS' && e.breakIdx > ob.idx &&
+    ((ob.type === 'bullish' && e.dir === 'up') || (ob.type === 'bearish' && e.dir === 'down'))
+  );
+  if(!ev) return false;
+  return fvgs.some(f =>
+    f.idx > ob.idx && f.idx <= ev.breakIdx &&
+    ((ob.type === 'bullish' && f.type === 'bullish') || (ob.type === 'bearish' && f.type === 'bearish'))
+  );
+}
+
+function zoneOverlapsHtf(zone, htfZones){
+  // overlap = chevauchement vertical > 30%
+  for(const htf of htfZones){
+    const overlapTop = Math.min(zone.top, htf.top);
+    const overlapBottom = Math.max(zone.bottom, htf.bottom);
+    if(overlapTop > overlapBottom){
+      const overlap = overlapTop - overlapBottom;
+      const zoneHeight = zone.top - zone.bottom;
+      if(overlap / zoneHeight > 0.3) return true;
+    }
+  }
+  return false;
+}
+
+function computeScore(zone, kind, ctx){
+  // ctx = { pd, ote, fvgs, structureEvents, htfZones }
+  const details = {};
+  details.killzone = isInKillzoneTime(zone.time);
+  details.favorablePD = inFavorablePD(zone, ctx.pd);
+  details.ote = inOteZone(zone, ctx.ote);
+  details.htf = ctx.htfZones ? zoneOverlapsHtf(zone, ctx.htfZones) : false;
+  if(kind === 'OB'){
+    details.fvgInImpulse = obContainsFvgInImpulse(zone, ctx.fvgs, ctx.structureEvents);
+  }
+  const score = Object.values(details).filter(Boolean).length;
+  return { score, details };
+}
+
+function annotateZones(zones, kind, ctx){
+  for(const z of zones){
+    const s = computeScore(z, kind, ctx);
+    z.score = s.score;
+    z.scoreDetails = s.details;
+  }
+}
+
+// ============================================================
+// MULTI-TF — Calcul des zones sur les TF supérieurs
+// ============================================================
+const HTF_FOR = { M15: ['H1', 'H4'], H1: ['H4', 'D1'], H4: ['D1'], D1: [] };
+
+function computeHtfZones(){
+  // Retourne toutes les zones (OB+FVG non mitigées) des TF supérieurs au TF courant
+  const htfs = HTF_FOR[state.currentTf] || [];
+  const all = [];
+  for(const tf of htfs){
+    const tfCandles = aggregate(state.m15, TF_SECONDS[tf]);
+    if(tfCandles.length < 10) continue;
+    const swings = detectSwings(tfCandles);
+    const structure = detectStructure(tfCandles, swings);
+    const obs = detectOrderBlocks(tfCandles, structure).filter(o => !o.mitigated);
+    const fvgs = detectFVG(tfCandles).filter(f => !f.mitigated);
+    all.push(...obs.map(o => ({ ...o, tf })), ...fvgs.map(f => ({ ...f, tf })));
+  }
+  return all;
+}
+
 function recomputeAll(){
   if(state.candles.length === 0) return;
   state.computed.swings = detectSwings(state.candles);
@@ -1566,6 +1787,20 @@ function recomputeAll(){
   state.computed.breakers = detectBreakers(state.computed.orderBlocks, state.candles);
   state.computed.ifvgs = detectIFVGs(state.computed.fvgs, state.candles);
   state.computed.ote = detectOTE(state.computed.swings);
+  // Multi-TF (en mode mock uniquement — le live API ne fournit pas la base M15 pour aggréger)
+  state.computed.htfZones = (!state.liveMode && state.indicators.multitf) ? computeHtfZones() : [];
+  // Annotate scores
+  const ctx = {
+    pd: state.computed.pd,
+    ote: state.computed.ote,
+    fvgs: state.computed.fvgs,
+    structureEvents: state.computed.structure.events,
+    htfZones: state.indicators.multitf ? state.computed.htfZones : null,
+  };
+  annotateZones(state.computed.orderBlocks, 'OB', ctx);
+  annotateZones(state.computed.fvgs, 'FVG', ctx);
+  annotateZones(state.computed.breakers, 'BB', ctx);
+  annotateZones(state.computed.ifvgs, 'IFVG', ctx);
 }
 
 // ============================================================
@@ -1692,6 +1927,8 @@ function drawCanvasOverlays(){
   if(state.indicators.bos)       drawBosMss(ctx, t2x, p2y, w, h);
   if(state.indicators.liquidity) drawSweeps(ctx, t2x, p2y, w, h);
   if(state.indicators.irlerl)    drawIRLERL(ctx, t2x, p2y, w, h);
+  // RR handles suivent le pan/zoom
+  if(state.rrTrade && state.rrTrade.active) updateRRHandlesPosition();
 }
 
 function drawAMD(ctx, t2x, p2y, w, h, vr){
@@ -1872,12 +2109,56 @@ function drawKillzones(ctx, t2x, p2y, w, h, vr){
   }
 }
 
+// Score → style modulator (fillAlpha, strokeAlpha multipliers)
+function scoreStyle(score, maxScore){
+  const ratio = maxScore > 0 ? score / maxScore : 0;
+  // ratio 0   : 0.3x (très transparent)
+  // ratio 0.5 : 1.0x (normal)
+  // ratio 1.0 : 1.4x (boost) + glow
+  if(ratio >= 0.8) return { mult: 1.4, glow: true,  badgeBg: 'rgba(16,185,129,0.95)', badgeFg: '#0f1117' };
+  if(ratio >= 0.6) return { mult: 1.15, glow: false, badgeBg: 'rgba(16,185,129,0.7)',  badgeFg: '#0f1117' };
+  if(ratio >= 0.4) return { mult: 0.85, glow: false, badgeBg: 'rgba(148,163,184,0.6)', badgeFg: '#0f1117' };
+  if(ratio >= 0.2) return { mult: 0.55, glow: false, badgeBg: 'rgba(148,163,184,0.4)', badgeFg: '#0f1117' };
+  return                  { mult: 0.35, glow: false, badgeBg: 'rgba(148,163,184,0.25)', badgeFg: '#475569' };
+}
+
+function drawScoreBadge(ctx, x, y, score, maxScore, hasHtf){
+  const style = scoreStyle(score, maxScore);
+  // Badge "N/5" en haut-droit
+  const text = score + '/' + maxScore;
+  ctx.font = 'bold 9px Segoe UI, system-ui';
+  const m = ctx.measureText(text);
+  const padX = 4, padY = 2;
+  const bw = m.width + padX * 2, bh = 11 + padY * 2;
+  // background
+  ctx.fillStyle = style.badgeBg;
+  ctx.beginPath();
+  ctx.roundRect(x - bw - 3, y + 2, bw, bh, 4);
+  ctx.fill();
+  // text
+  ctx.fillStyle = style.badgeFg;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x - bw - 3 + padX, y + 2 + bh / 2);
+  // HTF badge (à côté)
+  if(hasHtf){
+    const htfText = 'HTF';
+    const m2 = ctx.measureText(htfText);
+    const hw = m2.width + padX * 2;
+    ctx.fillStyle = 'rgba(167,139,250,0.9)';
+    ctx.beginPath();
+    ctx.roundRect(x - bw - 3 - hw - 3, y + 2, hw, bh, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0f1117';
+    ctx.fillText(htfText, x - bw - 3 - hw - 3 + padX, y + 2 + bh / 2);
+  }
+}
+
 function drawFVGs(ctx, t2x, p2y, w, h){
   ctx.lineWidth = 1;
-  // Limite : seulement non-mitigés + 30 plus récents mitigés (pour contexte)
   const unmitigated = state.computed.fvgs.filter(f => !f.mitigated);
   const recentMitigated = state.computed.fvgs.filter(f => f.mitigated).slice(-30);
   const list = [...recentMitigated, ...unmitigated];
+  const maxScore = state.indicators.multitf ? 4 : 3; // killzone + PD + OTE (+HTF si multi)
   for(const fvg of list){
     const x1 = t2x(fvg.time);
     if(x1 === null) continue;
@@ -1893,23 +2174,32 @@ function drawFVGs(ctx, t2x, p2y, w, h){
     }
     if(xEnd <= x1) continue;
     const isBull = fvg.type === 'bullish';
-    ctx.fillStyle = isBull ? 'rgba(16,185,129,0.10)' : 'rgba(239,68,68,0.10)';
+    const style = scoreStyle(fvg.score || 0, maxScore);
+    const fillBase = isBull ? [16,185,129] : [239,68,68];
+    ctx.fillStyle = `rgba(${fillBase.join(',')},${Math.min(0.10 * style.mult, 0.25)})`;
     ctx.fillRect(x1, y1, xEnd - x1, y2 - y1);
-    ctx.strokeStyle = isBull ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)';
+    ctx.strokeStyle = `rgba(${fillBase.join(',')},${Math.min(0.35 * style.mult, 0.85)})`;
     ctx.setLineDash([2, 2]);
+    if(style.glow){
+      ctx.shadowColor = `rgba(${fillBase.join(',')},0.5)`;
+      ctx.shadowBlur = 8;
+    }
     ctx.strokeRect(x1, y1, xEnd - x1, y2 - y1);
+    ctx.shadowBlur = 0;
     ctx.setLineDash([]);
+    // Score badge (only for unmitigated, sinon trop chargé)
+    if(!fvg.mitigated && fvg.score !== undefined){
+      drawScoreBadge(ctx, Math.min(xEnd, w - 2), y1, fvg.score, maxScore, fvg.scoreDetails && fvg.scoreDetails.htf);
+    }
   }
 }
 
 function drawOrderBlocks(ctx, t2x, p2y, w, h){
   ctx.lineWidth = 1;
-  ctx.font = 'bold 9px Segoe UI, system-ui';
-  ctx.textBaseline = 'top';
-  // Limite : non-mitigés + 20 plus récents mitigés
   const unmitigated = state.computed.orderBlocks.filter(o => !o.mitigated);
   const recentMitigated = state.computed.orderBlocks.filter(o => o.mitigated).slice(-20);
   const list = [...recentMitigated, ...unmitigated];
+  const maxScore = state.indicators.multitf ? 5 : 4; // killzone + PD + OTE + FVG-in-impulse (+HTF si multi)
   for(const ob of list){
     const x1 = t2x(ob.time);
     if(x1 === null) continue;
@@ -1925,12 +2215,26 @@ function drawOrderBlocks(ctx, t2x, p2y, w, h){
     }
     if(xEnd <= x1) continue;
     const isBull = ob.type === 'bullish';
-    ctx.fillStyle = isBull ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)';
+    const style = scoreStyle(ob.score || 0, maxScore);
+    const fillBase = isBull ? [16,185,129] : [239,68,68];
+    ctx.fillStyle = `rgba(${fillBase.join(',')},${Math.min(0.18 * style.mult, 0.35)})`;
     ctx.fillRect(x1, y1, xEnd - x1, y2 - y1);
-    ctx.strokeStyle = isBull ? 'rgba(16,185,129,0.55)' : 'rgba(239,68,68,0.55)';
+    ctx.strokeStyle = `rgba(${fillBase.join(',')},${Math.min(0.55 * style.mult, 1)})`;
+    if(style.glow){
+      ctx.shadowColor = `rgba(${fillBase.join(',')},0.6)`;
+      ctx.shadowBlur = 10;
+    }
     ctx.strokeRect(x1, y1, xEnd - x1, y2 - y1);
-    ctx.fillStyle = isBull ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)';
+    ctx.shadowBlur = 0;
+    // Label "OB" en haut-gauche
+    ctx.font = 'bold 9px Segoe UI, system-ui';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = `rgba(${fillBase.join(',')},0.95)`;
     ctx.fillText('OB', x1 + 3, y1 + 2);
+    // Score badge en haut-droit (uniquement non-mitigés)
+    if(!ob.mitigated && ob.score !== undefined){
+      drawScoreBadge(ctx, Math.min(xEnd, w - 2), y1, ob.score, maxScore, ob.scoreDetails && ob.scoreDetails.htf);
+    }
   }
 }
 
@@ -2037,6 +2341,8 @@ function wireIndicatorToggles(){
       const key = input.dataset.ind;
       if(Object.prototype.hasOwnProperty.call(state.indicators, key)){
         state.indicators[key] = input.checked;
+        // multitf modifie les htfZones + scores → besoin de recompute
+        if(key === 'multitf') recomputeAll();
         renderAll();
       }
     });
@@ -2134,6 +2440,8 @@ function updateRRDisplay(){
     });
     state.priceLines.push({ kind: 'rr', line });
   }
+  // Update les handles draggables
+  updateRRHandlesPosition();
 }
 
 function wireRR(){
@@ -2144,6 +2452,7 @@ function wireRR(){
     btn.classList.toggle('active', state.rrTrade.active);
     if(state.rrTrade.active){
       floating.classList.add('open');
+      document.getElementById('rr-handles').classList.add('active');
       // Init avec le prix actuel
       if(state.candles.length > 0){
         const last = state.candles[state.candles.length - 1].close;
@@ -2154,12 +2463,77 @@ function wireRR(){
       }
     } else {
       floating.classList.remove('open');
+      document.getElementById('rr-handles').classList.remove('active');
       clearRRLines();
     }
   });
   document.getElementById('rr-close').addEventListener('click', () => btn.click());
   ['rr-entry', 'rr-sl', 'rr-tp'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateRRDisplay);
+  });
+  setupRRHandlesDrag();
+}
+
+// ── Drag handles SL/TP/Entry ──
+function setupRRHandlesDrag(){
+  const lines = ['entry', 'sl', 'tp'];
+  for(const line of lines){
+    const handle = document.querySelector(`.rr-handle.${line}`);
+    let dragging = false;
+
+    const startDrag = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragging = true;
+      handle.classList.add('dragging');
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', endDrag);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', endDrag);
+      window.addEventListener('touchcancel', endDrag);
+    };
+
+    const onMove = e => {
+      if(!dragging) return;
+      e.preventDefault();
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const chartEl = document.getElementById('chart');
+      const rect = chartEl.getBoundingClientRect();
+      const y = clientY - rect.top;
+      const price = state.series.coordinateToPrice(y);
+      if(price === null || isNaN(price)) return;
+      document.getElementById('rr-' + line).value = price.toFixed(5);
+      updateRRDisplay();
+    };
+
+    const endDrag = () => {
+      if(!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', endDrag);
+      window.removeEventListener('touchcancel', endDrag);
+    };
+
+    handle.addEventListener('mousedown', startDrag);
+    handle.addEventListener('touchstart', startDrag, { passive: false });
+  }
+}
+
+// Update les handles positionnement à chaque pan/zoom du chart
+function updateRRHandlesPosition(){
+  if(!state.rrTrade.active) return;
+  const handles = document.getElementById('rr-handles');
+  ['entry', 'sl', 'tp'].forEach(line => {
+    const price = state.rrTrade[line];
+    const handle = handles.querySelector(`.rr-handle.${line}`);
+    if(price === null || isNaN(price)){ handle.style.display = 'none'; return; }
+    const y = state.series.priceToCoordinate(price);
+    if(y === null){ handle.style.display = 'none'; return; }
+    handle.style.display = 'flex';
+    handle.style.top = y + 'px';
   });
 }
 
@@ -2197,8 +2571,42 @@ function deleteTrade(id){
   renderJournal();
 }
 
+function getFilteredTrades(){
+  const setup = (document.getElementById('jr-filter-setup') || {}).value || '';
+  const side = (document.getElementById('jr-filter-side') || {}).value || '';
+  return state.trades.filter(t => {
+    if(setup && t.setup !== setup) return false;
+    if(side && t.side !== side) return false;
+    return true;
+  });
+}
+
+function exportTradesCSV(){
+  const trades = getFilteredTrades();
+  if(trades.length === 0){ alert('Aucun trade à exporter (vérifie les filtres).'); return; }
+  const headers = ['Date', 'Sens', 'Entry', 'SL', 'TP', 'Résultat (R)', 'Setup', 'Notes'];
+  const escape = v => {
+    if(v === null || v === undefined) return '';
+    const s = String(v).replace(/"/g, '""');
+    return /[,;"\n]/.test(s) ? `"${s}"` : s;
+  };
+  const rows = trades.map(t => [
+    t.date, t.side, t.entry || '', t.sl || '', t.tp || '', t.result, t.setup, t.notes || ''
+  ].map(escape).join(','));
+  const csv = headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `eurusd-trades-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
 function renderJournal(){
-  // Stats
+  // Stats (toujours sur trades non filtrés pour vue d'ensemble)
   const trades = state.trades;
   const n = trades.length;
   const wins = trades.filter(t => t.result > 0);
@@ -2249,13 +2657,18 @@ function renderJournal(){
     });
   }
 
-  // Trades list
+  // Trades list (avec filtres appliqués)
   const list = document.getElementById('journal-trades');
   if(trades.length === 0){
     list.innerHTML = '<div style="font-size:0.78rem;color:var(--muted);text-align:center;padding:20px">Aucun trade enregistré. Logge ton premier trade pour voir tes stats.</div>';
     return;
   }
-  list.innerHTML = trades.slice().reverse().map(t => `
+  const filtered = getFilteredTrades();
+  if(filtered.length === 0){
+    list.innerHTML = '<div style="font-size:0.78rem;color:var(--muted);text-align:center;padding:20px">Aucun trade ne correspond aux filtres.</div>';
+    return;
+  }
+  list.innerHTML = filtered.slice().reverse().map(t => `
     <div class="journal-trade">
       <span class="side ${t.side}">${t.side === 'long' ? '▲' : '▼'} ${t.side}</span>
       <span style="color:var(--muted2)">${t.date}</span>
@@ -2278,6 +2691,10 @@ function wireJournal(){
   document.getElementById('btn-close-journal').addEventListener('click', () => modal.classList.remove('open'));
   modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('open'); });
   document.getElementById('btn-add-trade').addEventListener('click', addTrade);
+  document.getElementById('btn-export-csv').addEventListener('click', exportTradesCSV);
+  ['jr-filter-setup', 'jr-filter-side'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderJournal);
+  });
   // Radio side group visual
   document.querySelectorAll('input[name="jr-side"]').forEach(r => {
     r.addEventListener('change', () => {
@@ -3099,6 +3516,7 @@ const TOGGLE_TO_CHAPTER = {
   fvg: '2.7', pd: '2.8', kz: '2.9',
   breaker: '3.1', ifvg: '3.2', ote: '3.3',
   amd: '3.4', pdarrays: '3.5', irlerl: '3.6',
+  multitf: '5.1',
 };
 
 function injectHelpIcons(){

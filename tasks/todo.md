@@ -124,6 +124,70 @@ Navigation Précédent/Suivant entre chapitres, sommaire collapsable, contenu p�
 
 ---
 
+## Session 2 — Quick wins + tuto débutant ✅
+
+### Tuto débutant (page séparée `tuto-debutant.html`) ✅
+24 chapitres en 6 modules pour vrais débutants :
+- M0 : Le marché c'est quoi vraiment ? (acteurs, forex vs bourse vs crypto, d'où viennent les prix)
+- M1 : Démarrer concrètement (broker, démo vs réel, combien pour commencer)
+- M2 : Mécanique d'un trade (long/short, spread, levier, marge, frais)
+- M3 : Types d'ordres (market, limit, stop, SL/TP)
+- M4 : Vrais chiffres et pièges (90% perdent, 5 pièges, démo vs réel, vrais revenus)
+- M5 : Vers le dashboard (pourquoi ICT, comment l'utiliser, plan 6 mois)
+Accessible via bouton 🎓 dans la topbar.
+
+### Quick wins (5/5) ✅
+- **QW1** Préférences persistées (toggles + TF + sections collapsed + chapitre cours) en localStorage
+- **QW2** Icônes ℹ️ à côté de chaque toggle ICT → ouvre direct le chapitre correspondant
+- **QW3** Présets 📚 Apprentissage / 📊 Swing / 🎯 Scalping → un clic active les bons indicateurs + TF
+- **QW4** Compteur quota API affiché dans la topbar (N/800, couleur warn/danger)
+- **QW5** Pulse vert + "il y a Xs" pour le polling live
+
+---
+
+## Session 3 — Features avancées (7-11) ✅
+
+### Feature 11 — Score qualité OB/FVG ✅
+Score 1-5 calculé sur 5 critères de confluence ICT :
+- favorablePD (Discount pour bullish, Premium pour bearish)
+- killzone (formé entre 7-10 ou 12-15 GMT)
+- ote (dans la zone fib 62-79% de la jambe courante)
+- fvgInImpulse (OB seulement — contient un FVG dans l'impulsion qui suit)
+- htf (confirmé sur TF supérieur — lié feature 7)
+
+Visuel : badge `N/5` à droite du rectangle + opacity/glow modulés selon le score (A+ en vert vif glow, faible en grisé).
+
+### Feature 7 — Multi-TF confluence ✅
+Toggle "Multi-TF confluence" dans Avancés. Quand activé :
+- Calcule les OB/FVG non-mitigés sur TF supérieurs (H1→H4+D1, H4→D1)
+- Pour chaque zone du TF courant : check overlap > 30% avec une zone HTF
+- Si oui → +1 au score + badge violet "HTF" affiché à gauche du badge score
+
+Limitation actuelle : marche en mode mock uniquement (utilise state.m15 pour aggréger). En live, faudrait des fetch API supplémentaires (quota).
+
+### Feature 9 — Export CSV + filtres journal ✅
+Dans modal Journal :
+- 2 dropdowns : filtre par setup type (OB/FVG/BB/...) + sens (long/short)
+- Bouton 📥 CSV qui télécharge un fichier `eurusd-trades-YYYY-MM-DD.csv` avec les trades filtrés
+- Format CSV propre (échappement des virgules/quotes/newlines)
+
+### Feature 10 — Polish mobile ✅
+- PD Arrays panel → bottom sheet (slide up) sur mobile
+- R/R floating → barre en bas, ratio affiché sur ligne complète
+- Modal Journal → grid 1 colonne empilée, scroll
+- Topbar compactée : OHLC overlay caché < 520px, live-meta caché, icon-btn réduits
+- Très petits écrans (< 380px) : logo réduit, gap minimal
+
+### Feature 8 — Drag SL/TP/Entry ✅
+- 3 poignées HTML (E vert, SL rouge, TP bleu) positionnées par-dessus le chart
+- Drag mousedown/touchstart → mousemove convertit Y → prix via `series.coordinateToPrice`
+- Update live : input + priceLine + ratio R/R
+- Suivent automatiquement le pan/zoom du chart (hooké à drawCanvasOverlays)
+- Curseur ns-resize, scale au hover, glow pendant le drag
+- Compatible souris + touch (mobile)
+
+---
+
 ## ⏱ Estimation
 - Phase 1 : socle visuel — court (1 itération)
 - Phase 2 : ICT essentiels — gros morceau (probablement 2-3 itérations, c'est le cœur)
