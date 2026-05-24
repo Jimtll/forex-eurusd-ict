@@ -390,7 +390,8 @@ const MODULES = [
   { id: 'M5', title: '5. Ton parcours vers le dashboard', chapters: [
     { id: '5.1', title: 'Pourquoi ICT et pas autre chose ?' },
     { id: '5.2', title: 'Comment utiliser le dashboard' },
-    { id: '5.3', title: 'Ton chemin étape par étape' },
+    { id: '5.3', title: 'Le Paper Trading intégré' },
+    { id: '5.4', title: 'Ton chemin étape par étape' },
   ]},
 ];
 
@@ -965,6 +966,52 @@ const CHAPTERS = {
   `,
   '5.3': `
     <span class="lesson-tag">Module 5 · Vers le dashboard</span>
+    <h1>Le Paper Trading intégré</h1>
+    <p>Avant de risquer de l'argent réel, il faut <strong>s'entraîner</strong>. Et avant le compte démo d'un broker, tu peux t'entraîner <strong>directement dans le dashboard</strong> grâce au <strong>Paper Trading</strong> intégré.</p>
+    <h2>Qu'est-ce que c'est ?</h2>
+    <p>Un <strong>compte fictif de 10 000 €</strong> dans le dashboard. Tu places des ordres Long ou Short avec SL et TP, et l'app simule l'exécution en temps réel.</p>
+    <ul>
+      <li>✅ Si le prix touche ton <strong>TP</strong> → position fermée, gain crédité sur le solde</li>
+      <li>❌ Si le prix touche ton <strong>SL</strong> → position fermée, perte débitée</li>
+      <li>📊 Stats automatiques : winrate, R moyen, profit factor, equity curve</li>
+    </ul>
+    <h2>Différence avec un compte démo broker</h2>
+    <table>
+      <tr><th></th><th>Paper Trading dashboard</th><th>Compte démo broker</th></tr>
+      <tr><td>Plateforme</td><td>Ton dashboard ICT</td><td>MetaTrader 5 / cTrader</td></tr>
+      <tr><td>Données</td><td>Mock ou TwelveData</td><td>Vrai broker (live)</td></tr>
+      <tr><td>Spread</td><td>Configurable (1 pip défaut)</td><td>Réel (variable)</td></tr>
+      <tr><td>Setups ICT</td><td>Indicateurs intégrés</td><td>À dessiner soi-même</td></tr>
+      <tr><td>But</td><td>Tester ta lecture ICT</td><td>Apprendre la plateforme</td></tr>
+    </table>
+    <h2>Comment l'utiliser concrètement</h2>
+    <ol>
+      <li>Active un preset (ex: <em>Setup</em>) pour voir les zones ICT sur le chart</li>
+      <li>Repère un setup A+ (OB en zone Discount + Killzone par exemple)</li>
+      <li>Ouvre <strong>💼 Paper Trading</strong></li>
+      <li>Place une position : Long ou Short, SL au-delà de l'invalidation, TP via "Auto TP" R:R 1:2</li>
+      <li>Regarde le P&L flottant évoluer (vert si dans ton sens, rouge sinon)</li>
+      <li>Quand SL ou TP touché → fermeture auto + notification</li>
+      <li>Loggue tes trades dans le 📝 <strong>Journal</strong> avec les notes</li>
+    </ol>
+    <h2>Long vs Short — rappel</h2>
+    <ul>
+      <li><strong>▲ LONG</strong> = j'achète maintenant pour revendre plus haut. Profite des hausses.</li>
+      <li><strong>▼ SHORT</strong> = je vends maintenant pour racheter plus bas. Profite des baisses.</li>
+    </ul>
+    <p>Sur le forex, tu peux faire les deux à tout moment. C'est la grande différence avec un livret bancaire où tu ne peux que "rester long" (attendre que ça monte).</p>
+    <div class="callout">
+      <strong>Workflow recommandé.</strong>
+      <ol>
+        <li><strong>Mois 1-2</strong> : Paper Trading dashboard pour t'entraîner aux setups ICT (gratuit, instantané)</li>
+        <li><strong>Mois 3-6</strong> : Compte démo broker pour t'habituer à l'exécution réelle (plateforme MT5/cTrader, ordres en milliseconde, spreads variables)</li>
+        <li><strong>Mois 7+</strong> : Petit compte réel 200-500€ avec 1% risque</li>
+      </ol>
+      Saute jamais la première étape — c'est le <em>laboratoire</em> où tu valides ta stratégie sans le stress de l'argent.
+    </div>
+  `,
+  '5.4': `
+    <span class="lesson-tag">Module 5 · Vers le dashboard</span>
     <h1>Ton chemin étape par étape</h1>
     <p>Plan d'action concret pour les <strong>6 prochains mois</strong>. Suis ça et tu seras devant 80% des débutants.</p>
     <h2>Semaine 1-2 : Théorie</h2>
@@ -974,19 +1021,27 @@ const CHAPTERS = {
       <li>Regarde la vidéo HugoFX entièrement (au moins 1×)</li>
       <li>Ne touche pas encore à un broker</li>
     </ul>
-    <h2>Semaine 3-4 : Observation</h2>
+    <h2>Semaine 3-4 : Observation + Paper Trading</h2>
     <ul>
       <li>Ouvre le dashboard en mode mock ou live</li>
-      <li>Active les indicateurs un par un, comprends ce que tu vois</li>
-      <li>Reconnaîs les patterns sur le chart sans trader</li>
-      <li>Pas encore de compte broker</li>
+      <li>Active les présets (Contexte / Setup / Entrée) un par un, comprends ce que tu vois</li>
+      <li>Ouvre <strong>💼 Paper Trading</strong> et place tes premiers trades fictifs (gratuit, sans risque)</li>
+      <li>Utilise <strong>🎬 Replay mode</strong> pour rejouer l'historique et tester ta lecture</li>
+      <li>Pas encore de compte broker — juste t'entraîner à reconnaître les setups</li>
     </ul>
-    <h2>Mois 2 : Compte démo</h2>
+    <h2>Mois 2 : Paper Trading intensif</h2>
     <ul>
-      <li>Ouvre un compte démo chez un bon broker (IC Markets, Pepperstone, OANDA)</li>
+      <li>Continue uniquement en Paper Trading. Objectif : <strong>30+ trades fictifs</strong></li>
+      <li>Active le <strong>spread simulé</strong> (1 pip) pour avoir des résultats réalistes</li>
+      <li>Vise <strong>winrate ≥ 50%</strong> et <strong>profit factor ≥ 1.5</strong> en paper</li>
+      <li>Logge <strong>tous</strong> tes trades dans le journal avec notes</li>
+    </ul>
+    <h2>Mois 3 : Compte démo broker</h2>
+    <ul>
+      <li>Si stats paper bonnes : ouvre un compte démo chez un broker régulé (IC Markets, Pepperstone, OANDA)</li>
       <li>Familiarise-toi avec la plateforme (MetaTrader 5 ou cTrader)</li>
-      <li>Trade en démo en suivant les setups vus sur ton dashboard</li>
-      <li>Logge <strong>tous</strong> tes trades dans le journal du dashboard</li>
+      <li>L'exécution réelle (millisecondes, slippage) est différente du paper — habitue-toi</li>
+      <li>Continue à utiliser le dashboard ICT en parallèle pour les setups</li>
     </ul>
     <h2>Mois 3-4 : Stats &amp; routine</h2>
     <ul>

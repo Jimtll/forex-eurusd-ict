@@ -840,6 +840,57 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 }
 .toast button:hover{background:var(--acc-dark)}
 
+/* ── Onboarding ── */
+.onb-hero{
+  padding:32px 28px 18px;
+  text-align:center;
+  background:linear-gradient(135deg, var(--acc-dim) 0%, var(--surface) 100%);
+  border-radius:14px 14px 0 0;
+  border-bottom:1px solid var(--border);
+}
+.onb-emoji{font-size:3.2rem;margin-bottom:12px;line-height:1}
+.onb-step{
+  font-size:0.7rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.08em;
+  margin-bottom:6px;font-weight:600;
+}
+.onb-content{
+  padding:24px 28px 16px;
+  font-size:0.95rem;
+  line-height:1.6;
+  min-height:120px;
+}
+.onb-content p{margin-bottom:12px;color:var(--text)}
+.onb-content strong{color:var(--acc)}
+.onb-content ul{margin:8px 0 12px 20px}
+.onb-content li{margin-bottom:5px}
+.onb-content .onb-key{
+  display:inline-block;
+  padding:2px 8px;border-radius:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  font-size:0.82rem;font-weight:600;color:var(--text);
+}
+.onb-progress{
+  height:3px;background:var(--surface2);
+  margin:0 28px;border-radius:2px;overflow:hidden;
+}
+.onb-progress-fill{
+  height:100%;background:var(--acc);
+  width:0%;transition:width 0.3s;
+}
+.onb-actions{
+  padding:18px 28px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;
+}
+@media(max-width:520px){
+  .onb-hero{padding:24px 20px 14px}
+  .onb-emoji{font-size:2.6rem}
+  .onb-content{padding:18px 20px 12px;font-size:0.88rem}
+  .onb-actions{padding:14px 20px 18px;flex-direction:column-reverse;align-items:stretch}
+  .onb-actions > div{display:flex;justify-content:space-between}
+}
+
 /* ── Paper Trading ── */
 .paper-grid{
   display:grid;
@@ -1493,6 +1544,21 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
       <input type="number" id="setting-fvg-min-size" class="bt-input" value="0" min="0" max="50" step="0.5">
     </div>
 
+    <div class="modal-section">
+      <h3>💼 Paper Trading</h3>
+      <label style="font-size:0.74rem;color:var(--muted2);margin-bottom:4px;display:block">Spread simulé (pips, aller-retour total)</label>
+      <input type="number" id="setting-paper-spread" class="bt-input" value="1" min="0" max="10" step="0.1">
+      <p style="font-size:0.72rem;color:var(--muted);line-height:1.4;margin-top:6px">
+        Réalité EUR/USD : ~1 pip chez un broker ECN, ~2 pips sur compte standard.
+        0 = pas de coût (tu trades comme un dieu). 1 = réaliste.
+      </p>
+    </div>
+
+    <div class="modal-section">
+      <h3>🎓 Aide</h3>
+      <button class="btn btn-ghost" id="btn-restart-onboarding" style="width:100%">🎯 Relancer le tour de présentation</button>
+    </div>
+
     <div class="modal-actions" style="justify-content:flex-end;margin-top:24px">
       <button class="btn btn-primary" id="btn-close-settings">Fermer</button>
     </div>
@@ -1692,6 +1758,26 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
           <div id="bt-trades" class="bt-trades-list"></div>
         </div>
 
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Onboarding (1er lancement) -->
+<div class="modal-backdrop" id="modal-onboarding">
+  <div class="modal" style="max-width:560px;padding:0">
+    <div class="onb-hero">
+      <div class="onb-emoji" id="onb-emoji">👋</div>
+      <div class="onb-step">Étape <span id="onb-step-num">1</span> / 8</div>
+      <h2 id="onb-title" style="margin:0;font-size:1.3rem">Bienvenue</h2>
+    </div>
+    <div class="onb-content" id="onb-content"></div>
+    <div class="onb-progress"><div class="onb-progress-fill" id="onb-progress-fill"></div></div>
+    <div class="onb-actions">
+      <button class="btn btn-ghost" id="onb-skip" style="font-size:0.78rem">Passer le tour</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="onb-prev">← Précédent</button>
+        <button class="btn btn-primary" id="onb-next">Suivant →</button>
       </div>
     </div>
   </div>
@@ -3046,7 +3132,10 @@ function renderAll(){
   renderPDArraysPanel();
   drawCanvasOverlays();
   if(state.alerts && state.alerts.enabled) checkAlerts();
-  if(state.paper) checkPaperPositions();
+  if(state.paper){
+    checkPaperPositions();
+    renderPaperPositionsOnChart();
+  }
 }
 
 // ============================================================
@@ -3081,6 +3170,12 @@ function wireSettingsModal(){
   document.getElementById('btn-regen').addEventListener('click', () => {
     regenerateData();
     modal.classList.remove('open');
+  });
+  // Relance onboarding
+  const btnRestart = document.getElementById('btn-restart-onboarding');
+  if(btnRestart) btnRestart.addEventListener('click', () => {
+    modal.classList.remove('open');
+    startOnboarding();
   });
 }
 
@@ -5103,17 +5198,182 @@ fetchTwelveData = async function(tfKey, size){
 setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 // ============================================================
+// ONBOARDING — tour guidé au 1er lancement
+// ============================================================
+
+const ONBOARDING_STEPS = [
+  {
+    emoji: '👋',
+    title: 'Bienvenue !',
+    html: `
+      <p>Salut ! Je vais te montrer ton dashboard <strong>EUR/USD ICT</strong> en <strong>8 étapes rapides</strong>.</p>
+      <p>L'app combine :</p>
+      <ul>
+        <li>📊 Chart EUR/USD avec 14 indicateurs ICT</li>
+        <li>🛠 Outils de gestion de risque + backtester</li>
+        <li>💼 Compte fictif pour s'entraîner</li>
+        <li>📚 Cours ICT 27 chapitres + tuto débutant 24 chapitres</li>
+      </ul>
+      <p style="color:var(--muted2);font-size:0.84rem">Tu peux passer ce tour à tout moment.</p>
+    `,
+  },
+  {
+    emoji: '🎯',
+    title: 'Présets — clic et c\'est prêt',
+    html: `
+      <p>En haut du panel de droite, tu as <strong>4 boutons préset</strong> :</p>
+      <ul>
+        <li><span class="onb-key">🔄 Reset</span> — désactive tout pour repartir clean</li>
+        <li><span class="onb-key">🔍 Contexte</span> (H1) — analyse top-down</li>
+        <li><span class="onb-key">📊 Setup</span> (H4) — recherche de zones de trade</li>
+        <li><span class="onb-key">🎯 Entrée</span> (M15) — confirmation intraday</li>
+      </ul>
+      <p>Chaque preset active 3-5 indicateurs ciblés. <strong>N'active jamais tout en même temps</strong> — c'est illisible.</p>
+    `,
+  },
+  {
+    emoji: '🧠',
+    title: 'Indicateurs ICT',
+    html: `
+      <p>Dans le panel : 3 sections <strong>Essentiels / Avancés / Risk</strong>.</p>
+      <p>Active un toggle pour voir l'indicateur sur le chart (Order Blocks, FVG, Liquidity, Killzones…).</p>
+      <p>À côté de chaque toggle, l'icône <span class="onb-key">ℹ</span> ouvre <strong>directement le chapitre cours</strong> qui explique cet indicateur.</p>
+    `,
+  },
+  {
+    emoji: '🛠',
+    title: 'Outils de risk',
+    html: `
+      <p>Dans la section <strong>Gestion de risque</strong> :</p>
+      <ul>
+        <li><span class="onb-key">📐 Calculateur</span> — taille de position selon ton % risque</li>
+        <li><span class="onb-key">🎯 R/R Visualizer</span> — drag SL/TP sur le chart</li>
+        <li><span class="onb-key">📝 Journal</span> — enregistre tes trades + stats</li>
+        <li><span class="onb-key">🔬 Backtester</span> — teste ta stratégie sur l'historique</li>
+        <li><span class="onb-key">🎬 Replay</span> — rejoue l'historique bougie par bougie</li>
+      </ul>
+    `,
+  },
+  {
+    emoji: '💼',
+    title: 'Paper Trading',
+    html: `
+      <p>Le bouton vert <span class="onb-key">💼 Paper Trading</span> ouvre un <strong>compte fictif 10 000 €</strong>.</p>
+      <p>Tu places des trades <strong>Long</strong> (acheter) ou <strong>Short</strong> (vendre) avec SL/TP. L'app les exécute en temps réel quand le prix touche tes niveaux.</p>
+      <p>C'est le meilleur moyen de t'entraîner <strong>sans risquer un centime</strong> avant de passer en compte réel.</p>
+    `,
+  },
+  {
+    emoji: '📚',
+    title: 'Apprends',
+    html: `
+      <p>Dans la topbar (en haut à droite) :</p>
+      <ul>
+        <li><span class="onb-key">🎓</span> — Tuto débutant (les bases : broker, levier, ordres, pièges)</li>
+        <li><span class="onb-key">📖</span> — Glossaire ICT (25 termes définis)</li>
+        <li><span class="onb-key">📚</span> — Cours ICT (27 chapitres + quiz)</li>
+      </ul>
+      <p><strong>Pour débuter : commence par le tuto 🎓</strong>, surtout si tu n'as jamais ouvert de plateforme de trading.</p>
+    `,
+  },
+  {
+    emoji: '🌐',
+    title: 'Données réelles (optionnel)',
+    html: `
+      <p>Par défaut, tu es en mode <strong>MOCK</strong> (données simulées réalistes avec cycles AMD).</p>
+      <p>Pour voir le vrai prix EUR/USD :</p>
+      <ol>
+        <li>Crée un compte gratuit sur <strong>twelvedata.com</strong> (2 min)</li>
+        <li><span class="onb-key">⚙</span> Paramètres → colle ta clé API</li>
+        <li>"Activer mode Live"</li>
+      </ol>
+      <p style="color:var(--muted2);font-size:0.84rem">800 requêtes/jour gratuit, largement suffisant pour l'usage normal.</p>
+    `,
+  },
+  {
+    emoji: '🚀',
+    title: 'C\'est parti !',
+    html: `
+      <p>Tu as tout vu. <strong>Mon conseil pour démarrer :</strong></p>
+      <ol>
+        <li>Lis le <strong>tuto débutant 🎓</strong> entièrement (1-2 heures bien dépensées)</li>
+        <li>Reviens et active le preset <strong>🔍 Contexte</strong></li>
+        <li>Ouvre <strong>💼 Paper Trading</strong> et place ton premier trade fictif</li>
+        <li>Logge tes trades dans <strong>📝 Journal</strong> pour suivre tes stats</li>
+      </ol>
+      <p style="font-size:0.84rem;color:var(--muted2)">Tu peux revoir ce tour à tout moment depuis ⚙ Paramètres.</p>
+      <p style="text-align:center;margin-top:14px;color:var(--acc);font-weight:600">Bon trading 🎯</p>
+    `,
+  },
+];
+
+let _onbStep = 0;
+
+function showOnboardingStep(){
+  const s = ONBOARDING_STEPS[_onbStep];
+  document.getElementById('onb-emoji').textContent = s.emoji;
+  document.getElementById('onb-title').textContent = s.title;
+  document.getElementById('onb-content').innerHTML = s.html;
+  document.getElementById('onb-step-num').textContent = (_onbStep + 1);
+  document.getElementById('onb-progress-fill').style.width = ((_onbStep + 1) / ONBOARDING_STEPS.length * 100) + '%';
+  document.getElementById('onb-prev').disabled = _onbStep === 0;
+  document.getElementById('onb-prev').style.opacity = _onbStep === 0 ? '0.3' : '1';
+  document.getElementById('onb-next').textContent = _onbStep === ONBOARDING_STEPS.length - 1 ? '🚀 Commencer' : 'Suivant →';
+}
+
+function startOnboarding(){
+  _onbStep = 0;
+  document.getElementById('modal-onboarding').classList.add('open');
+  showOnboardingStep();
+}
+
+function endOnboarding(){
+  document.getElementById('modal-onboarding').classList.remove('open');
+  localStorage.setItem('onboarding_done', 'true');
+}
+
+function wireOnboarding(){
+  document.getElementById('onb-next').addEventListener('click', () => {
+    if(_onbStep < ONBOARDING_STEPS.length - 1){
+      _onbStep++;
+      showOnboardingStep();
+    } else {
+      endOnboarding();
+    }
+  });
+  document.getElementById('onb-prev').addEventListener('click', () => {
+    if(_onbStep > 0){
+      _onbStep--;
+      showOnboardingStep();
+    }
+  });
+  document.getElementById('onb-skip').addEventListener('click', endOnboarding);
+
+  // Auto-show si jamais fait
+  if(!localStorage.getItem('onboarding_done')){
+    // Petit délai pour que l'app se charge d'abord
+    setTimeout(() => startOnboarding(), 800);
+  }
+}
+
+// Expose pour pouvoir relancer le tour depuis Paramètres
+window.startOnboarding = startOnboarding;
+
+// ============================================================
 // PAPER TRADING — compte fictif avec positions live
 // ============================================================
 // Approximation : 1 pip × 1 lot ≈ 10€ (vraie valeur ~10$ ≈ 9.3€ mais on simplifie)
 const PIP_VALUE_EUR = 10;
+const PAPER_SPREAD_DEFAULT = 1; // 1 pip total = 0.5 pip aller + 0.5 pip retour (réaliste EUR/USD)
 
 state.paper = {
   balance: parseFloat(localStorage.getItem('paper_balance') || '10000'),
   positions: JSON.parse(localStorage.getItem('paper_positions') || '[]'),
   history: JSON.parse(localStorage.getItem('paper_history') || '[]'),
+  spreadPips: parseFloat(localStorage.getItem('paper_spread') || PAPER_SPREAD_DEFAULT),
 };
 let _paperEquityChart = null;
+state.paperPriceLines = []; // {posId, kind, line}
 
 function savePaper(){
   localStorage.setItem('paper_balance', state.paper.balance);
@@ -5150,11 +5410,7 @@ function placePaperOrder(){
   const tp = parseFloat(document.getElementById('paper-tp').value);
   const riskPct = parseFloat(document.getElementById('paper-risk-pct').value);
 
-  // Validation
-  if(isNaN(entry) || isNaN(sl) || isNaN(tp)){
-    showToast('⚠ Remplis Entry, SL et TP');
-    return;
-  }
+  if(isNaN(entry) || isNaN(sl) || isNaN(tp)){ showToast('⚠ Remplis Entry, SL et TP'); return; }
   if(side === 'long' && sl >= entry){ showToast('⚠ Pour un LONG, le SL doit être SOUS l\'entry'); return; }
   if(side === 'long' && tp <= entry){ showToast('⚠ Pour un LONG, le TP doit être AU-DESSUS de l\'entry'); return; }
   if(side === 'short' && sl <= entry){ showToast('⚠ Pour un SHORT, le SL doit être AU-DESSUS de l\'entry'); return; }
@@ -5166,9 +5422,14 @@ function placePaperOrder(){
 
   const currentPrice = paperCurrentPrice();
   const status = orderType === 'limit' ? 'pending' : 'open';
-  // Pour un market order, on ignore l'entry et on prend le prix actuel
-  const realEntry = orderType === 'market' ? currentPrice : entry;
-  // Pour un limit, on attend que le prix atteigne entry
+  // Spread aller : 0.5 pip défavorable à l'entrée pour un market order
+  const halfSpread = (state.paper.spreadPips / 2) * PIP;
+  let realEntry;
+  if(orderType === 'market'){
+    realEntry = side === 'long' ? currentPrice + halfSpread : currentPrice - halfSpread;
+  } else {
+    realEntry = entry; // limit : entry exact souhaité (spread sera appliqué à l'activation)
+  }
 
   const pos = {
     id: Date.now(),
@@ -5178,17 +5439,84 @@ function placePaperOrder(){
     openTime: Math.floor(Date.now() / 1000),
     openPrice: realEntry,
     status,
+    spreadCost: state.paper.spreadPips, // pour info
   };
   state.paper.positions.push(pos);
   savePaper();
   renderPaperTrading();
-  showToast(`✓ ${side === 'long' ? '▲ LONG' : '▼ SHORT'} ${lots.toFixed(2)} lots placé`);
+  renderPaperPositionsOnChart();
+  showToast(`✓ ${side === 'long' ? '▲ LONG' : '▼ SHORT'} ${lots.toFixed(2)} lots placé (spread ${state.paper.spreadPips} pip)`);
 
-  // Clear le formulaire mais garde les valeurs utiles
+  // Clear le formulaire
   document.getElementById('paper-entry').value = '';
   document.getElementById('paper-sl').value = '';
   document.getElementById('paper-tp').value = '';
   document.getElementById('paper-preview').classList.remove('visible');
+}
+
+function applyExitSpread(price, side){
+  // Spread retour : 0.5 pip défavorable à la sortie
+  const halfSpread = (state.paper.spreadPips / 2) * PIP;
+  return side === 'long' ? price - halfSpread : price + halfSpread;
+}
+
+function editPositionLevel(posId, kind){
+  const pos = state.paper.positions.find(p => p.id === posId);
+  if(!pos) return;
+  const currentValue = pos[kind];
+  const label = kind === 'sl' ? 'Stop Loss' : 'Take Profit';
+  const newValueStr = prompt(`Nouveau ${label} pour ${pos.side === 'long' ? '▲ LONG' : '▼ SHORT'} (actuel : ${currentValue.toFixed(5)}) :`, currentValue.toFixed(5));
+  if(newValueStr === null) return;
+  const newValue = parseFloat(newValueStr);
+  if(isNaN(newValue)){ showToast('⚠ Valeur invalide'); return; }
+  // Validation cohérence
+  if(kind === 'sl'){
+    if(pos.side === 'long' && newValue >= pos.entry){ showToast('⚠ SL doit être SOUS l\'entry pour un long'); return; }
+    if(pos.side === 'short' && newValue <= pos.entry){ showToast('⚠ SL doit être AU-DESSUS de l\'entry pour un short'); return; }
+  } else {
+    if(pos.side === 'long' && newValue <= pos.entry){ showToast('⚠ TP doit être AU-DESSUS de l\'entry pour un long'); return; }
+    if(pos.side === 'short' && newValue >= pos.entry){ showToast('⚠ TP doit être SOUS l\'entry pour un short'); return; }
+  }
+  pos[kind] = newValue;
+  savePaper();
+  renderPaperTrading();
+  renderPaperPositionsOnChart();
+  showToast(`✓ ${label} déplacé à ${newValue.toFixed(5)}`);
+}
+
+function renderPaperPositionsOnChart(){
+  if(!state.series) return;
+  // Clean anciennes lignes paper
+  state.paperPriceLines.forEach(p => {
+    try { state.series.removePriceLine(p.line); } catch(e){}
+  });
+  state.paperPriceLines = [];
+  // Ajoute les positions ouvertes/pending
+  for(const pos of state.paper.positions){
+    if(pos.status === 'closed') continue;
+    const sideColor = pos.side === 'long' ? '#10b981' : '#ef4444';
+    const isPending = pos.status === 'pending';
+    const sidePrefix = pos.side === 'long' ? '▲L' : '▼S';
+    const suffix = isPending ? ' ⏳' : '';
+    // Entry
+    state.paperPriceLines.push({ posId: pos.id, kind: 'entry', line: state.series.createPriceLine({
+      price: pos.entry, color: sideColor, lineWidth: 2,
+      lineStyle: isPending ? LightweightCharts.LineStyle.Dotted : LightweightCharts.LineStyle.Solid,
+      axisLabelVisible: true, title: `${sidePrefix}${suffix}`,
+    })});
+    // SL
+    state.paperPriceLines.push({ posId: pos.id, kind: 'sl', line: state.series.createPriceLine({
+      price: pos.sl, color: '#ef4444', lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      axisLabelVisible: true, title: `${sidePrefix} SL`,
+    })});
+    // TP
+    state.paperPriceLines.push({ posId: pos.id, kind: 'tp', line: state.series.createPriceLine({
+      price: pos.tp, color: '#3b82f6', lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      axisLabelVisible: true, title: `${sidePrefix} TP`,
+    })});
+  }
 }
 
 function checkPaperPositions(){
@@ -5199,33 +5527,37 @@ function checkPaperPositions(){
 
   for(const pos of state.paper.positions){
     if(pos.status === 'pending'){
-      // Limit order : check si entry est touché
+      // Limit order : check si entry est touché. Appliquer spread à l'activation.
+      const halfSpread = (state.paper.spreadPips / 2) * PIP;
       if(pos.side === 'long' && last.low <= pos.entry){
         pos.status = 'open';
         pos.openTime = last.time;
-        pos.openPrice = pos.entry;
+        pos.openPrice = pos.entry + halfSpread; // spread aller
+        pos.entry = pos.openPrice;
         changed = true;
       } else if(pos.side === 'short' && last.high >= pos.entry){
         pos.status = 'open';
         pos.openTime = last.time;
-        pos.openPrice = pos.entry;
+        pos.openPrice = pos.entry - halfSpread;
+        pos.entry = pos.openPrice;
         changed = true;
       }
     }
     if(pos.status === 'open'){
-      // Check SL puis TP (conservateur : SL d'abord si les deux touchés)
+      // Check SL puis TP. Le spread retour est appliqué au prix d'exit.
       if(pos.side === 'long'){
-        if(last.low <= pos.sl){ closePaperPosition(pos.id, pos.sl, 'sl'); changed = true; }
-        else if(last.high >= pos.tp){ closePaperPosition(pos.id, pos.tp, 'tp'); changed = true; }
+        if(last.low <= pos.sl){ closePaperPosition(pos.id, applyExitSpread(pos.sl, 'long'), 'sl'); changed = true; }
+        else if(last.high >= pos.tp){ closePaperPosition(pos.id, applyExitSpread(pos.tp, 'long'), 'tp'); changed = true; }
       } else {
-        if(last.high >= pos.sl){ closePaperPosition(pos.id, pos.sl, 'sl'); changed = true; }
-        else if(last.low <= pos.tp){ closePaperPosition(pos.id, pos.tp, 'tp'); changed = true; }
+        if(last.high >= pos.sl){ closePaperPosition(pos.id, applyExitSpread(pos.sl, 'short'), 'sl'); changed = true; }
+        else if(last.low <= pos.tp){ closePaperPosition(pos.id, applyExitSpread(pos.tp, 'short'), 'tp'); changed = true; }
       }
     }
   }
   if(changed){
     savePaper();
     renderPaperTrading();
+    renderPaperPositionsOnChart();
   }
 }
 
@@ -5233,11 +5565,13 @@ function closePaperPosition(id, exitPrice, reason){
   const idx = state.paper.positions.findIndex(p => p.id === id);
   if(idx === -1) return;
   const pos = state.paper.positions[idx];
+  // Si fermeture manuelle, appliquer aussi le spread retour
+  if(reason === 'manual') exitPrice = applyExitSpread(exitPrice, pos.side);
   const pnl = calcPositionPnL(pos, exitPrice);
   pos.status = 'closed';
   pos.exitTime = Math.floor(Date.now() / 1000);
   pos.exitPrice = exitPrice;
-  pos.exitReason = reason; // 'sl' | 'tp' | 'manual'
+  pos.exitReason = reason;
   pos.pnl = pnl;
   state.paper.balance += pnl;
   state.paper.history.unshift(pos);
@@ -5247,6 +5581,12 @@ function closePaperPosition(id, exitPrice, reason){
   const sign = pnl >= 0 ? '+' : '';
   const emoji = reason === 'tp' ? '🎯' : reason === 'sl' ? '🛑' : '✋';
   showToast(`${emoji} Position fermée : ${sign}${pnl.toFixed(2)} €`);
+  // Notification browser si alertes activées
+  if(reason !== 'manual' && state.alerts && state.alerts.enabled){
+    sendNotif(`${emoji} Position ${reason === 'tp' ? 'gagnante' : 'perdante'}`,
+      `${pos.side === 'long' ? '▲ LONG' : '▼ SHORT'} fermée par ${reason.toUpperCase()} : ${sign}${pnl.toFixed(2)} €`,
+      'paper-close-' + pos.id);
+  }
 }
 
 function depositFunds(amount){
@@ -5362,7 +5702,9 @@ function renderPaperTrading(){
             <div class="pd-row"><span>Type</span><span class="pd-val">${p.orderType}</span></div>
           </div>
           <div class="paper-position-actions">
-            <button class="btn-close-pos" data-id="${p.id}">✋ Fermer manuellement (au prix actuel)</button>
+            <button class="btn-edit-pos" data-id="${p.id}" data-kind="sl" title="Modifier le Stop Loss">✏ SL</button>
+            <button class="btn-edit-pos" data-id="${p.id}" data-kind="tp" title="Modifier le Take Profit">✏ TP</button>
+            <button class="btn-close-pos" data-id="${p.id}">✋ Fermer maintenant</button>
           </div>
         </div>
       `;
@@ -5372,6 +5714,9 @@ function renderPaperTrading(){
         if(!currentPrice){ showToast('⚠ Pas de prix actuel'); return; }
         closePaperPosition(parseInt(b.dataset.id), currentPrice, 'manual');
       });
+    });
+    posListEl.querySelectorAll('.btn-edit-pos').forEach(b => {
+      b.addEventListener('click', () => editPositionLevel(parseInt(b.dataset.id), b.dataset.kind));
     });
   }
 
@@ -6018,6 +6363,14 @@ function wireQuickWins(){
   const mockMode = document.getElementById('mock-mode');
   mockMode.value = localStorage.getItem('mock_mode') || 'realistic';
   mockMode.addEventListener('change', e => localStorage.setItem('mock_mode', e.target.value));
+
+  // Paper spread setting
+  const spreadInput = document.getElementById('setting-paper-spread');
+  spreadInput.value = state.paper.spreadPips;
+  spreadInput.addEventListener('change', e => {
+    state.paper.spreadPips = Math.max(0, parseFloat(e.target.value) || 0);
+    localStorage.setItem('paper_spread', state.paper.spreadPips);
+  });
 }
 
 // Patch regenerateData to use realistic generator if setting says so
@@ -6122,6 +6475,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireReplay();
   wireQuickWins();
   wirePaperTrading();
+  wireOnboarding();
   setupZoneHover();
   injectHelpIcons();
   loadPrefs();       // applique state + DOM avant que regenerateData ne render
