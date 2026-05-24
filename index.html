@@ -840,6 +840,45 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 }
 .toast button:hover{background:var(--acc-dark)}
 
+/* ── Annotations toolbar ── */
+.annot-toolbar{
+  position:absolute;
+  left:8px;top:50%;
+  transform:translateY(-50%);
+  background:rgba(15,17,23,0.92);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:6px;
+  z-index:12;
+  display:flex;flex-direction:column;
+  gap:3px;
+}
+.annot-btn{
+  width:32px;height:32px;border-radius:7px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--muted2);
+  font-size:0.92rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.annot-btn:hover{color:var(--text);border-color:var(--border2)}
+.annot-btn.active{background:var(--acc);color:white;border-color:var(--acc)}
+.annot-btn.annot-color{
+  width:28px;height:28px;
+  border:2px solid var(--border);
+}
+.annot-btn.annot-color.active{border-color:white;transform:scale(1.1)}
+.annot-btn.annot-clear{color:var(--red);font-size:0.78rem}
+.annot-divider{height:1px;background:var(--border);margin:3px 2px}
+
+@media(max-width:900px){
+  .annot-toolbar{left:4px;padding:4px}
+  .annot-btn{width:28px;height:28px;font-size:0.82rem}
+  .annot-btn.annot-color{width:24px;height:24px}
+}
+
 /* ── Onboarding ── */
 .onb-hero{
   padding:32px 28px 18px;
@@ -1212,10 +1251,54 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
     box-shadow:-12px 0 30px rgba(0,0,0,0.4);
   }
   .side-panel.open{transform:translateX(0)}
-  .drawer-toggle{display:flex}
+  .drawer-toggle{
+    display:flex;
+    background:var(--acc) !important;
+    color:white !important;
+    border-color:var(--acc) !important;
+    box-shadow:0 0 0 0 var(--acc-glow);
+    animation:drawerPulse 2.4s ease-in-out infinite;
+  }
+  .drawer-toggle.opened-once{
+    background:var(--surface2) !important;
+    color:var(--muted2) !important;
+    border-color:var(--border) !important;
+    animation:none;
+    box-shadow:none;
+  }
+  @keyframes drawerPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}
+    50%{box-shadow:0 0 0 8px transparent}
+  }
   .chart-overlay-info{font-size:0.66rem;padding:8px 10px;gap:8px}
   .logo-sub{display:none}
   :root{--side-w:280px}
+
+  /* Hint flottant 1re fois */
+  .mobile-hint{
+    position:fixed;
+    top:70px;right:10px;
+    background:var(--acc);color:white;
+    padding:8px 12px;border-radius:8px;
+    font-size:0.78rem;font-weight:600;
+    box-shadow:0 4px 12px rgba(16,185,129,0.4);
+    z-index:40;
+    display:none;
+    animation:hintBounce 1.5s ease-in-out infinite;
+  }
+  .mobile-hint.visible{display:block}
+  .mobile-hint::after{
+    content:'';position:absolute;
+    top:-8px;right:14px;
+    width:0;height:0;
+    border-left:8px solid transparent;
+    border-right:8px solid transparent;
+    border-bottom:8px solid var(--acc);
+  }
+  @keyframes hintBounce{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-4px)}
+  }
 
   /* PD Arrays panel → bottom sheet */
   .pd-arrays-panel{
@@ -1349,11 +1432,31 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
       <!-- Hover tooltip pour zones ICT -->
       <div class="zone-tooltip" id="zone-tooltip"></div>
 
+      <!-- Annotation toolbar (dessin manuel) -->
+      <div class="annot-toolbar" id="annot-toolbar">
+        <button class="annot-btn active" data-mode="pan" title="Pan (déplacer le chart)">🖱</button>
+        <button class="annot-btn" data-mode="hline" title="Ligne horizontale (1 clic)">━</button>
+        <button class="annot-btn" data-mode="trendline" title="Trendline (2 clics)">↗</button>
+        <button class="annot-btn" data-mode="rect" title="Rectangle (2 clics)">▢</button>
+        <button class="annot-btn" data-mode="text" title="Texte (1 clic + saisie)">𝐀</button>
+        <div class="annot-divider"></div>
+        <button class="annot-btn annot-color" data-color="acc" style="background:#10b981" title="Vert"></button>
+        <button class="annot-btn annot-color" data-color="red" style="background:#ef4444" title="Rouge"></button>
+        <button class="annot-btn annot-color" data-color="blue" style="background:#3b82f6" title="Bleu"></button>
+        <button class="annot-btn annot-color" data-color="yellow" style="background:#fbbf24" title="Jaune"></button>
+        <div class="annot-divider"></div>
+        <button class="annot-btn" data-mode="erase" title="Cliquer sur une annotation pour l'effacer">🗑</button>
+        <button class="annot-btn annot-clear" id="annot-clear-all" title="Tout effacer">✖</button>
+      </div>
+
       <!-- Toast undo journal -->
       <div class="toast" id="toast-undo">
         <span id="toast-msg">Trade supprimé</span>
         <button id="toast-undo-btn">Annuler</button>
       </div>
+
+      <!-- Hint mobile 1re fois (pour découvrir le drawer) -->
+      <div class="mobile-hint" id="mobile-hint">👆 Tap pour les indicateurs &amp; outils</div>
 
       <div class="chart-overlay-info" id="chart-info">
         <div><span class="ohlc-label">O</span><span class="ohlc-val" id="ov-o">—</span></div>
@@ -2764,6 +2867,8 @@ function drawCanvasOverlays(){
   if(state.indicators.bos)       drawBosMss(ctx, t2x, p2y, w, h);
   if(state.indicators.liquidity) drawSweeps(ctx, t2x, p2y, w, h);
   if(state.indicators.irlerl)    drawIRLERL(ctx, t2x, p2y, w, h);
+  // Annotations utilisateur (toujours dessinées)
+  if(state.annotations) drawAnnotations(ctx, t2x, p2y, w, h);
   // RR handles suivent le pan/zoom
   if(state.rrTrade && state.rrTrade.active) updateRRHandlesPosition();
 }
@@ -3181,9 +3286,44 @@ function wireSettingsModal(){
 
 function wireDrawerToggle(){
   const panel = document.getElementById('side-panel');
-  document.getElementById('drawer-toggle').addEventListener('click', () => {
+  const toggle = document.getElementById('drawer-toggle');
+  const hint = document.getElementById('mobile-hint');
+  const hintShown = localStorage.getItem('mobile_hint_dismissed') === 'true';
+  toggle.addEventListener('click', () => {
     panel.classList.toggle('open');
+    toggle.classList.add('opened-once');
+    if(hint) hint.classList.remove('visible');
+    localStorage.setItem('mobile_hint_dismissed', 'true');
   });
+  // Affiche le hint après 1.5s sur mobile si jamais ouvert
+  if(!hintShown && window.innerWidth <= 900 && hint){
+    setTimeout(() => { hint.classList.add('visible'); }, 1500);
+    // Auto-hide après 8s
+    setTimeout(() => { hint.classList.remove('visible'); }, 9500);
+  }
+  // Swipe gesture : depuis le bord droit, swipe vers la gauche ouvre le drawer
+  let touchStartX = null, touchStartY = null;
+  document.addEventListener('touchstart', e => {
+    if(window.innerWidth > 900) return;
+    const t = e.touches[0];
+    if(t.clientX > window.innerWidth - 30){
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if(touchStartX === null) return;
+    const t = e.changedTouches[0];
+    const dx = touchStartX - t.clientX;
+    const dy = Math.abs(touchStartY - t.clientY);
+    if(dx > 40 && dy < 60 && !panel.classList.contains('open')){
+      panel.classList.add('open');
+      toggle.classList.add('opened-once');
+      if(hint) hint.classList.remove('visible');
+      localStorage.setItem('mobile_hint_dismissed', 'true');
+    }
+    touchStartX = null;
+  }, { passive: true });
 }
 
 function wireIndicatorToggles(){
@@ -5198,6 +5338,223 @@ fetchTwelveData = async function(tfKey, size){
 setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 // ============================================================
+// ANNOTATIONS — dessin manuel sur le chart
+// ============================================================
+
+const ANNOT_COLORS = {
+  acc: '#10b981', red: '#ef4444', blue: '#3b82f6', yellow: '#fbbf24'
+};
+
+state.annotations = JSON.parse(localStorage.getItem('annotations') || '[]');
+state.annotMode = 'pan';
+state.annotColor = 'acc';
+state.annotDrawing = null; // { type, time1, price1 } pour les 2-clics
+let _annotHoverIdx = -1;
+
+function saveAnnotations(){ localStorage.setItem('annotations', JSON.stringify(state.annotations)); }
+
+function setAnnotMode(mode){
+  state.annotMode = mode;
+  state.annotDrawing = null;
+  document.querySelectorAll('.annot-btn[data-mode]').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  // Cursor adapté
+  const chartEl = document.getElementById('chart');
+  if(mode === 'pan') chartEl.style.cursor = '';
+  else if(mode === 'erase') chartEl.style.cursor = 'not-allowed';
+  else chartEl.style.cursor = 'crosshair';
+}
+
+function setAnnotColor(color){
+  state.annotColor = color;
+  document.querySelectorAll('.annot-btn.annot-color').forEach(b => {
+    b.classList.toggle('active', b.dataset.color === color);
+  });
+}
+
+function handleChartClick(param){
+  if(state.annotMode === 'pan' || !param || !param.time || !param.point) return;
+  const price = state.series.coordinateToPrice(param.point.y);
+  if(price === null) return;
+  const time = param.time;
+
+  if(state.annotMode === 'erase'){
+    eraseAnnotationAt(param.point.x, param.point.y);
+    return;
+  }
+
+  if(state.annotMode === 'hline'){
+    state.annotations.push({ id: Date.now(), type: 'hline', color: state.annotColor, price });
+    saveAnnotations();
+    renderAll();
+  } else if(state.annotMode === 'text'){
+    const txt = prompt('Texte du label :', '');
+    if(!txt) return;
+    state.annotations.push({ id: Date.now(), type: 'text', color: state.annotColor, time, price, text: txt });
+    saveAnnotations();
+    renderAll();
+  } else if(state.annotMode === 'trendline' || state.annotMode === 'rect'){
+    if(!state.annotDrawing){
+      // 1er clic
+      state.annotDrawing = { type: state.annotMode, color: state.annotColor, time1: time, price1: price };
+      showToast(`📍 ${state.annotMode === 'trendline' ? 'Trendline' : 'Rectangle'} : clique le 2e point`);
+    } else {
+      // 2e clic, finalise
+      state.annotations.push({
+        id: Date.now(),
+        type: state.annotDrawing.type,
+        color: state.annotDrawing.color,
+        time1: state.annotDrawing.time1, price1: state.annotDrawing.price1,
+        time2: time, price2: price,
+      });
+      state.annotDrawing = null;
+      saveAnnotations();
+      renderAll();
+    }
+  }
+}
+
+function eraseAnnotationAt(x, y){
+  const timeScale = state.chart.timeScale();
+  const t2x = t => timeScale.timeToCoordinate(t);
+  const p2y = p => state.series.priceToCoordinate(p);
+  // Trouve l'annotation la plus proche (dans un rayon de 10px)
+  let bestIdx = -1, bestDist = 12;
+  for(let i = 0; i < state.annotations.length; i++){
+    const a = state.annotations[i];
+    let dist = Infinity;
+    if(a.type === 'hline'){
+      const ay = p2y(a.price);
+      if(ay !== null) dist = Math.abs(y - ay);
+    } else if(a.type === 'text'){
+      const ax = t2x(a.time), ay = p2y(a.price);
+      if(ax !== null && ay !== null) dist = Math.hypot(x - ax, y - ay);
+    } else if(a.type === 'trendline'){
+      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
+      if(x1 !== null && x2 !== null && y1 !== null && y2 !== null){
+        dist = distanceToSegment(x, y, x1, y1, x2, y2);
+      }
+    } else if(a.type === 'rect'){
+      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
+      if(x1 !== null && x2 !== null && y1 !== null && y2 !== null){
+        // Distance à un bord du rectangle
+        const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        const dxIn = (x >= minX && x <= maxX) ? 0 : Math.min(Math.abs(x - minX), Math.abs(x - maxX));
+        const dyIn = (y >= minY && y <= maxY) ? 0 : Math.min(Math.abs(y - minY), Math.abs(y - maxY));
+        dist = Math.hypot(dxIn, dyIn);
+      }
+    }
+    if(dist < bestDist){ bestDist = dist; bestIdx = i; }
+  }
+  if(bestIdx !== -1){
+    state.annotations.splice(bestIdx, 1);
+    saveAnnotations();
+    renderAll();
+    showToast('🗑 Annotation supprimée');
+  }
+}
+
+function distanceToSegment(px, py, x1, y1, x2, y2){
+  const dx = x2 - x1, dy = y2 - y1;
+  const len2 = dx*dx + dy*dy;
+  if(len2 === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t*dx), py - (y1 + t*dy));
+}
+
+function drawAnnotations(ctx, t2x, p2y, w, h){
+  ctx.lineWidth = 1.5;
+  ctx.font = 'bold 11px Segoe UI, system-ui';
+  for(const a of state.annotations){
+    const color = ANNOT_COLORS[a.color] || ANNOT_COLORS.acc;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    if(a.type === 'hline'){
+      const y = p2y(a.price);
+      if(y === null) continue;
+      ctx.setLineDash([6, 3]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(a.price.toFixed(5), 6, y - 3);
+    } else if(a.type === 'trendline'){
+      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
+      if(x1 === null || x2 === null || y1 === null || y2 === null) continue;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x1, y1, 4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x2, y2, 4, 0, Math.PI*2); ctx.fill();
+    } else if(a.type === 'rect'){
+      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
+      if(x1 === null || x2 === null || y1 === null || y2 === null) continue;
+      const X = Math.min(x1, x2), Y = Math.min(y1, y2);
+      const W = Math.abs(x2 - x1), H = Math.abs(y2 - y1);
+      ctx.globalAlpha = 0.12;
+      ctx.fillRect(X, Y, W, H);
+      ctx.globalAlpha = 1;
+      ctx.strokeRect(X, Y, W, H);
+    } else if(a.type === 'text'){
+      const x = t2x(a.time), y = p2y(a.price);
+      if(x === null || y === null) continue;
+      // background pour lisibilité
+      const m = ctx.measureText(a.text);
+      ctx.fillStyle = 'rgba(15,17,23,0.85)';
+      ctx.fillRect(x - 2, y - 14, m.width + 8, 18);
+      ctx.fillStyle = color;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(a.text, x + 2, y - 5);
+      // petit pointeur
+      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  // Drawing en cours (trendline/rect)
+  if(state.annotDrawing){
+    const color = ANNOT_COLORS[state.annotDrawing.color];
+    const x1 = t2x(state.annotDrawing.time1), y1 = p2y(state.annotDrawing.price1);
+    if(x1 !== null && y1 !== null){
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(x1, y1, 5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(x1, y1, 12, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
+function wireAnnotations(){
+  // Subscribe au click du chart
+  state.chart.subscribeClick(param => handleChartClick(param));
+  // Boutons mode
+  document.querySelectorAll('.annot-btn[data-mode]').forEach(b => {
+    b.addEventListener('click', () => setAnnotMode(b.dataset.mode));
+  });
+  // Boutons couleur
+  document.querySelectorAll('.annot-btn.annot-color').forEach(b => {
+    b.addEventListener('click', () => setAnnotColor(b.dataset.color));
+  });
+  setAnnotColor('acc'); // couleur active par défaut
+  // Bouton tout effacer
+  document.getElementById('annot-clear-all').addEventListener('click', () => {
+    if(state.annotations.length === 0){ showToast('Aucune annotation à effacer'); return; }
+    if(!confirm(`Effacer toutes les annotations (${state.annotations.length}) ?`)) return;
+    state.annotations = [];
+    saveAnnotations();
+    renderAll();
+    showToast('🗑 Toutes les annotations effacées');
+  });
+  // Escape pour annuler un drawing en cours
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && state.annotDrawing){
+      state.annotDrawing = null;
+      renderAll();
+    }
+  });
+}
+
+// ============================================================
 // ONBOARDING — tour guidé au 1er lancement
 // ============================================================
 
@@ -6476,6 +6833,7 @@ document.addEventListener('DOMContentLoaded', () => {
   wireQuickWins();
   wirePaperTrading();
   wireOnboarding();
+  wireAnnotations();
   setupZoneHover();
   injectHelpIcons();
   loadPrefs();       // applique state + DOM avant que regenerateData ne render
