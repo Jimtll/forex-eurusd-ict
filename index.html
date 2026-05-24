@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0f1117">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ICT EUR/USD">
 <title>EUR/USD · ICT Dashboard</title>
 <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -488,6 +494,70 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
   border-left-color:var(--acc);
   font-weight:600;
 }
+.course-toc .chapter::before{
+  content:'○';
+  display:inline-block;margin-right:5px;
+  color:var(--surface3);font-size:0.75rem;
+}
+.course-toc .chapter.read::before{content:'✓';color:var(--acc)}
+
+.course-progress{
+  padding:12px 18px;
+  border-bottom:1px solid var(--border);
+}
+.course-progress-label{
+  display:flex;justify-content:space-between;
+  font-size:0.7rem;color:var(--muted);
+  margin-bottom:6px;
+}
+.course-progress-bar{
+  height:5px;background:var(--surface2);
+  border-radius:3px;overflow:hidden;
+}
+.course-progress-fill{
+  height:100%;background:var(--acc);
+  width:0%;transition:width 0.4s;
+}
+
+/* Quiz styles (réutilisé du tuto pour cohérence) */
+.course-content .quiz-block{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;padding:24px;margin-top:32px;
+}
+.course-content .quiz-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.course-content .quiz-header .emoji{font-size:1.4rem}
+.course-content .quiz-header h3{margin:0;color:var(--acc);font-size:1.05rem}
+.course-content .quiz-sub{font-size:0.8rem;color:var(--muted2);margin-bottom:18px}
+.course-content .quiz-question{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.course-content .quiz-question:last-of-type{border-bottom:none;padding-bottom:0}
+.course-content .quiz-q-text{font-size:0.92rem;font-weight:600;margin-bottom:10px;color:var(--text)}
+.course-content .quiz-options{display:flex;flex-direction:column;gap:6px}
+.course-content .quiz-option{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:8px;
+  background:var(--surface3);border:1px solid var(--border);
+  font-size:0.84rem;cursor:pointer;transition:all 0.15s;
+}
+.course-content .quiz-option:hover{border-color:var(--acc)}
+.course-content .quiz-option.correct{background:var(--acc-dim);border-color:var(--acc);color:var(--acc)}
+.course-content .quiz-option.wrong{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.course-content .quiz-option.locked{cursor:default;pointer-events:none}
+.course-content .quiz-option.locked:not(.correct):not(.wrong){opacity:0.4}
+.course-content .quiz-explanation{
+  margin-top:10px;font-size:0.82rem;color:var(--muted2);
+  padding:8px 12px;background:var(--surface);
+  border-left:3px solid var(--acc);
+  border-radius:0 6px 6px 0;display:none;
+}
+.course-content .quiz-explanation.visible{display:block}
+.course-content .quiz-score{
+  margin-top:14px;padding:14px;background:var(--surface);
+  border-radius:10px;text-align:center;display:none;
+}
+.course-content .quiz-score.visible{display:block}
+.course-content .quiz-score .score-value{font-size:1.6rem;font-weight:800;color:var(--acc);margin-bottom:4px}
+.course-content .quiz-score .score-msg{font-size:0.84rem;color:var(--muted2)}
 
 .course-content{
   flex:1;overflow-y:auto;
@@ -638,6 +708,35 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 #ps-result .line .val.highlight{color:var(--acc)}
 
 .modal-section h3{font-size:0.84rem;margin-bottom:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.05em;font-weight:700}
+
+/* ── Alerts toggles ── */
+.alert-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;font-size:0.86rem}
+.alert-toggle input{display:none}
+.alert-toggle-track{
+  width:36px;height:20px;border-radius:99px;
+  background:var(--surface3);position:relative;
+  transition:background 0.18s;flex-shrink:0;
+}
+.alert-toggle-track::before{
+  content:'';position:absolute;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--muted2);
+  top:3px;left:3px;
+  transition:transform 0.18s,background 0.18s;
+}
+.alert-toggle input:checked + .alert-toggle-track{background:var(--acc-dim)}
+.alert-toggle input:checked + .alert-toggle-track::before{transform:translateX(16px);background:var(--acc)}
+.alert-toggle-label{font-weight:500}
+
+.alert-subtoggle{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;margin:3px 0;
+  border-radius:7px;
+  background:var(--surface2);
+  font-size:0.8rem;cursor:pointer;
+}
+.alert-subtoggle:hover{background:var(--surface3)}
+.alert-subtoggle input{margin:0;cursor:pointer}
 
 /* ── Backtest modal ── */
 .backtest-grid{
@@ -867,6 +966,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
       <span id="price-display">—</span>
       <span id="price-change" class="change flat">—</span>
     </div>
+    <button class="icon-btn" id="install-btn" title="Installer comme app" style="display:none">📲</button>
     <a class="icon-btn" href="./tuto-debutant.html" title="Tuto débutant — bases du trading">🎓</a>
     <button class="icon-btn" id="open-courses" title="Cours ICT">📚</button>
     <button class="icon-btn drawer-toggle" id="drawer-toggle" title="Indicateurs">☰</button>
@@ -1037,6 +1137,24 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
         <button class="btn btn-ghost" id="btn-mock-mode">🎲 Repasser en Mock</button>
       </div>
       <p id="api-status" style="font-size:0.78rem;color:var(--muted2);margin-top:8px;line-height:1.5"></p>
+    </div>
+
+    <div class="modal-section">
+      <h3>🔔 Alertes</h3>
+      <p style="font-size:0.8rem;color:var(--muted2);line-height:1.5;margin-bottom:10px">
+        Reçois des notifications navigateur quand un setup important apparaît, même si l'onglet n'est pas actif.
+      </p>
+      <label class="alert-toggle">
+        <input type="checkbox" id="alerts-enabled">
+        <span class="alert-toggle-track"></span>
+        <span class="alert-toggle-label">Activer les notifications</span>
+      </label>
+      <div id="alerts-types" style="margin-top:10px;display:none">
+        <label class="alert-subtoggle"><input type="checkbox" id="alert-aplus" checked> ⭐ Setups A+ (score ≥ 4/5)</label>
+        <label class="alert-subtoggle"><input type="checkbox" id="alert-sweep" checked> 💧 Liquidity sweeps</label>
+        <label class="alert-subtoggle"><input type="checkbox" id="alert-killzone" checked> 🕐 Début de killzone (London / NY)</label>
+      </div>
+      <p id="alerts-status" style="font-size:0.74rem;color:var(--muted);margin-top:8px"></p>
     </div>
 
     <div class="modal-section">
@@ -2466,6 +2584,7 @@ function renderAll(){
   renderPremiumDiscount();
   renderPDArraysPanel();
   drawCanvasOverlays();
+  if(state.alerts && state.alerts.enabled) checkAlerts();
 }
 
 // ============================================================
@@ -2983,6 +3102,158 @@ function wireApiKey(){
   document.getElementById('api-key-input').value = state.apiKey;
   document.getElementById('btn-test-api').addEventListener('click', enableLiveMode);
   document.getElementById('btn-mock-mode').addEventListener('click', disableLiveMode);
+}
+
+// ============================================================
+// FEATURE 15 — PWA : service worker + install prompt
+// ============================================================
+
+let _pwaDeferredPrompt = null;
+
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  // Register avec un path relatif au dossier courant (au cas où l'app est servie depuis un sous-chemin)
+  navigator.serviceWorker.register('./sw.js', { scope: './' })
+    .then(reg => console.info('[SW] enregistré', reg.scope))
+    .catch(err => console.warn('[SW] échec', err));
+}
+
+function wirePwaInstall(){
+  const btn = document.getElementById('install-btn');
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _pwaDeferredPrompt = e;
+    btn.style.display = 'flex';
+  });
+  btn.addEventListener('click', async () => {
+    if(!_pwaDeferredPrompt) return;
+    _pwaDeferredPrompt.prompt();
+    const { outcome } = await _pwaDeferredPrompt.userChoice;
+    if(outcome === 'accepted') btn.style.display = 'none';
+    _pwaDeferredPrompt = null;
+  });
+  // Si déjà installé, on cache (event séparé)
+  window.addEventListener('appinstalled', () => {
+    btn.style.display = 'none';
+    _pwaDeferredPrompt = null;
+  });
+}
+
+// ============================================================
+// FEATURE 13 — ALERTES NAVIGATEUR
+// ============================================================
+
+state.alerts = {
+  enabled: localStorage.getItem('alerts_enabled') === 'true',
+  types: {
+    aplus: localStorage.getItem('alert_aplus') !== 'false',
+    sweep: localStorage.getItem('alert_sweep') !== 'false',
+    killzone: localStorage.getItem('alert_killzone') !== 'false',
+  },
+  sentIds: new Set(),
+  lastKzStatus: null,
+};
+
+function notifSupported(){ return 'Notification' in window; }
+
+async function requestNotifPermission(){
+  if(!notifSupported()) return false;
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied') return false;
+  const p = await Notification.requestPermission();
+  return p === 'granted';
+}
+
+function sendNotif(title, body, tag){
+  if(!state.alerts.enabled || !notifSupported() || Notification.permission !== 'granted') return;
+  if(state.alerts.sentIds.has(tag)) return;
+  state.alerts.sentIds.add(tag);
+  try {
+    new Notification(title, { body, tag, icon: './icon.svg', silent: false });
+  } catch(e){ console.warn('[Notif]', e); }
+}
+
+function checkAlerts(){
+  if(!state.alerts.enabled) return;
+  // A+ setups (score >= 4)
+  if(state.alerts.types.aplus){
+    const aplus = [
+      ...state.computed.orderBlocks.filter(o => !o.mitigated && (o.score || 0) >= 4).map(o => ({ ...o, kind: 'OB' })),
+      ...state.computed.fvgs.filter(f => !f.mitigated && (f.score || 0) >= 4).map(f => ({ ...f, kind: 'FVG' })),
+    ];
+    for(const z of aplus){
+      const tag = `aplus-${z.kind}-${z.time}-${z.type}`;
+      const side = z.type === 'bullish' ? 'Long' : 'Short';
+      const price = ((z.top + z.bottom) / 2).toFixed(5);
+      sendNotif(`⭐ Setup A+ ${z.kind}`, `${side} score ${z.score} à ${price} sur ${state.currentTf}`, tag);
+    }
+  }
+  // Liquidity sweeps (les 3 derniers)
+  if(state.alerts.types.sweep){
+    const recent = state.computed.liquidity.sweeps.slice(-3);
+    for(const s of recent){
+      const tag = `sweep-${s.time}-${s.dir}`;
+      sendNotif('💧 Liquidity Sweep', `${s.dir === 'up' ? 'BSL' : 'SSL'} swept à ${s.level.toFixed(5)}`, tag);
+    }
+  }
+  // Killzones (transition)
+  if(state.alerts.types.killzone){
+    const now = new Date();
+    const h = now.getUTCHours() + now.getUTCMinutes() / 60;
+    let currentKz = null;
+    if(h >= 7 && h < 10) currentKz = 'London';
+    else if(h >= 12 && h < 15) currentKz = 'NY';
+    if(currentKz && currentKz !== state.alerts.lastKzStatus){
+      const tag = `kz-${currentKz}-${now.toISOString().slice(0,10)}`;
+      sendNotif(`🕐 Killzone ${currentKz}`, `La killzone ${currentKz} vient de commencer.`, tag);
+    }
+    state.alerts.lastKzStatus = currentKz;
+  }
+}
+
+function wireAlerts(){
+  const enabledEl = document.getElementById('alerts-enabled');
+  const typesWrap = document.getElementById('alerts-types');
+  const statusEl = document.getElementById('alerts-status');
+
+  // Restore state
+  enabledEl.checked = state.alerts.enabled;
+  typesWrap.style.display = state.alerts.enabled ? 'block' : 'none';
+  document.getElementById('alert-aplus').checked = state.alerts.types.aplus;
+  document.getElementById('alert-sweep').checked = state.alerts.types.sweep;
+  document.getElementById('alert-killzone').checked = state.alerts.types.killzone;
+
+  const updateStatus = () => {
+    if(!notifSupported()){ statusEl.innerHTML = '<span style="color:var(--orange)">⚠ Notifications non supportées par ce navigateur.</span>'; return; }
+    if(!state.alerts.enabled){ statusEl.textContent = ''; return; }
+    if(Notification.permission === 'granted') statusEl.innerHTML = '<span style="color:var(--acc)">✓ Notifications activées</span>';
+    else if(Notification.permission === 'denied') statusEl.innerHTML = '<span style="color:var(--red)">✗ Bloquées. Active-les dans les paramètres de ton navigateur.</span>';
+    else statusEl.innerHTML = '<span style="color:var(--muted2)">Cliquer activera la demande de permission.</span>';
+  };
+  updateStatus();
+
+  enabledEl.addEventListener('change', async () => {
+    if(enabledEl.checked){
+      const ok = await requestNotifPermission();
+      if(!ok){ enabledEl.checked = false; updateStatus(); return; }
+      state.alerts.enabled = true;
+      typesWrap.style.display = 'block';
+      // Notif test
+      sendNotif('🎉 Alertes activées', 'Tu recevras maintenant les setups importants en temps réel.', 'test-' + Date.now());
+    } else {
+      state.alerts.enabled = false;
+      typesWrap.style.display = 'none';
+    }
+    localStorage.setItem('alerts_enabled', state.alerts.enabled);
+    updateStatus();
+  });
+
+  ['aplus', 'sweep', 'killzone'].forEach(k => {
+    document.getElementById('alert-' + k).addEventListener('change', e => {
+      state.alerts.types[k] = e.target.checked;
+      localStorage.setItem('alert_' + k, e.target.checked);
+    });
+  });
 }
 
 // ============================================================
@@ -3848,29 +4119,181 @@ const COURSES = {
 };
 
 let currentCourseChapter = '1.1';
+const COURSE_READ_KEY = 'course_read_chapters';
+let readCourseChapters = new Set(JSON.parse(localStorage.getItem(COURSE_READ_KEY) || '[]'));
+
+const COURSE_QUIZZES = {
+  '2.9': {
+    title: 'Quiz — Module 2 : ICT essentiels',
+    after: 'Tu maîtrises les essentiels ? Vérifions :',
+    questions: [
+      {
+        q: 'Un Order Block bullish, c\'est :',
+        options: ['La dernière bougie bullish avant un move haussier', 'La dernière bougie bearish avant un move haussier qui casse structure', 'N\'importe quelle grosse bougie verte'],
+        correct: 1,
+        explain: 'Un OB bullish = la dernière bougie BEARISH (rouge) avant l\'impulsion haussière qui casse structure. C\'est là où les institutions ont placé leurs ordres d\'achat avant de pousser le prix.',
+      },
+      {
+        q: 'Quand le prix wick au-dessus d\'un swing high puis close en dessous, c\'est :',
+        options: ['Un breakout réussi → on achète la cassure', 'Un liquidity sweep → les institutions ont collecté la liquidité', 'Une erreur de cotation'],
+        correct: 1,
+        explain: 'C\'est LE pattern ICT le plus puissant. Le wick au-dessus active les buy stops du retail, les institutions vendent dans cette liquidité, puis le prix retombe. À fade, pas à trader dans le sens du wick.',
+      },
+      {
+        q: 'En zone Premium (au-dessus de l\'équilibre 50%), tu cherches à :',
+        options: ['Acheter (prix bas)', 'Vendre (prix élevé)', 'Ne rien faire'],
+        correct: 1,
+        explain: '"Acheter en Discount, vendre en Premium". En zone Premium, le prix est cher → tu cherches des setups SHORT. En Discount → LONG. La ligne grise pointillée du dashboard te dit où tu en es.',
+      },
+      {
+        q: 'Quelles sont les heures GMT de la killzone London ?',
+        options: ['00h-07h', '07h-10h', '12h-15h'],
+        correct: 1,
+        explain: 'London Open : 07-10h GMT. C\'est la phase de "manipulation" — gros volume et souvent faux moves avant le vrai. NY Open : 12-15h GMT. Asia : 20-00h GMT.',
+      },
+    ],
+  },
+  '4.5': {
+    title: 'Quiz — Module 4 : Gestion de risque',
+    after: 'La gestion de risque, c\'est 80% du succès. Test :',
+    questions: [
+      {
+        q: 'Tu as 10 000€. Quel risque par trade vises-tu ?',
+        options: ['10% pour gagner vite', '1-2% maximum', '5% pour équilibrer'],
+        correct: 1,
+        explain: 'TOUJOURS 1-2% max. Avec 10% par trade, 7 pertes consécutives = -52% du compte. Avec 1%, 7 pertes = -7%. La survie passe avant tout.',
+      },
+      {
+        q: 'Ton R:R minimum acceptable, c\'est :',
+        options: ['1:1 (récupère ce que tu risques)', '1:2 minimum (tu gagnes 2× ce que tu risques)', '1:5 sinon ça vaut pas le coup'],
+        correct: 1,
+        explain: 'Avec 1:2 minimum, même un winrate de 40% est rentable (4×2R - 6×1R = +2R sur 10 trades). Sous 1:2, tu as besoin d\'un winrate impossible à maintenir.',
+      },
+      {
+        q: 'Tu enchaînes 2 pertes dans la journée. Tu fais quoi ?',
+        options: ['Tu continues, c\'est la loi des stats', 'Tu arrêtes pour aujourd\'hui, tu reviens demain', 'Tu doubles la taille pour te refaire'],
+        correct: 1,
+        explain: 'Règle stricte : 2 pertes max par jour. Au-delà, c\'est probablement que ton mental est compromis (revenge, FOMO). Le marché sera encore là demain.',
+      },
+    ],
+  },
+};
+
+function renderCourseQuiz(chapterId){
+  const quiz = COURSE_QUIZZES[chapterId];
+  if(!quiz) return '';
+  return `
+    <div class="quiz-block">
+      <div class="quiz-header">
+        <span class="emoji">🧠</span>
+        <h3>${quiz.title}</h3>
+      </div>
+      <p class="quiz-sub">${quiz.after}</p>
+      ${quiz.questions.map((q, qi) => `
+        <div class="quiz-question" data-q="${qi}">
+          <div class="quiz-q-text">${qi + 1}. ${q.q}</div>
+          <div class="quiz-options">
+            ${q.options.map((opt, oi) => `
+              <div class="quiz-option" data-opt="${oi}" data-correct="${oi === q.correct ? '1' : '0'}">${opt}</div>
+            `).join('')}
+          </div>
+          <div class="quiz-explanation"><strong>Explication :</strong> ${q.explain}</div>
+        </div>
+      `).join('')}
+      <div class="quiz-score" id="course-quiz-score-${chapterId}">
+        <div class="score-value">— / ${quiz.questions.length}</div>
+        <div class="score-msg"></div>
+      </div>
+    </div>
+  `;
+}
+
+function wireCourseQuiz(chapterId){
+  const quiz = COURSE_QUIZZES[chapterId];
+  if(!quiz) return;
+  const block = document.querySelector('.course-content .quiz-block');
+  if(!block) return;
+  const answered = new Set();
+  block.querySelectorAll('.quiz-question').forEach((qEl, qi) => {
+    const opts = qEl.querySelectorAll('.quiz-option');
+    opts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if(answered.has(qi)) return;
+        answered.add(qi);
+        const correctIdx = quiz.questions[qi].correct;
+        opts.forEach((o, oi) => {
+          o.classList.add('locked');
+          if(oi === correctIdx) o.classList.add('correct');
+          else if(o === opt) o.classList.add('wrong');
+        });
+        qEl.querySelector('.quiz-explanation').classList.add('visible');
+        if(answered.size === quiz.questions.length){
+          const correct = [...block.querySelectorAll('.quiz-question')]
+            .filter(q => q.querySelector('.quiz-option.correct') && !q.querySelector('.quiz-option.wrong')).length;
+          const score = document.getElementById('course-quiz-score-' + chapterId);
+          score.classList.add('visible');
+          score.querySelector('.score-value').textContent = `${correct} / ${quiz.questions.length}`;
+          const pct = correct / quiz.questions.length;
+          score.querySelector('.score-msg').textContent =
+            pct === 1 ? '🎉 Parfait ! Tu as tout compris.'
+            : pct >= 0.66 ? '👍 Bien ! Re-lis les explications.'
+            : '📚 Re-lis le module avant de continuer.';
+          localStorage.setItem('course_quiz_' + chapterId, correct);
+        }
+      });
+    });
+  });
+}
+
+function markCourseRead(chapterId){
+  if(readCourseChapters.has(chapterId)) return;
+  readCourseChapters.add(chapterId);
+  localStorage.setItem(COURSE_READ_KEY, JSON.stringify([...readCourseChapters]));
+  const a = document.querySelector(`#course-toc .chapter[data-chap="${chapterId}"]`);
+  if(a) a.classList.add('read');
+  updateCourseProgress();
+}
+
+function updateCourseProgress(){
+  const all = COURSE_MODULES.flatMap(m => m.chapters.map(c => c.id));
+  const read = all.filter(id => readCourseChapters.has(id)).length;
+  const fill = document.getElementById('course-progress-fill');
+  const text = document.getElementById('course-progress-text');
+  if(fill) fill.style.width = (read / all.length * 100) + '%';
+  if(text) text.textContent = `${read} / ${all.length} chapitres lus`;
+}
 
 function renderCourseTOC(){
   const toc = document.getElementById('course-toc');
-  toc.innerHTML = COURSE_MODULES.map(m => `
+  toc.innerHTML = `
+    <div class="course-progress">
+      <div class="course-progress-label">
+        <span>Progression</span>
+        <span id="course-progress-text">0 / 27</span>
+      </div>
+      <div class="course-progress-bar"><div class="course-progress-fill" id="course-progress-fill"></div></div>
+    </div>
+  ` + COURSE_MODULES.map(m => `
     <details ${m.id === 'M1' ? 'open' : ''}>
       <summary>${m.title}</summary>
-      ${m.chapters.map(c => `<a class="chapter ${c.id === currentCourseChapter ? 'active' : ''}" data-chap="${c.id}">${c.title}</a>`).join('')}
+      ${m.chapters.map(c => `<a class="chapter ${c.id === currentCourseChapter ? 'active' : ''} ${readCourseChapters.has(c.id) ? 'read' : ''}" data-chap="${c.id}">${c.title}</a>`).join('')}
     </details>
   `).join('');
   toc.querySelectorAll('.chapter').forEach(a => {
     a.addEventListener('click', () => loadCourseChapter(a.dataset.chap));
   });
+  updateCourseProgress();
 }
 
 function loadCourseChapter(id){
   currentCourseChapter = id;
   const content = COURSES[id] || '<p>Chapitre à venir.</p>';
-  // Find prev/next
+  const quizHtml = renderCourseQuiz(id);
   const allChapters = COURSE_MODULES.flatMap(m => m.chapters.map(c => c.id));
   const idx = allChapters.indexOf(id);
   const prev = idx > 0 ? allChapters[idx - 1] : null;
   const next = idx < allChapters.length - 1 ? allChapters[idx + 1] : null;
-  document.getElementById('course-content').innerHTML = content + `
+  document.getElementById('course-content').innerHTML = content + quizHtml + `
     <div class="lesson-nav">
       <button ${!prev ? 'disabled' : ''} data-chap="${prev || ''}">← Précédent</button>
       <button ${!next ? 'disabled' : ''} data-chap="${next || ''}">Suivant →</button>
@@ -3882,6 +4305,8 @@ function loadCourseChapter(id){
   document.querySelectorAll('#course-content .lesson-nav button').forEach(b => {
     if(b.dataset.chap) b.addEventListener('click', () => loadCourseChapter(b.dataset.chap));
   });
+  if(quizHtml) wireCourseQuiz(id);
+  setTimeout(() => markCourseRead(id), 4000);
   document.getElementById('course-content').scrollTop = 0;
 }
 
@@ -4134,8 +4559,11 @@ document.addEventListener('DOMContentLoaded', () => {
   wireJournal();
   wireBacktest();
   wireApiKey();
+  wireAlerts();
   wireCourses();
   wirePresets();
+  wirePwaInstall();
+  registerServiceWorker();
   injectHelpIcons();
   loadPrefs();       // applique state + DOM avant que regenerateData ne render
   regenerateData(); // utilise state.currentTf + state.indicators restaurés

@@ -115,6 +115,84 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
   border-left-color:var(--acc);
   font-weight:600;
 }
+.toc-chapter::before{
+  content:'○';
+  display:inline-block;
+  margin-right:6px;
+  color:var(--surface3);
+  font-size:0.75rem;
+}
+.toc-chapter.read::before{content:'✓';color:var(--acc)}
+
+.global-progress{
+  padding:14px 22px 8px;
+  border-top:1px solid var(--border);
+  margin-top:8px;
+}
+.global-progress-label{
+  display:flex;justify-content:space-between;
+  font-size:0.7rem;color:var(--muted);
+  margin-bottom:6px;
+}
+.global-progress-bar{
+  height:6px;background:var(--surface2);
+  border-radius:3px;overflow:hidden;
+}
+.global-progress-fill{
+  height:100%;background:var(--acc);
+  width:0%;transition:width 0.4s;
+}
+
+/* ── Quiz ── */
+.quiz-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:24px;margin-top:32px;
+}
+.quiz-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:6px;
+}
+.quiz-header .emoji{font-size:1.4rem}
+.quiz-header h3{margin:0;color:var(--acc);font-size:1.05rem}
+.quiz-sub{font-size:0.8rem;color:var(--muted2);margin-bottom:18px}
+.quiz-question{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.quiz-question:last-of-type{border-bottom:none}
+.quiz-q-text{font-size:0.95rem;font-weight:600;margin-bottom:10px;color:var(--text)}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-option{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:8px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  font-size:0.86rem;cursor:pointer;
+  transition:all 0.15s;
+}
+.quiz-option:hover{border-color:var(--acc);background:var(--surface3)}
+.quiz-option.correct{background:var(--acc-dim);border-color:var(--acc);color:var(--acc)}
+.quiz-option.wrong{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.quiz-option.locked{cursor:default;pointer-events:none}
+.quiz-option.locked:not(.correct):not(.wrong){opacity:0.4}
+.quiz-explanation{
+  margin-top:10px;font-size:0.82rem;
+  color:var(--muted2);
+  padding:8px 12px;
+  background:var(--surface2);
+  border-left:3px solid var(--acc);
+  border-radius:0 6px 6px 0;
+  display:none;
+}
+.quiz-explanation.visible{display:block}
+.quiz-score{
+  margin-top:14px;padding:14px;
+  background:var(--surface2);border-radius:10px;
+  text-align:center;
+  display:none;
+}
+.quiz-score.visible{display:block}
+.quiz-score .score-value{font-size:1.6rem;font-weight:800;color:var(--acc);margin-bottom:4px}
+.quiz-score .score-msg{font-size:0.84rem;color:var(--muted2)}
 
 /* ── Content ── */
 .content{
@@ -258,6 +336,13 @@ tr:last-child td{border-bottom:none}
   <aside class="toc-wrap" id="toc-wrap">
     <div class="toc-title">Programme complet</div>
     <div id="toc"></div>
+    <div class="global-progress">
+      <div class="global-progress-label">
+        <span>Progression</span>
+        <span id="progress-text">0 / 24</span>
+      </div>
+      <div class="global-progress-bar"><div class="global-progress-fill" id="progress-fill"></div></div>
+    </div>
   </aside>
 
   <main class="content" id="content"></main>
@@ -934,10 +1019,160 @@ const CHAPTERS = {
 };
 
 // ============================================================
-// RENDU
+// QUIZ — interactif à la fin de certains chapitres
+// ============================================================
+const QUIZZES = {
+  '0.4': {
+    title: 'Quiz — Module 0 : Bases du marché',
+    after: 'Maintenant que tu as les bases du marché, vérifie ta compréhension :',
+    questions: [
+      {
+        q: 'Sur le forex, quel acteur fait le plus de volume ?',
+        options: ['Les particuliers (toi/moi)', 'Les banques commerciales (JP Morgan, Deutsche Bank...)', 'Les hedge funds'],
+        correct: 1,
+        explain: 'Les banques commerciales font ~40% du volume forex. Le retail (particuliers) ne fait que ~5%. C\'est pour ça qu\'on dit qu\'il faut "trader avec le Smart Money", pas contre.',
+      },
+      {
+        q: 'Le forex est ouvert :',
+        options: ['Du dimanche soir au vendredi soir (24h/24)', '9h-17h heure locale', '24h/24, 7j/7 comme la crypto'],
+        correct: 0,
+        explain: 'Le forex ouvre dimanche 22h GMT et ferme vendredi 22h GMT. Pendant le week-end, le marché est fermé — c\'est pour ça qu\'on parfois on voit des "gaps" le lundi matin.',
+      },
+      {
+        q: 'Quand le prix de EUR/USD passe de 1.0850 à 1.0900, ça veut dire :',
+        options: ['L\'euro s\'est déprécié face au dollar', 'L\'euro s\'est apprécié (il faut plus de dollars pour acheter 1€)', 'Le dollar s\'est apprécié'],
+        correct: 1,
+        explain: 'EUR/USD c\'est "combien de $ pour 1€". Si ça monte à 1.0900, il faut 1.09$ pour acheter 1€ → l\'euro vaut plus cher en dollars → euro fort.',
+      },
+    ],
+  },
+  '2.5': {
+    title: 'Quiz — Module 2 : Mécanique d\'un trade',
+    after: 'Tu sais maintenant comment fonctionne un trade. Vérifions :',
+    questions: [
+      {
+        q: 'Tu achètes EUR/USD à 1.0850 avec 0.5 lot. Le prix monte à 1.0900. Tu fermes. Tu gagnes :',
+        options: ['25 $', '250 $', '5 000 $'],
+        correct: 1,
+        explain: 'Calcul : 50 pips × 0.5 lot × 10$/pip = 250$. (1 lot standard = 100 000 unités, et 1 pip ≈ 10$ pour 1 lot sur EUR/USD)',
+      },
+      {
+        q: 'Le levier 30:1 te permet de :',
+        options: ['Gagner 30× plus à chaque trade', 'Trader une position 30× plus grande que ton capital', 'Avoir 30× moins de risque'],
+        correct: 1,
+        explain: 'Le levier te permet d\'OUVRIR une grosse position avec peu de capital (le broker prête le reste en garantie). Ça multiplie les gains ET les pertes. Le levier ne change pas ton risque — c\'est la TAILLE de position qui le détermine.',
+      },
+      {
+        q: 'Pendant une grosse news (NFP, FOMC), tu devrais :',
+        options: ['Trader agressivement pour profiter de la volatilité', 'Attendre que la news passe — spreads explosent et exécution mauvaise', 'Toujours trader dans le sens de la news'],
+        correct: 1,
+        explain: 'Pendant les news majeures, les spreads peuvent passer de 1 pip à 20+ pips. Slippage massif, exécutions chaotiques. Mieux vaut attendre 30 min avant/après les news clés. Calendrier : forexfactory.com.',
+      },
+    ],
+  },
+  '4.4': {
+    title: 'Quiz — Module 4 : Pièges et réalité',
+    after: 'Le test le plus important — la mentalité.',
+    questions: [
+      {
+        q: 'Tu viens de prendre une perte sur un trade. Que fais-tu ?',
+        options: ['Tu prends immédiatement un autre trade pour te refaire', 'Tu fermes la plateforme pendant 1h minimum, tu reviens à froid', 'Tu déplaces ton SL sur le prochain trade pour avoir plus de marge'],
+        correct: 1,
+        explain: 'Le "revenge trade" tue plus de comptes que toutes les autres erreurs réunies. La règle d\'or : après une perte, pause 1h minimum. Tu reviens à froid avec ton plan, jamais sous le coup de l\'émotion.',
+      },
+      {
+        q: 'Tu risques 1% par trade. Tu enchaînes 5 pertes consécutives. Ton compte :',
+        options: ['Est explosé (~50% perdu)', 'A perdu environ 5%', 'Est dans le négatif après margin call'],
+        correct: 1,
+        explain: 'Avec 1% par trade, 5 pertes = ~4.9% (effet composé). Avec 20% par trade par contre, 5 pertes = ~67%. C\'est pour ça que TOUT le monde te dit 1-2% max. C\'est mathématique.',
+      },
+      {
+        q: 'Avec 5 000€ de capital et un excellent rendement de 20%/an, tu gagnes par mois :',
+        options: ['~83€/mois', '~500€/mois', '~5 000€/mois'],
+        correct: 0,
+        explain: '5 000€ × 20% = 1 000€/an = 83€/mois. C\'est pas un salaire. Le trading ne devient un vrai revenu qu\'avec un GROS capital (180k+€ pour 3000€/mois). Les "20% par mois" promis sur Instagram ? Du flan.',
+      },
+    ],
+  },
+};
+
+function renderQuiz(chapterId){
+  const quiz = QUIZZES[chapterId];
+  if(!quiz) return '';
+  return `
+    <div class="quiz-block">
+      <div class="quiz-header">
+        <span class="emoji">🧠</span>
+        <h3>${quiz.title}</h3>
+      </div>
+      <p class="quiz-sub">${quiz.after}</p>
+      ${quiz.questions.map((q, qi) => `
+        <div class="quiz-question" data-q="${qi}">
+          <div class="quiz-q-text">${qi + 1}. ${q.q}</div>
+          <div class="quiz-options">
+            ${q.options.map((opt, oi) => `
+              <div class="quiz-option" data-opt="${oi}" data-correct="${oi === q.correct ? '1' : '0'}">${opt}</div>
+            `).join('')}
+          </div>
+          <div class="quiz-explanation"><strong>Explication :</strong> ${q.explain}</div>
+        </div>
+      `).join('')}
+      <div class="quiz-score" id="quiz-score-${chapterId}">
+        <div class="score-value">— / ${quiz.questions.length}</div>
+        <div class="score-msg"></div>
+      </div>
+    </div>
+  `;
+}
+
+function wireQuiz(chapterId){
+  const quiz = QUIZZES[chapterId];
+  if(!quiz) return;
+  const block = document.querySelector('.quiz-block');
+  if(!block) return;
+  const answered = new Set();
+  block.querySelectorAll('.quiz-question').forEach((qEl, qi) => {
+    const opts = qEl.querySelectorAll('.quiz-option');
+    opts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if(answered.has(qi)) return;
+        answered.add(qi);
+        const correctOptIdx = quiz.questions[qi].correct;
+        opts.forEach((o, oi) => {
+          o.classList.add('locked');
+          if(oi === correctOptIdx) o.classList.add('correct');
+          else if(o === opt) o.classList.add('wrong');
+        });
+        qEl.querySelector('.quiz-explanation').classList.add('visible');
+        if(answered.size === quiz.questions.length){
+          const correct = [...block.querySelectorAll('.quiz-question')].filter((qEl, i) => {
+            const sel = qEl.querySelector('.quiz-option.correct.wrong, .quiz-option.correct:not(.wrong)');
+            // Si l'utilisateur a cliqué sur le bon : la correct n'a pas .wrong
+            return qEl.querySelector('.quiz-option.correct') && !qEl.querySelector('.quiz-option.wrong');
+          }).length;
+          const score = document.getElementById('quiz-score-' + chapterId);
+          score.classList.add('visible');
+          score.querySelector('.score-value').textContent = `${correct} / ${quiz.questions.length}`;
+          const pct = correct / quiz.questions.length;
+          const msg = pct === 1 ? '🎉 Parfait ! Tu as tout compris.'
+            : pct >= 0.66 ? '👍 Bien ! Re-lis les explications pour les questions ratées.'
+            : '📚 Re-lis le module avant de continuer — c\'est important.';
+          score.querySelector('.score-msg').textContent = msg;
+          // Save quiz score
+          localStorage.setItem('quiz_' + chapterId, correct);
+        }
+      });
+    });
+  });
+}
+
+// ============================================================
+// RENDU + PROGRESS
 // ============================================================
 const LS_KEY = 'tuto_last_chapter';
+const READ_KEY = 'tuto_read_chapters';
 let currentChapter = localStorage.getItem(LS_KEY) || '0.1';
+let readChapters = new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]'));
 
 function renderTOC(){
   const container = document.getElementById('toc');
@@ -946,7 +1181,7 @@ function renderTOC(){
       <button class="toc-module-header">${m.title}</button>
       <div class="toc-chapters">
         ${m.chapters.map(c => `
-          <a class="toc-chapter ${c.id === currentChapter ? 'active' : ''}" data-chap="${c.id}">${c.title}</a>
+          <a class="toc-chapter ${c.id === currentChapter ? 'active' : ''} ${readChapters.has(c.id) ? 'read' : ''}" data-chap="${c.id}">${c.title}</a>
         `).join('')}
       </div>
     </div>
@@ -957,21 +1192,40 @@ function renderTOC(){
   container.querySelectorAll('.toc-chapter').forEach(a => {
     a.addEventListener('click', () => loadChapter(a.dataset.chap));
   });
+  updateProgress();
+}
+
+function markRead(chapterId){
+  if(readChapters.has(chapterId)) return;
+  readChapters.add(chapterId);
+  localStorage.setItem(READ_KEY, JSON.stringify([...readChapters]));
+  const tocLink = document.querySelector(`.toc-chapter[data-chap="${chapterId}"]`);
+  if(tocLink) tocLink.classList.add('read');
+  updateProgress();
+}
+
+function updateProgress(){
+  const all = MODULES.flatMap(m => m.chapters.map(c => c.id));
+  const read = all.filter(id => readChapters.has(id)).length;
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  if(fill) fill.style.width = (read / all.length * 100) + '%';
+  if(text) text.textContent = `${read} / ${all.length}`;
 }
 
 function loadChapter(id){
   currentChapter = id;
   localStorage.setItem(LS_KEY, id);
   const content = CHAPTERS[id] || '<p>Chapitre à venir.</p>';
+  const quizHtml = renderQuiz(id);
   const all = MODULES.flatMap(m => m.chapters.map(c => c.id));
   const idx = all.indexOf(id);
   const prev = idx > 0 ? all[idx - 1] : null;
   const next = idx < all.length - 1 ? all[idx + 1] : null;
 
-  // Compute progress
   const progress = ((idx + 1) / all.length) * 100;
 
-  document.getElementById('content').innerHTML = content + `
+  document.getElementById('content').innerHTML = content + quizHtml + `
     <div class="progress-bar"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
     <div class="progress-text" style="text-align:center">Chapitre ${idx + 1} / ${all.length}</div>
     <div class="lesson-nav">
@@ -979,15 +1233,16 @@ function loadChapter(id){
       <button class="next" ${!next ? 'disabled' : ''} data-chap="${next || ''}">${next ? 'Suivant →' : '🎓 Fin du tuto'}</button>
     </div>
   `;
-  // Update TOC active state
   document.querySelectorAll('.toc-chapter').forEach(a => {
     a.classList.toggle('active', a.dataset.chap === id);
   });
-  // Wire nav buttons
   document.querySelectorAll('.lesson-nav button').forEach(b => {
     if(b.dataset.chap) b.addEventListener('click', () => loadChapter(b.dataset.chap));
   });
-  // Scroll to top + close mobile drawer
+  // Wire quiz if present
+  if(quizHtml) wireQuiz(id);
+  // Mark as read after 4s (le temps de lire vraiment)
+  setTimeout(() => markRead(id), 4000);
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.getElementById('toc-wrap').classList.remove('mobile-open');
 }

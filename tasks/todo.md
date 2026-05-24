@@ -204,6 +204,47 @@ Modal `🔬 Backtester` (panel Risk). Logique :
 
 ---
 
+## Session 5 — Alertes + PWA + Cours interactifs ✅
+
+### Feature 13 — Alertes push browser ✅
+Section "🔔 Alertes" dans la modal Paramètres :
+- Toggle global "Activer les notifications" → demande permission via `Notification.requestPermission()`
+- 3 sub-toggles : ⭐ Setups A+ (score≥4), 💧 Liquidity sweeps, 🕐 Début killzone London/NY
+- Anti-spam : `state.alerts.sentIds = Set` track les notifs déjà envoyées (par tag unique)
+- Hook : `checkAlerts()` appelé à la fin de `renderAll()` (donc à chaque recompute)
+- Notif test envoyée au moment de l'activation pour confirmer que ça marche
+
+### Feature 15 — PWA offline + service worker ✅
+3 nouveaux fichiers :
+- `manifest.json` : nom, scope, theme color, icon, shortcuts
+- `sw.js` : cache-first pour app-shell + cache à la volée des CDN (Lightweight Charts, Chart.js), pas de cache des appels TwelveData
+- `icon.svg` : design simple avec bougies stylisées (vert/rouge) + label "ICT"
+
+Index.html étendu : `<link rel="manifest">`, meta apple-touch-icon, register SW au boot, bouton 📲 dans la topbar (visible quand `beforeinstallprompt` est dispo).
+
+### Feature 16 — Cours interactifs (progress + quiz) ✅
+**Progress tracker** :
+- Tuto débutant : barre de progression dans le sommaire (N/24 chapitres lus), ✓ vert à côté des chapitres lus
+- Cours ICT : barre de progression (N/27 chapitres), idem
+- Chapitre marqué lu 4s après l'avoir ouvert
+- Stockage localStorage : `tuto_read_chapters` et `course_read_chapters`
+
+**Quiz** :
+- 3 quiz dans le tuto débutant (chapitres 0.4, 2.5, 4.4)
+- 2 quiz dans les cours ICT (chapitres 2.9, 4.5)
+- 3-4 questions QCM chacun, feedback immédiat (vert/rouge), explication détaillée
+- Score affiché à la fin avec message adapté ("Parfait", "Bien", "Re-lis")
+- Scores stockés en localStorage
+
+**Total** : 5 quiz, 17 questions de qualité avec explications pédagogiques.
+
+---
+
+## 🎯 État final
+**Toutes les features prévues (1-16) sont livrées.** Voir [GitHub](https://github.com/Jimtll/forex-eurusd-ict).
+
+---
+
 ## ⏱ Estimation
 - Phase 1 : socle visuel — court (1 itération)
 - Phase 2 : ICT essentiels — gros morceau (probablement 2-3 itérations, c'est le cœur)

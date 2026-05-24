@@ -1,0 +1,20 @@
+{
+  "name": "EUR/USD ICT Dashboard",
+  "short_name": "ICT EUR/USD",
+  "description": "Dashboard de trading EUR/USD avec analyse Smart Money Concepts + cours pédagogiques",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "lang": "fr",
+  "categories": ["finance", "education"],
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "./index.html", "icons": [{ "src": "./icon.svg", "sizes": "any" }] },
+    { "name": "Tuto débutant", "url": "./tuto-debutant.html", "icons": [{ "src": "./icon.svg", "sizes": "any" }] }
+  ]
+}
