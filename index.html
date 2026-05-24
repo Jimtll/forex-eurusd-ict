@@ -968,6 +968,77 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
   .onb-actions > div{display:flex;justify-content:space-between}
 }
 
+/* ── Propfirm Challenge ── */
+.propfirm-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+}
+.propfirm-card.passed{border-color:var(--acc);background:var(--acc-dim)}
+.propfirm-card.failed{border-color:var(--red);background:var(--red-dim)}
+.propfirm-empty{
+  text-align:center;color:var(--muted2);font-size:0.84rem;
+  padding:8px 0 12px;
+}
+.propfirm-start-btns{display:flex;gap:5px;flex-wrap:wrap}
+.propfirm-start-btns button{
+  flex:1;min-width:80px;
+  padding:8px 6px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:0.78rem;font-weight:600;
+  border-radius:7px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.propfirm-start-btns button:hover{border-color:var(--acc);color:var(--acc)}
+
+.pf-status{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:10px;
+  font-size:0.84rem;font-weight:600;
+}
+.pf-status .pf-badge{
+  font-size:0.62rem;font-weight:700;
+  padding:3px 8px;border-radius:99px;letter-spacing:0.06em;
+}
+.pf-status .pf-badge.active{background:var(--blue-dim);color:var(--blue)}
+.pf-status .pf-badge.passed{background:var(--acc-dim);color:var(--acc)}
+.pf-status .pf-badge.failed{background:var(--red-dim);color:var(--red)}
+.pf-account-size{margin-left:auto;color:var(--muted2);font-size:0.78rem;font-weight:500}
+
+.pf-bar-row{margin-bottom:8px}
+.pf-bar-row:last-child{margin-bottom:4px}
+.pf-bar-label{
+  display:flex;justify-content:space-between;
+  font-size:0.7rem;color:var(--muted2);
+  margin-bottom:3px;
+  font-variant-numeric:tabular-nums;
+}
+.pf-bar{
+  height:6px;background:var(--surface2);
+  border-radius:3px;overflow:hidden;position:relative;
+}
+.pf-bar-fill{
+  height:100%;transition:width 0.4s;
+}
+.pf-bar-fill.profit{background:var(--acc)}
+.pf-bar-fill.danger{background:var(--red)}
+.pf-bar-fill.warn{background:var(--orange)}
+
+.propfirm-actions{
+  display:flex;gap:6px;margin-top:10px;
+}
+.propfirm-actions button{
+  flex:1;padding:7px;font-size:0.76rem;border-radius:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted2);transition:all 0.15s;
+}
+.propfirm-actions button:hover{color:var(--text);border-color:var(--border2)}
+.propfirm-actions button.danger:hover{color:var(--red);border-color:var(--red)}
+
 /* ── Paper Trading ── */
 .paper-grid{
   display:grid;
@@ -1706,6 +1777,20 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
     </div>
 
     <div class="modal-section">
+      <h3>🌐 Polling (mode live)</h3>
+      <label style="font-size:0.74rem;color:var(--muted2);margin-bottom:4px;display:block">Intervalle de rafraîchissement du prix</label>
+      <select id="setting-poll-interval" class="bt-input">
+        <option value="10000">10s — très réactif (⚠ ~360 req/h, quota 800/j vite épuisé)</option>
+        <option value="30000">30s — équilibré (120 req/h)</option>
+        <option value="60000">60s — recommandé (60 req/h)</option>
+        <option value="120000">120s — économe (30 req/h)</option>
+      </select>
+      <p style="font-size:0.7rem;color:var(--muted);line-height:1.4;margin-top:6px">
+        Quota TwelveData free : 800 requêtes/jour. À 10s, tu épuises ton quota en ~2h d'utilisation continue.
+      </p>
+    </div>
+
+    <div class="modal-section">
       <h3>💼 Paper Trading</h3>
       <label style="font-size:0.74rem;color:var(--muted2);margin-bottom:4px;display:block">Spread simulé (pips, aller-retour total)</label>
       <input type="number" id="setting-paper-spread" class="bt-input" value="1" min="0" max="10" step="0.1">
@@ -1978,6 +2063,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 
         <!-- Colonne 1 : Capital + Nouvelle position -->
         <div class="paper-col">
+
+          <!-- Propfirm Challenge -->
+          <div class="paper-section">
+            <h3>🏆 Propfirm Challenge</h3>
+            <div id="propfirm-card" class="propfirm-card"></div>
+          </div>
 
           <!-- Capital -->
           <div class="paper-section">
@@ -2260,6 +2351,7 @@ const state = {
   liveMode: false,
   livePollTimer: null,
   apiKey: localStorage.getItem('twelvedata_key') || '',
+  pollIntervalMs: parseInt(localStorage.getItem('poll_interval_ms') || '60000', 10),
   overlayCanvas: null,
   overlayCtx: null,
   priceLines: [], // { kind, line }
@@ -3858,7 +3950,8 @@ function updateStatusBadge(){
 
 function startLivePolling(){
   stopLivePolling();
-  const interval = state.currentTf === 'M15' ? 60000 : 120000; // 1 min sur M15, 2 min sinon
+  // Intervalle configurable, minimum 10s
+  const interval = Math.max(10000, state.pollIntervalMs);
   state.livePollTimer = setInterval(async () => {
     if(!state.liveMode) return;
     try {
@@ -6084,6 +6177,7 @@ state.paper = {
   positions: JSON.parse(localStorage.getItem('paper_positions') || '[]'),
   history: JSON.parse(localStorage.getItem('paper_history') || '[]'),
   spreadPips: parseFloat(localStorage.getItem('paper_spread') || PAPER_SPREAD_DEFAULT),
+  propfirm: JSON.parse(localStorage.getItem('paper_propfirm') || 'null'),
 };
 let _paperEquityChart = null;
 state.paperPriceLines = []; // {posId, kind, line}
@@ -6092,7 +6186,198 @@ function savePaper(){
   localStorage.setItem('paper_balance', state.paper.balance);
   localStorage.setItem('paper_positions', JSON.stringify(state.paper.positions));
   localStorage.setItem('paper_history', JSON.stringify(state.paper.history));
+  localStorage.setItem('paper_propfirm', JSON.stringify(state.paper.propfirm));
   scheduleAutoSync();
+}
+
+// ============================================================
+// PROPFIRM CHALLENGE — simule contraintes FTMO/TFT/Apex/etc.
+// ============================================================
+
+function startPropfirmChallenge(accountSize){
+  const today = new Date().toISOString().slice(0, 10);
+  state.paper.propfirm = {
+    active: true,
+    accountSize,
+    profitTarget: 0.10, // 10%
+    dailyLossLimit: 0.05, // 5%
+    maxDrawdown: 0.10, // 10%
+    startBalance: accountSize,
+    dailyStartBalance: accountSize,
+    dailyStartDate: today,
+    peakBalance: accountSize,
+    status: 'in_progress', // 'in_progress' | 'passed' | 'failed_daily' | 'failed_dd'
+    startedAt: Date.now(),
+  };
+  // Met le solde du paper à la taille du challenge
+  state.paper.balance = accountSize;
+  // Ferme les positions ouvertes (challenge = fresh start)
+  state.paper.positions = [];
+  savePaper();
+  renderPaperTrading();
+  showToast(`🏆 Challenge ${accountSize.toLocaleString('fr-FR')}€ démarré ! Objectif : +10% sans casser les règles.`);
+}
+
+function endPropfirmChallenge(){
+  if(!confirm('Abandonner le challenge en cours ?')) return;
+  state.paper.propfirm = null;
+  savePaper();
+  renderPaperTrading();
+  showToast('🏳️ Challenge abandonné');
+}
+
+function checkPropfirmRules(){
+  const pf = state.paper.propfirm;
+  if(!pf || !pf.active || pf.status !== 'in_progress') return;
+
+  // Daily reset si nouvelle journée UTC
+  const today = new Date().toISOString().slice(0, 10);
+  if(today !== pf.dailyStartDate){
+    pf.dailyStartBalance = state.paper.balance;
+    pf.dailyStartDate = today;
+  }
+
+  // Equity = balance + P&L flottant
+  const cp = paperCurrentPrice();
+  const floating = state.paper.positions
+    .filter(p => p.status === 'open')
+    .reduce((s, p) => s + calcPositionPnL(p, cp), 0);
+  const equity = state.paper.balance + floating;
+
+  // Update peak
+  if(equity > pf.peakBalance) pf.peakBalance = equity;
+
+  // Daily loss
+  const dailyLoss = pf.dailyStartBalance - equity;
+  if(dailyLoss / pf.accountSize >= pf.dailyLossLimit){
+    pf.status = 'failed_daily';
+    savePaper();
+    sendNotif('🛑 Challenge échoué', `Daily loss dépassé (-${pf.dailyLossLimit*100}%). Compte verrouillé.`, 'pf-failed-daily');
+    return;
+  }
+  // Max drawdown
+  const drawdown = pf.peakBalance - equity;
+  if(drawdown / pf.accountSize >= pf.maxDrawdown){
+    pf.status = 'failed_dd';
+    savePaper();
+    sendNotif('🛑 Challenge échoué', `Max drawdown dépassé (-${pf.maxDrawdown*100}%). Compte verrouillé.`, 'pf-failed-dd');
+    return;
+  }
+  // Profit target
+  const profit = equity - pf.startBalance;
+  if(profit / pf.startBalance >= pf.profitTarget){
+    pf.status = 'passed';
+    savePaper();
+    sendNotif('🎉 Challenge réussi !', `Tu as atteint +${(pf.profitTarget*100).toFixed(0)}% sans casser les règles.`, 'pf-passed-' + Date.now());
+    return;
+  }
+}
+
+function canTradePropfirm(){
+  const pf = state.paper.propfirm;
+  if(!pf || !pf.active) return true;
+  return pf.status === 'in_progress';
+}
+
+function renderPropfirmCard(){
+  const el = document.getElementById('propfirm-card');
+  if(!el) return;
+  const pf = state.paper.propfirm;
+  if(!pf || !pf.active){
+    el.classList.remove('passed', 'failed');
+    el.innerHTML = `
+      <div class="propfirm-empty">Simule les contraintes d'une vraie propfirm (FTMO, TFT, Apex…).</div>
+      <div class="propfirm-start-btns">
+        <button data-size="10000">10 000€</button>
+        <button data-size="25000">25 000€</button>
+        <button data-size="50000">50 000€</button>
+        <button data-size="100000">100 000€</button>
+      </div>
+      <p style="font-size:0.68rem;color:var(--muted);margin-top:8px;line-height:1.4">
+        Règles : +10% en profit / -5% daily loss / -10% drawdown total. Reset solde à la taille choisie.
+      </p>
+    `;
+    el.querySelectorAll('.propfirm-start-btns button').forEach(b => {
+      b.addEventListener('click', () => {
+        const size = parseInt(b.dataset.size, 10);
+        if(state.paper.balance !== 10000 || state.paper.history.length > 0){
+          if(!confirm(`Démarrer un challenge ${size.toLocaleString('fr-FR')}€ ?\nTon solde actuel et tes positions ouvertes seront réinitialisés.`)) return;
+        }
+        startPropfirmChallenge(size);
+      });
+    });
+    return;
+  }
+
+  // Challenge actif
+  el.classList.toggle('passed', pf.status === 'passed');
+  el.classList.toggle('failed', pf.status === 'failed_daily' || pf.status === 'failed_dd');
+
+  const cp = paperCurrentPrice();
+  const floating = state.paper.positions
+    .filter(p => p.status === 'open')
+    .reduce((s, p) => s + calcPositionPnL(p, cp), 0);
+  const equity = state.paper.balance + floating;
+
+  const profit = equity - pf.startBalance;
+  const profitPct = profit / pf.startBalance;
+  const profitTargetPct = pf.profitTarget;
+
+  const dailyLoss = pf.dailyStartBalance - equity;
+  const dailyLossPct = dailyLoss / pf.accountSize;
+  const dailyLossLimitPct = pf.dailyLossLimit;
+
+  const drawdown = pf.peakBalance - equity;
+  const drawdownPct = drawdown / pf.accountSize;
+  const maxDDPct = pf.maxDrawdown;
+
+  const statusLabel = {
+    in_progress: { txt: 'EN COURS', cls: 'active' },
+    passed: { txt: '✅ RÉUSSI', cls: 'passed' },
+    failed_daily: { txt: '🛑 DAILY LOSS', cls: 'failed' },
+    failed_dd: { txt: '🛑 MAX DD', cls: 'failed' },
+  }[pf.status];
+
+  el.innerHTML = `
+    <div class="pf-status">
+      <span class="pf-badge ${statusLabel.cls}">${statusLabel.txt}</span>
+      <span class="pf-account-size">${pf.accountSize.toLocaleString('fr-FR')}€</span>
+    </div>
+    <div class="pf-bar-row">
+      <div class="pf-bar-label">
+        <span>🎯 Profit target ${(profitTargetPct*100).toFixed(0)}%</span>
+        <span>${profit >= 0 ? '+' : ''}${(profitPct*100).toFixed(2)}% / ${(profitTargetPct*100).toFixed(0)}%</span>
+      </div>
+      <div class="pf-bar"><div class="pf-bar-fill profit" style="width:${Math.min(100, Math.max(0, profitPct / profitTargetPct * 100))}%"></div></div>
+    </div>
+    <div class="pf-bar-row">
+      <div class="pf-bar-label">
+        <span>📉 Daily loss (limite -${(dailyLossLimitPct*100).toFixed(0)}%)</span>
+        <span>${dailyLoss > 0 ? '-' : '+'}${Math.abs(dailyLossPct*100).toFixed(2)}% / -${(dailyLossLimitPct*100).toFixed(0)}%</span>
+      </div>
+      <div class="pf-bar"><div class="pf-bar-fill ${dailyLossPct >= dailyLossLimitPct * 0.7 ? 'danger' : 'warn'}" style="width:${Math.min(100, Math.max(0, dailyLossPct / dailyLossLimitPct * 100))}%"></div></div>
+    </div>
+    <div class="pf-bar-row">
+      <div class="pf-bar-label">
+        <span>📊 Drawdown total (limite -${(maxDDPct*100).toFixed(0)}%)</span>
+        <span>-${(drawdownPct*100).toFixed(2)}% / -${(maxDDPct*100).toFixed(0)}%</span>
+      </div>
+      <div class="pf-bar"><div class="pf-bar-fill ${drawdownPct >= maxDDPct * 0.7 ? 'danger' : 'warn'}" style="width:${Math.min(100, Math.max(0, drawdownPct / maxDDPct * 100))}%"></div></div>
+    </div>
+    <div class="propfirm-actions">
+      ${pf.status === 'in_progress'
+        ? '<button class="danger" id="pf-abandon">🏳️ Abandonner</button>'
+        : '<button id="pf-restart">🔄 Nouveau challenge</button>'}
+    </div>
+  `;
+  const abandonBtn = document.getElementById('pf-abandon');
+  if(abandonBtn) abandonBtn.addEventListener('click', endPropfirmChallenge);
+  const restartBtn = document.getElementById('pf-restart');
+  if(restartBtn) restartBtn.addEventListener('click', () => {
+    state.paper.propfirm = null;
+    savePaper();
+    renderPaperTrading();
+  });
 }
 
 function paperCurrentPrice(){
@@ -6117,6 +6402,16 @@ function calcPositionPnL(pos, currentPrice){
 }
 
 function placePaperOrder(){
+  // Block si propfirm verrouillé
+  if(!canTradePropfirm()){
+    const pf = state.paper.propfirm;
+    const msg = pf.status === 'failed_daily' ? 'Daily loss dépassé. Reviens demain.' :
+                pf.status === 'failed_dd' ? 'Max drawdown dépassé. Challenge échoué.' :
+                pf.status === 'passed' ? 'Challenge réussi ! Démarre-en un nouveau.' :
+                'Compte propfirm verrouillé.';
+    showToast('🛑 ' + msg);
+    return;
+  }
   const side = document.querySelector('input[name="paper-side"]:checked').value;
   const orderType = document.getElementById('paper-order-type').value;
   const entry = parseFloat(document.getElementById('paper-entry').value);
@@ -6234,6 +6529,8 @@ function renderPaperPositionsOnChart(){
 }
 
 function checkPaperPositions(){
+  // Toujours check les règles propfirm (même sans positions, pour daily reset)
+  if(state.paper.propfirm && state.paper.propfirm.active) checkPropfirmRules();
   if(state.paper.positions.length === 0) return;
   if(state.candles.length === 0) return;
   const last = state.candles[state.candles.length - 1];
@@ -6368,6 +6665,8 @@ function autoCalcTP(){
 }
 
 function renderPaperTrading(){
+  // Propfirm card
+  renderPropfirmCard();
   // Capital
   const balance = state.paper.balance;
   const currentPrice = paperCurrentPrice();
@@ -7091,6 +7390,18 @@ function wireQuickWins(){
   spreadInput.addEventListener('change', e => {
     state.paper.spreadPips = Math.max(0, parseFloat(e.target.value) || 0);
     localStorage.setItem('paper_spread', state.paper.spreadPips);
+  });
+
+  // Polling interval setting
+  const pollInput = document.getElementById('setting-poll-interval');
+  pollInput.value = state.pollIntervalMs;
+  pollInput.addEventListener('change', e => {
+    state.pollIntervalMs = parseInt(e.target.value, 10);
+    localStorage.setItem('poll_interval_ms', state.pollIntervalMs);
+    if(state.liveMode){
+      startLivePolling(); // hot reload
+      showToast(`🔄 Polling : ${state.pollIntervalMs/1000}s`);
+    }
   });
 }
 
