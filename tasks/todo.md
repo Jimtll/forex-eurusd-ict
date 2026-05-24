@@ -188,6 +188,22 @@ Dans modal Journal :
 
 ---
 
+## Session 4 — Backtester automatique ✅
+
+### Feature 12 — Backtester ICT
+Modal `🔬 Backtester` (panel Risk). Logique :
+- **Inputs** : type de setup (OB / FVG / OB+FVG / BB / IFVG), direction, score min, R:R cible, time stop (bougies max), SL buffer (pips)
+- **Simulation** : pour chaque zone, trouve l'index de mitigation (entry trigger), calcule entry/SL/TP, itère sur les bougies suivantes pour voir si SL ou TP touché en premier. Time stop = close au prix de fin avec R calculé.
+- **Stats** : trades, winrate, R moyen, total R, profit factor, max drawdown, expectancy €/100€, verdict (✓ Rentable si PF≥1.5)
+- **Equity curve** Chart.js
+- **Liste des trades** (limité à 100 affichés) avec side, date, prices, score, R
+- **Toggle "Afficher sur le chart"** : markers ▲▼ verts/rouges avec label "+2.0R" / "-1.0R" sur chaque entrée simulée
+
+**Conservateur** : si SL et TP touchés dans la même bougie → on considère SL touché en premier (worst case).
+**Réaliste** : ne prend PAS en compte spread/slippage/commissions. Les résultats sont donc optimistes vs réel. À déduire ~1-2 pips par trade pour estimer net.
+
+---
+
 ## ⏱ Estimation
 - Phase 1 : socle visuel — court (1 itération)
 - Phase 2 : ICT essentiels — gros morceau (probablement 2-3 itérations, c'est le cœur)
