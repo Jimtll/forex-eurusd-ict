@@ -134,6 +134,44 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 }
 .icon-btn:hover{color:var(--text);border-color:var(--border2)}
 
+/* ── Cloud sync indicator ── */
+.cloud-btn{
+  position:relative;
+}
+.cloud-btn.visible{display:flex !important}
+.cloud-btn.synced{
+  background:var(--acc-dim);
+  border-color:var(--acc);
+  color:var(--acc);
+  box-shadow:0 0 0 0 var(--acc-glow);
+}
+.cloud-btn.syncing{
+  background:var(--surface2);
+  border-color:var(--yellow);
+  color:var(--yellow);
+  animation:cloudPulse 1.2s ease-in-out infinite;
+}
+.cloud-btn.error{
+  background:var(--red-dim);
+  border-color:var(--red);
+  color:var(--red);
+}
+@keyframes cloudPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.5)}
+  50%{box-shadow:0 0 0 6px transparent}
+}
+.cloud-btn::after{
+  content:'';
+  position:absolute;
+  bottom:3px;right:3px;
+  width:7px;height:7px;border-radius:50%;
+  background:transparent;
+  border:1.5px solid var(--surface);
+}
+.cloud-btn.synced::after{background:var(--acc)}
+.cloud-btn.syncing::after{background:var(--yellow)}
+.cloud-btn.error::after{background:var(--red)}
+
 /* ── LAYOUT ── */
 .layout{
   flex:1;display:flex;min-height:0;
@@ -1388,6 +1426,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
       <span id="price-display">—</span>
       <span id="price-change" class="change flat">—</span>
     </div>
+    <button class="icon-btn cloud-btn" id="cloud-btn" title="Sync Gist actif" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+    </button>
     <button class="icon-btn" id="install-btn" title="Installer comme app" style="display:none">📲</button>
     <a class="icon-btn" href="./tuto-debutant.html" title="Tuto débutant — bases du trading">🎓</a>
     <button class="icon-btn" id="open-glossary" title="Glossaire ICT">📖</button>
@@ -1685,6 +1726,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
         <button class="btn btn-ghost" id="btn-gist-pull">📥 Pull (récupérer)</button>
         <button class="btn btn-ghost" id="btn-gist-disconnect">🔌 Déconnecter</button>
       </div>
+      <label class="alert-toggle" style="margin-top:10px">
+        <input type="checkbox" id="gist-auto-sync">
+        <span class="alert-toggle-track"></span>
+        <span class="alert-toggle-label">Sync automatique (push après chaque modif, pull au lancement)</span>
+      </label>
       <p id="gist-status" style="font-size:0.74rem;color:var(--muted2);margin-top:8px;line-height:1.5"></p>
     </div>
 
@@ -3564,6 +3610,7 @@ let equityChart = null;
 
 function saveTrades(){
   localStorage.setItem('eurusd_trades', JSON.stringify(state.trades));
+  scheduleAutoSync();
 }
 
 function addTrade(){
@@ -5374,6 +5421,7 @@ setInterval(() => { if(state.liveMode) updateLiveMeta(); }, 5000);
 
 state.gistToken = localStorage.getItem('gist_token') || '';
 state.gistId = localStorage.getItem('gist_id') || null;
+state.gistAutoSync = localStorage.getItem('gist_auto_sync') !== 'false'; // true par défaut
 const GIST_FILENAME = 'forex-eurusd-data.json';
 const GIST_DESCRIPTION = 'Forex EUR/USD ICT Dashboard - User Data';
 
@@ -5479,6 +5527,66 @@ function refreshGistStatus(){
   }
 }
 
+// ── Cloud indicator topbar ──
+function setCloudState(s, msg){
+  const btn = document.getElementById('cloud-btn');
+  if(!btn) return;
+  if(!state.gistToken){ btn.classList.remove('visible'); return; }
+  btn.classList.add('visible');
+  btn.classList.remove('synced', 'syncing', 'error');
+  if(s === 'synced'){
+    btn.classList.add('synced');
+    btn.title = msg || 'Sync à jour';
+  } else if(s === 'syncing'){
+    btn.classList.add('syncing');
+    btn.title = 'Sync en cours…';
+  } else if(s === 'error'){
+    btn.classList.add('error');
+    btn.title = '⚠ Erreur sync : ' + (msg || 'voir Paramètres');
+  }
+}
+
+// ── Auto-push debounced ──
+let _autoSyncTimer = null;
+function scheduleAutoSync(){
+  if(!state.gistToken || !state.gistAutoSync) return;
+  setCloudState('syncing');
+  if(_autoSyncTimer) clearTimeout(_autoSyncTimer);
+  _autoSyncTimer = setTimeout(async () => {
+    try {
+      const data = await syncPush();
+      localStorage.setItem('local_sync_time', new Date(data.syncedAt).getTime());
+      setCloudState('synced', '☁️ Synced ' + new Date().toLocaleTimeString('fr-FR'));
+    } catch(err){
+      setCloudState('error', err.message);
+    }
+  }, 2500);
+}
+
+// ── Auto-pull au boot ──
+async function autoPullIfNewer(){
+  if(!state.gistToken || !state.gistId) return;
+  setCloudState('syncing');
+  try {
+    const gist = await gistApi('GET', `gists/${state.gistId}`);
+    if(!gist.files[GIST_FILENAME]){ setCloudState('synced'); return; }
+    const data = JSON.parse(gist.files[GIST_FILENAME].content);
+    const remoteTime = new Date(data.syncedAt).getTime();
+    const localTime = parseInt(localStorage.getItem('local_sync_time') || '0', 10);
+    if(remoteTime > localTime + 5000){ // 5s de marge pour éviter les races
+      const restored = applySyncData(data);
+      localStorage.setItem('local_sync_time', remoteTime);
+      renderAll();
+      if(state.paper && document.getElementById('modal-paper').classList.contains('open')) renderPaperTrading();
+      showToast('☁️ Données récupérées du Gist (' + restored.length + ' éléments)');
+    }
+    setCloudState('synced');
+  } catch(err){
+    console.warn('[autoPull]', err);
+    setCloudState('error', err.message);
+  }
+}
+
 function wireGistSync(){
   const tokenInput = document.getElementById('gist-token-input');
   const status = document.getElementById('gist-status');
@@ -5486,6 +5594,25 @@ function wireGistSync(){
 
   tokenInput.value = state.gistToken;
   refreshGistStatus();
+
+  // Cloud icon → ouvre Settings sur la section Sync
+  const cloudBtn = document.getElementById('cloud-btn');
+  if(cloudBtn) cloudBtn.addEventListener('click', () => {
+    document.getElementById('modal-settings').classList.add('open');
+    setTimeout(() => {
+      document.getElementById('gist-token-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  });
+  if(state.gistToken) setCloudState('synced');
+
+  // Toggle auto-sync
+  const autoToggle = document.getElementById('gist-auto-sync');
+  autoToggle.checked = state.gistAutoSync;
+  autoToggle.addEventListener('change', e => {
+    state.gistAutoSync = e.target.checked;
+    localStorage.setItem('gist_auto_sync', state.gistAutoSync);
+    if(state.gistAutoSync && state.gistToken){ scheduleAutoSync(); }
+  });
 
   document.getElementById('btn-gist-connect').addEventListener('click', async () => {
     const token = tokenInput.value.trim();
@@ -5496,13 +5623,19 @@ function wireGistSync(){
       const existing = await syncFindExistingGist();
       localStorage.setItem('gist_token', token);
       if(existing){
-        status.innerHTML = `<span style="color:var(--acc)">✓ Token OK + Gist existant trouvé (${existing.id.slice(0,8)}…). Clique <strong>Pull</strong> pour récupérer tes données.</span>`;
+        status.innerHTML = `<span style="color:var(--acc)">✓ Token OK + Gist existant trouvé. Récupération automatique des données...</span>`;
+        // Pull auto si Gist existant trouvé
+        try { await syncPull(); status.innerHTML = `<span style="color:var(--acc)">✓ Connecté et données récupérées du Gist.</span>`; renderAll(); } catch(e){}
       } else {
-        status.innerHTML = '<span style="color:var(--acc)">✓ Token valide. Aucun Gist existant — clique <strong>Push</strong> pour en créer un.</span>';
+        status.innerHTML = '<span style="color:var(--acc)">✓ Token valide. Création automatique du Gist au prochain changement (sync auto activée).</span>';
+        if(state.gistAutoSync) scheduleAutoSync();
       }
+      setCloudState('synced');
+      refreshGistStatus();
     } catch(err){
       status.innerHTML = `<span style="color:var(--red)">✗ ${err.message}</span>`;
       state.gistToken = '';
+      setCloudState('error', err.message);
     }
   });
 
@@ -5561,7 +5694,7 @@ state.annotColor = 'acc';
 state.annotDrawing = null; // { type, time1, price1 } pour les 2-clics
 let _annotHoverIdx = -1;
 
-function saveAnnotations(){ localStorage.setItem('annotations', JSON.stringify(state.annotations)); }
+function saveAnnotations(){ localStorage.setItem('annotations', JSON.stringify(state.annotations)); scheduleAutoSync(); }
 
 function setAnnotMode(mode){
   state.annotMode = mode;
@@ -5946,6 +6079,7 @@ function savePaper(){
   localStorage.setItem('paper_balance', state.paper.balance);
   localStorage.setItem('paper_positions', JSON.stringify(state.paper.positions));
   localStorage.setItem('paper_history', JSON.stringify(state.paper.history));
+  scheduleAutoSync();
 }
 
 function paperCurrentPrice(){
@@ -7053,6 +7187,10 @@ document.addEventListener('DOMContentLoaded', () => {
   wireAnnotations();
   wireGistSync();
   setupZoneHover();
+  // Auto-pull au boot si Gist connecté et auto-sync activé (background, non-bloquant)
+  if(state.gistToken && state.gistId && state.gistAutoSync){
+    setTimeout(() => autoPullIfNewer(), 1500);
+  }
   injectHelpIcons();
   loadPrefs();       // applique state + DOM avant que regenerateData ne render
   regenerateData(); // utilise state.currentTf + state.indicators restaurés
