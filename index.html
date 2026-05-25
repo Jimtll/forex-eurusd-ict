@@ -11,9 +11,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ICT EUR/USD">
 <title>EUR/USD · ICT Dashboard</title>
-<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <link rel="stylesheet" href="./css/style.css">
+<link rel="preconnect" href="https://api.twelvedata.com" crossorigin>
 </head>
 <body>
 
@@ -776,26 +777,27 @@
   </div>
 </div>
 
+<!-- Tous les scripts en defer : téléchargement parallèle, exécution dans l'ordre déclaré -->
 <!-- Data + utils -->
-<script src="./js/content.js"></script>
-<script src="./js/mock.js"></script>
+<script src="./js/content.js" defer></script>
+<script src="./js/mock.js" defer></script>
 <!-- Core : state + chart + ICT detection/render -->
-<script src="./js/state.js"></script>
-<script src="./js/chart.js"></script>
-<script src="./js/ict.js"></script>
+<script src="./js/state.js" defer></script>
+<script src="./js/chart.js" defer></script>
+<script src="./js/ict.js" defer></script>
 <!-- Features -->
-<script src="./js/live.js"></script>
-<script src="./js/alerts.js"></script>
-<script src="./js/risk.js"></script>
-<script src="./js/backtest.js"></script>
-<script src="./js/paper.js"></script>
-<script src="./js/sync.js"></script>
-<script src="./js/annot.js"></script>
-<script src="./js/replay.js"></script>
-<script src="./js/courses.js"></script>
+<script src="./js/live.js" defer></script>
+<script src="./js/alerts.js" defer></script>
+<script src="./js/risk.js" defer></script>
+<script src="./js/backtest.js" defer></script>
+<script src="./js/paper.js" defer></script>
+<script src="./js/sync.js" defer></script>
+<script src="./js/annot.js" defer></script>
+<script src="./js/replay.js" defer></script>
+<script src="./js/courses.js" defer></script>
 <!-- UI + boot (en dernier) -->
-<script src="./js/ui.js"></script>
-<script src="./js/boot.js"></script>
+<script src="./js/ui.js" defer></script>
+<script src="./js/boot.js" defer></script>
 
 </body>
 </html>
