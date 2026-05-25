@@ -159,9 +159,13 @@ function detectOrderBlocks(candles, structure){
 }
 
 function detectFVG(candles){
+  // Filtre intégré : ignore les FVG < state.fvgMinSizePips (était un wrapper externe)
+  const minSize = ((state && state.fvgMinSizePips) || 0) * PIP;
   const fvgs = [];
   for(let i = 1; i < candles.length - 1; i++){
     if(candles[i+1].low > candles[i-1].high){
+      const gap = candles[i+1].low - candles[i-1].high;
+      if(gap < minSize) continue;
       fvgs.push({
         type: 'bullish', idx: i, time: candles[i].time,
         top: candles[i+1].low, bottom: candles[i-1].high,
@@ -169,6 +173,8 @@ function detectFVG(candles){
       });
     }
     if(candles[i+1].high < candles[i-1].low){
+      const gap = candles[i-1].low - candles[i+1].high;
+      if(gap < minSize) continue;
       fvgs.push({
         type: 'bearish', idx: i, time: candles[i].time,
         top: candles[i-1].low, bottom: candles[i+1].high,
@@ -390,8 +396,16 @@ function computeHtfZones(){
   return all;
 }
 
-function recomputeAll(){
-  if(state.candles.length === 0) return;
+// Cache LRU des résultats de recomputeAll (était un wrapper externe)
+const _computeCache = new Map();
+function _candlesHash(){
+  if(state.candles.length === 0) return '0';
+  const first = state.candles[0];
+  const last = state.candles[state.candles.length - 1];
+  return `${state.currentTf}-${state.candles.length}-${first.time}-${last.time}-${last.close.toFixed(5)}-${state.fvgMinSizePips || 0}-${state.indicators.multitf}`;
+}
+
+function _recomputeRaw(){
   state.computed.swings = detectSwings(state.candles);
   state.computed.structure = detectStructure(state.candles, state.computed.swings);
   state.computed.liquidity = detectLiquidity(state.candles, state.computed.swings);
@@ -416,6 +430,23 @@ function recomputeAll(){
   annotateZones(state.computed.breakers, 'BB', ctx);
   annotateZones(state.computed.ifvgs, 'IFVG', ctx);
 }
+
+function recomputeAll(){
+  if(state.candles.length === 0) return;
+  const hash = _candlesHash();
+  if(_computeCache.has(hash)){
+    state.computed = JSON.parse(JSON.stringify(_computeCache.get(hash)));
+    return;
+  }
+  _recomputeRaw();
+  // Limite LRU : 12 entrées max
+  if(_computeCache.size > 12){
+    _computeCache.delete(_computeCache.keys().next().value);
+  }
+  _computeCache.set(hash, JSON.parse(JSON.stringify(state.computed)));
+}
+
+function clearComputeCache(){ _computeCache.clear(); }
 
 // ============================================================
 // ICT RENDERING — Lightweight Charts natifs + canvas overlay
@@ -541,10 +572,14 @@ function drawCanvasOverlays(){
   if(state.indicators.bos)       drawBosMss(ctx, t2x, p2y, w, h);
   if(state.indicators.liquidity) drawSweeps(ctx, t2x, p2y, w, h);
   if(state.indicators.irlerl)    drawIRLERL(ctx, t2x, p2y, w, h);
+  // News events overlay (était un wrapper externe)
+  if(state.indicators.news && typeof drawNewsEvents === 'function') drawNewsEvents(ctx, t2x, w, h);
   // Annotations utilisateur (toujours dessinées)
-  if(state.annotations) drawAnnotations(ctx, t2x, p2y, w, h);
+  if(state.annotations && typeof drawAnnotations === 'function') drawAnnotations(ctx, t2x, p2y, w, h);
+  // Rebuild zones hoverable (pour tooltip)
+  if(typeof rebuildHoverableZones === 'function') rebuildHoverableZones();
   // RR handles suivent le pan/zoom
-  if(state.rrTrade && state.rrTrade.active) updateRRHandlesPosition();
+  if(state.rrTrade && state.rrTrade.active && typeof updateRRHandlesPosition === 'function') updateRRHandlesPosition();
 }
 
 function drawAMD(ctx, t2x, p2y, w, h, vr){

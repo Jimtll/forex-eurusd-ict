@@ -1,5 +1,5 @@
 // Service Worker — EUR/USD ICT Dashboard
-const CACHE = 'eurusd-ict-v13';
+const CACHE = 'eurusd-ict-v14';
 const APP_SHELL = [
   './',
   './index.html',
@@ -11,6 +11,12 @@ const APP_SHELL = [
   './js/mock.js',
   './js/ict.js',
   './js/app.js',
+  './js/risk.js',
+  './js/backtest.js',
+  './js/paper.js',
+  './js/sync.js',
+  './js/annot.js',
+  './js/replay.js',
 ];
 
 self.addEventListener('install', e => {
