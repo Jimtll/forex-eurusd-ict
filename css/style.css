@@ -990,10 +990,75 @@ body{background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
 .annot-btn.annot-clear{color:var(--red);font-size:0.78rem}
 .annot-divider{height:1px;background:var(--border);margin:3px 2px}
 
+/* Popup presets ICT pour le rectangle */
+.rect-preset-popup{
+  position:fixed;
+  background:rgba(15,17,23,0.97);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:10px;
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:220px;
+  max-height:70vh;
+  overflow-y:auto;
+  box-shadow:0 12px 32px rgba(0,0,0,0.6);
+  backdrop-filter:blur(8px);
+}
+.rect-preset-popup.hidden{display:none}
+.rect-preset-popup h4{
+  margin:0 0 4px;
+  font-size:0.7rem;
+  color:var(--muted2);
+  text-transform:uppercase;
+  letter-spacing:0.6px;
+  padding:0 4px;
+}
+.rect-preset-list{display:flex;flex-direction:column;gap:2px}
+.rect-preset-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:6px;
+  color:var(--text);
+  font-size:0.85rem;
+  cursor:pointer;
+  text-align:left;
+  font-family:inherit;
+  transition:background 0.12s, border-color 0.12s;
+}
+.rect-preset-item:hover{
+  background:rgba(255,255,255,0.06);
+  border-color:var(--border2);
+}
+.rect-preset-item.active{
+  background:rgba(16,185,129,0.12);
+  border-color:var(--acc);
+}
+.rect-preset-swatch{
+  width:18px;height:18px;
+  border-radius:3px;
+  flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.15);
+}
+.rect-preset-tag{
+  font-size:0.7rem;
+  color:var(--muted2);
+  margin-left:auto;
+  font-family:'JetBrains Mono', monospace;
+}
+
 @media(max-width:900px){
   .annot-toolbar{left:4px;padding:4px}
   .annot-btn{width:28px;height:28px;font-size:0.82rem}
   .annot-btn.annot-color{width:24px;height:24px}
+  .rect-preset-popup{min-width:200px;max-height:60vh}
+  .rect-preset-item{padding:10px;font-size:0.9rem}
 }
 
 /* ── Onboarding ── */

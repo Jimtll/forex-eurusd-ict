@@ -11,12 +11,29 @@ const ANNOT_COLORS = {
   acc: '#10b981', red: '#ef4444', blue: '#3b82f6', yellow: '#fbbf24'
 };
 
+// ── Presets ICT pour le rectangle (style TradingView "Modèle de Dessin") ──
+const RECT_PRESETS = [
+  { id: 'plain',   label: 'Carré (sans label)',     color: 'acc',    text: '' },
+  { id: 'fvg1',    label: '1st FVG',                color: 'blue',   text: '1st FVG' },
+  { id: 'bb_bull', label: 'BB+ (Breaker bull)',     color: 'acc',    text: 'BB+' },
+  { id: 'bb_bear', label: 'BB- (Breaker bear)',     color: 'red',    text: 'BB-' },
+  { id: 'bisi',    label: 'BISI (imbalance bull)',  color: 'acc',    text: 'BISI' },
+  { id: 'sibi',    label: 'SIBI (imbalance bear)',  color: 'red',    text: 'SIBI' },
+  { id: 'bpr',     label: 'BPR (Balanced Price R.)', color: 'yellow', text: 'BPR' },
+  { id: 'ifvg',    label: 'IFVG (Inverse FVG)',     color: 'yellow', text: 'IFVG' },
+  { id: 'org',     label: 'Opening Range Gap',      color: 'blue',   text: 'ORG' },
+  { id: 'ote',     label: 'OTE (62–79%)',           color: 'yellow', text: 'OTE' },
+  { id: 'vi_bull', label: 'VI+ (Volume Imb. bull)', color: 'acc',    text: 'VI+' },
+  { id: 'vi_bear', label: 'VI- (Volume Imb. bear)', color: 'red',    text: 'VI-' },
+];
+
 state.annotations = JSON.parse(localStorage.getItem('annotations') || '[]');
 state.annotMode = 'pan';
 state.annotColor = 'acc';
 state.annotDraft = null;          // annotation en cours de création
 state.annotDrag = null;           // { id, kind, startX/Y, startTime/Price, startData }
 state.selectedAnnotId = null;     // id de l'annotation sélectionnée
+state.rectPreset = localStorage.getItem('annot_rect_preset') || 'plain';
 let _annotCrosshair = null;       // { x, y, time, price } pour la croix magnétique
 
 function saveAnnotations(){ localStorage.setItem('annotations', JSON.stringify(state.annotations)); scheduleAutoSync(); }
@@ -280,6 +297,15 @@ function onChartMouseDown(e){
       time1: pos.time, price1: pos.price,
       time2: pos.time, price2: pos.price,
     };
+    // Si rect avec preset → attache le label + couleur du preset au draft
+    if(state.annotMode === 'rect' && state.rectPreset && state.rectPreset !== 'plain'){
+      const preset = RECT_PRESETS.find(p => p.id === state.rectPreset);
+      if(preset){
+        state.annotDraft.label = preset.text;
+        state.annotDraft.preset = preset.id;
+        state.annotDraft.color = preset.color;
+      }
+    }
     renderAll();
   }
 }
@@ -355,6 +381,8 @@ function onChartMouseUp(e){
       time1: draft.time1, price1: draft.price1,
       time2: draft.time2, price2: draft.price2,
     };
+    if(draft.label) newAnnot.label = draft.label;
+    if(draft.preset) newAnnot.preset = draft.preset;
     state.annotations.push(newAnnot);
     state.selectedAnnotId = newAnnot.id;
     state.annotDraft = null;
@@ -441,6 +469,18 @@ function drawSingleAnnotation(ctx, t2x, p2y, w, h, a, selected, isDraft){
     if(isDraft) ctx.setLineDash([4, 3]);
     ctx.strokeRect(X, Y, W, H);
     ctx.setLineDash([]);
+    // Label preset ICT (haut gauche, badge coloré)
+    if(a.label && !isDraft){
+      ctx.font = 'bold 10px Segoe UI, system-ui';
+      const m = ctx.measureText(a.label);
+      const padX = 5, padY = 2;
+      const bw = m.width + padX*2, bh = 14;
+      ctx.fillStyle = color;
+      ctx.fillRect(X, Y - bh, bw, bh);
+      ctx.fillStyle = '#0f1117';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(a.label, X + padX, Y - bh/2);
+    }
   } else if(a.type === 'text'){
     const x = t2x(a.time), y = p2y(a.price);
     if(x === null || y === null) return;
@@ -481,6 +521,65 @@ function drawAnnotations(ctx, t2x, p2y, w, h){
   }
 }
 
+// ── Popup presets ICT pour le rectangle ──
+function showRectPresetPopup(anchorBtn){
+  const popup = document.getElementById('rect-preset-popup');
+  const list = document.getElementById('rect-preset-list');
+  if(!popup || !list) return;
+  list.innerHTML = RECT_PRESETS.map(p => `
+    <button class="rect-preset-item${p.id === state.rectPreset ? ' active' : ''}" data-preset="${p.id}">
+      <span class="rect-preset-swatch" style="background:${ANNOT_COLORS[p.color]}"></span>
+      <span>${p.label}</span>
+      ${p.text ? `<span class="rect-preset-tag">${p.text}</span>` : ''}
+    </button>
+  `).join('');
+  // Positionne à droite du bouton (à gauche si pas la place)
+  const r = anchorBtn.getBoundingClientRect();
+  popup.classList.remove('hidden');
+  const pw = popup.offsetWidth || 220;
+  let left = r.right + 8;
+  if(left + pw > window.innerWidth - 8) left = Math.max(8, r.left - pw - 8);
+  popup.style.left = left + 'px';
+  popup.style.top = Math.min(window.innerHeight - popup.offsetHeight - 8, Math.max(8, r.top)) + 'px';
+  // Wire les items
+  list.querySelectorAll('.rect-preset-item').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const presetId = b.dataset.preset;
+      state.rectPreset = presetId;
+      localStorage.setItem('annot_rect_preset', presetId);
+      const preset = RECT_PRESETS.find(p => p.id === presetId);
+      if(preset && preset.color) setAnnotColor(preset.color);
+      hideRectPresetPopup();
+      setAnnotMode('rect');
+      if(typeof showToast === 'function'){
+        showToast(preset.text ? `Mode rect ICT : ${preset.text}` : 'Mode rect');
+      }
+    });
+  });
+  // Fermeture sur clic extérieur (au prochain tick pour éviter de capturer le clic d'ouverture)
+  setTimeout(() => {
+    document.addEventListener('click', closeRectPopupOnOutside, { once: true });
+  }, 0);
+}
+
+function closeRectPopupOnOutside(e){
+  const popup = document.getElementById('rect-preset-popup');
+  if(!popup || popup.classList.contains('hidden')) return;
+  if(popup.contains(e.target)) {
+    // Re-arm la fermeture
+    setTimeout(() => document.addEventListener('click', closeRectPopupOnOutside, { once: true }), 0);
+    return;
+  }
+  if(e.target.closest('#annot-btn-rect')) return;
+  hideRectPresetPopup();
+}
+
+function hideRectPresetPopup(){
+  const popup = document.getElementById('rect-preset-popup');
+  if(popup) popup.classList.add('hidden');
+}
+
 function wireAnnotations(){
   const chartEl = document.getElementById('chart');
   // Capture phase pour intercepter avant Lightweight Charts en mode dessin
@@ -493,9 +592,18 @@ function wireAnnotations(){
   document.addEventListener('touchmove', onChartMouseMove, { passive: false });
   document.addEventListener('touchend', onChartMouseUp);
 
-  // Boutons mode
+  // Boutons mode — le bouton rect ouvre la popup presets au lieu d'activer directement
   document.querySelectorAll('.annot-btn[data-mode]').forEach(b => {
-    b.addEventListener('click', () => setAnnotMode(b.dataset.mode));
+    b.addEventListener('click', (e) => {
+      if(b.dataset.mode === 'rect'){
+        e.preventDefault();
+        e.stopPropagation();
+        showRectPresetPopup(b);
+        return;
+      }
+      hideRectPresetPopup();
+      setAnnotMode(b.dataset.mode);
+    });
   });
   // Boutons couleur
   document.querySelectorAll('.annot-btn.annot-color').forEach(b => {
@@ -515,6 +623,8 @@ function wireAnnotations(){
   // Clavier : Escape (annule), Delete/Backspace (supprime sélection)
   document.addEventListener('keydown', e => {
     if(e.key === 'Escape'){
+      const popup = document.getElementById('rect-preset-popup');
+      if(popup && !popup.classList.contains('hidden')){ hideRectPresetPopup(); return; }
       if(state.annotDraft){ state.annotDraft = null; renderAll(); }
       else if(state.selectedAnnotId){ state.selectedAnnotId = null; renderAll(); }
       else if(state.annotMode !== 'pan'){ setAnnotMode('pan'); }

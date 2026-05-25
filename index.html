@@ -102,8 +102,8 @@
       <div class="annot-toolbar" id="annot-toolbar">
         <button class="annot-btn active" data-mode="pan" title="Pan (déplacer le chart)">🖱</button>
         <button class="annot-btn" data-mode="hline" title="Ligne horizontale (1 clic)">━</button>
-        <button class="annot-btn" data-mode="trendline" title="Trendline (2 clics)">↗</button>
-        <button class="annot-btn" data-mode="rect" title="Rectangle (2 clics)">▢</button>
+        <button class="annot-btn" data-mode="trendline" title="Trendline (drag-to-draw)">↗</button>
+        <button class="annot-btn" id="annot-btn-rect" data-mode="rect" title="Rectangle (modèle ICT — clic pour choisir)">▢</button>
         <button class="annot-btn" data-mode="text" title="Texte (1 clic + saisie)">𝐀</button>
         <div class="annot-divider"></div>
         <button class="annot-btn annot-color" data-color="acc" style="background:#10b981" title="Vert"></button>
@@ -113,6 +113,12 @@
         <div class="annot-divider"></div>
         <button class="annot-btn" data-mode="erase" title="Cliquer sur une annotation pour l'effacer">🗑</button>
         <button class="annot-btn annot-clear" id="annot-clear-all" title="Tout effacer">✖</button>
+      </div>
+
+      <!-- Popup presets ICT pour le rectangle -->
+      <div class="rect-preset-popup hidden" id="rect-preset-popup">
+        <h4>Modèle ICT</h4>
+        <div class="rect-preset-list" id="rect-preset-list"><!-- rempli en JS --></div>
       </div>
 
       <!-- Toast undo journal -->
