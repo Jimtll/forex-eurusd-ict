@@ -16,13 +16,28 @@ async function fetchTwelveData(tfKey, size = 800){
   const j = await r.json();
   if(j.status === 'error' || j.code) throw new Error(j.message || 'Erreur API');
   if(!j.values || !Array.isArray(j.values)) throw new Error('Format de réponse inattendu');
+  // Parse datetime — gère les 2 formats TwelveData :
+  //  - intraday : "2026-05-23 13:45:00" (avec heure)
+  //  - daily/weekly : "2026-05-23" (date seule)
+  const parseTwelveTs = (dt) => {
+    if(!dt) return NaN;
+    let iso;
+    if(dt.length === 10){
+      // Format date seule → ajouter 00:00:00 UTC
+      iso = dt + 'T00:00:00Z';
+    } else {
+      iso = dt.replace(' ', 'T') + 'Z';
+    }
+    const t = new Date(iso).getTime();
+    return isNaN(t) ? NaN : Math.floor(t / 1000);
+  };
   const candles = j.values.reverse().map(v => ({
-    time: Math.floor(new Date(v.datetime.replace(' ', 'T') + 'Z').getTime() / 1000),
+    time: parseTwelveTs(v.datetime),
     open: parseFloat(v.open),
     high: parseFloat(v.high),
     low: parseFloat(v.low),
     close: parseFloat(v.close),
-  })).filter(c => !isNaN(c.open));
+  })).filter(c => !isNaN(c.open) && !isNaN(c.time));
   // Intégré directement (était un wrapper _originalFetchTwelveData)
   if(typeof incrementQuota === 'function') incrementQuota();
   state.lastRefreshTs = Date.now();
