@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Forex EUR/USD ICT — Test Suite</title>
+<style>
+body{font-family:'SF Mono',Consolas,Menlo,monospace;background:#0f1117;color:#e2e8f0;padding:24px;margin:0;line-height:1.6}
+h1{color:#10b981;font-size:1.2rem;margin-bottom:14px}
+#summary{font-size:1.1rem;font-weight:700;margin-bottom:20px;padding:12px 16px;border-radius:10px;background:#1a1d27;border:1px solid #2a2f45}
+#summary.pass{border-color:#10b981;color:#10b981}
+#summary.fail{border-color:#ef4444;color:#ef4444}
+#output{white-space:pre;font-size:0.85rem;background:#1a1d27;padding:16px;border-radius:10px;border:1px solid #2a2f45;overflow-x:auto}
+.pass{color:#10b981}
+.fail{color:#ef4444}
+.section{color:#94a3b8;font-weight:700;margin-top:14px;display:block}
+.error{color:#f97316;margin-left:18px;display:block;font-size:0.78rem}
+.note{color:#64748b;font-size:0.78rem;margin-top:14px}
+</style>
+</head>
+<body>
+
+<h1>🧪 Forex EUR/USD ICT — Test Suite</h1>
+<div id="summary">Running tests…</div>
+<div id="output"></div>
+<p class="note">Tests sur fonctions pures (mock data, ICT detection, paper trading, risk).
+  Aucune dépendance DOM, aucune requête réseau. Si tous passent, la logique core est validée.</p>
+
+<!-- Stub DOM elements pour éviter null refs au chargement de l'app -->
+<div style="display:none">
+  <div id="modal-onboarding"></div>
+  <input id="rr-entry">
+  <input id="rr-sl">
+  <input id="rr-tp">
+  <div id="rr-ratio"></div>
+  <input id="paper-entry">
+  <input id="paper-sl">
+  <input id="paper-tp">
+  <input id="paper-risk-pct">
+</div>
+
+<!-- Same scripts as index.html (sauf boot.js + ui.js qui touchent au DOM) -->
+<script src="../js/content.js"></script>
+<script src="../js/mock.js"></script>
+<script src="../js/state.js"></script>
+<script src="../js/ict.js"></script>
+<script src="../js/risk.js"></script>
+<script src="../js/backtest.js"></script>
+<script src="../js/paper.js"></script>
+
+<script>
+'use strict';
+
+const out = document.getElementById('output');
+const summary = document.getElementById('summary');
+let passed = 0, failed = 0;
+
+function section(name){
+  const el = document.createElement('span');
+  el.className = 'section';
+  el.textContent = '── ' + name + ' ──';
+  out.appendChild(el);
+}
+
+function test(name, fn){
+  const el = document.createElement('span');
+  try {
+    fn();
+    el.className = 'pass';
+    el.textContent = '  ✓ ' + name;
+    passed++;
+  } catch(e){
+    el.className = 'fail';
+    el.textContent = '  ✗ ' + name;
+    failed++;
+    const err = document.createElement('span');
+    err.className = 'error';
+    err.textContent = '    → ' + e.message;
+    el.appendChild(document.createElement('br'));
+    el.appendChild(err);
+  }
+  el.appendChild(document.createElement('br'));
+  out.appendChild(el);
+}
+
+function assert(cond, msg){
+  if(!cond) throw new Error(msg || 'assertion failed');
+}
+
+function assertEq(actual, expected, msg){
+  if(actual !== expected) throw new Error((msg || 'expected ') + JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+}
+
+function assertApprox(actual, expected, tol, msg){
+  tol = tol || 0.0001;
+  if(Math.abs(actual - expected) > tol){
+    throw new Error((msg || 'expected ~') + expected + ' (±' + tol + '), got ' + actual);
+  }
+}
+
+// ============================================================
+// TESTS — MOCK / DATA
+// ============================================================
+
+section('Constants & helpers');
+
+test('PIP = 0.0001', () => assertEq(PIP, 0.0001));
+test('BASE_PRICE = 1.0850', () => assertEq(BASE_PRICE, 1.0850));
+test('TF_SECONDS includes M1, M5, M15, H1, H4, D1', () => {
+  assertEq(TF_SECONDS.M1, 60);
+  assertEq(TF_SECONDS.M5, 300);
+  assertEq(TF_SECONDS.M15, 900);
+  assertEq(TF_SECONDS.H1, 3600);
+  assertEq(TF_SECONDS.H4, 14400);
+  assertEq(TF_SECONDS.D1, 86400);
+});
+
+test('gauss returns finite number', () => {
+  for(let i = 0; i < 100; i++){
+    const v = gauss(0, 1);
+    assert(isFinite(v) && !isNaN(v), 'gauss returned ' + v);
+  }
+});
+
+test('isForexClosed: samedi 12h GMT = fermé', () => {
+  // 2026-05-23 = samedi
+  assertEq(isForexClosed(new Date('2026-05-23T12:00:00Z')), true);
+});
+
+test('isForexClosed: lundi 12h GMT = ouvert', () => {
+  // 2026-05-25 = lundi
+  assertEq(isForexClosed(new Date('2026-05-25T12:00:00Z')), false);
+});
+
+test('isForexClosed: vendredi 23h GMT = fermé (après 22h)', () => {
+  // 2026-05-22 = vendredi 23h
+  assertEq(isForexClosed(new Date('2026-05-22T23:00:00Z')), true);
+});
+
+test('isForexClosed: dimanche 23h GMT = ouvert (après 22h)', () => {
+  assertEq(isForexClosed(new Date('2026-05-24T23:00:00Z')), false);
+});
+
+section('Aggregate (M1 → M5/M15/H1)');
+
+test('aggregate 5 bougies M1 → 1 bougie M5 (OHLC correct)', () => {
+  const m1 = [
+    { time: 0,   open: 1.0850, high: 1.0860, low: 1.0840, close: 1.0855 },
+    { time: 60,  open: 1.0855, high: 1.0870, low: 1.0850, close: 1.0865 },
+    { time: 120, open: 1.0865, high: 1.0880, low: 1.0858, close: 1.0875 },
+    { time: 180, open: 1.0875, high: 1.0878, low: 1.0870, close: 1.0872 },
+    { time: 240, open: 1.0872, high: 1.0876, low: 1.0868, close: 1.0870 },
+  ];
+  const m5 = aggregate(m1, 300);
+  assertEq(m5.length, 1);
+  assertEq(m5[0].open, 1.0850, 'open = première bougie');
+  assertEq(m5[0].close, 1.0870, 'close = dernière bougie');
+  assertEq(m5[0].high, 1.0880, 'high = max des 5');
+  assertEq(m5[0].low, 1.0840, 'low = min des 5');
+});
+
+test('aggregate 10 M1 → 2 M5', () => {
+  const m1 = Array.from({length: 10}, (_, i) => ({
+    time: i * 60, open: 1.08, high: 1.09, low: 1.07, close: 1.085
+  }));
+  const m5 = aggregate(m1, 300);
+  assertEq(m5.length, 2);
+});
+
+// ============================================================
+// TESTS — ICT DETECTION
+// ============================================================
+
+section('ICT — Swing Points');
+
+test('detectSwings finds bullish pivot (n=2)', () => {
+  // Pivot high au milieu
+  const candles = [
+    {time:0, open:1.080, high:1.081, low:1.079, close:1.080, idx:0},
+    {time:1, open:1.080, high:1.082, low:1.080, close:1.082, idx:1},
+    {time:2, open:1.082, high:1.090, low:1.081, close:1.088, idx:2}, // swing high
+    {time:3, open:1.088, high:1.089, low:1.083, close:1.084, idx:3},
+    {time:4, open:1.084, high:1.085, low:1.080, close:1.081, idx:4},
+  ];
+  const swings = detectSwings(candles, 2);
+  const highs = swings.filter(s => s.type === 'high');
+  assert(highs.length >= 1, 'devrait détecter ≥ 1 swing high');
+  assertEq(highs[0].price, 1.090, 'swing high au bon prix');
+});
+
+section('ICT — Fair Value Gaps');
+
+test('detectFVG: bullish gap (low[i+1] > high[i-1])', () => {
+  const old = state.fvgMinSizePips;
+  state.fvgMinSizePips = 0;
+  const candles = [
+    {time:0,   open:1.0850, high:1.0860, low:1.0840, close:1.0855},
+    {time:60,  open:1.0855, high:1.0900, low:1.0853, close:1.0895}, // big move up
+    {time:120, open:1.0895, high:1.0910, low:1.0865, close:1.0905}, // low > prev[i-1].high (1.0860)
+  ];
+  const fvgs = detectFVG(candles);
+  state.fvgMinSizePips = old;
+  const bullish = fvgs.filter(f => f.type === 'bullish');
+  assert(bullish.length >= 1, 'devrait détecter ≥ 1 FVG bullish');
+});
+
+test('detectFVG respecte fvgMinSizePips (filtre)', () => {
+  const old = state.fvgMinSizePips;
+  state.fvgMinSizePips = 100; // Énorme filtre → personne ne passe
+  const candles = [
+    {time:0,   open:1.0850, high:1.0860, low:1.0840, close:1.0855},
+    {time:60,  open:1.0855, high:1.0870, low:1.0854, close:1.0865}, // petit gap
+    {time:120, open:1.0865, high:1.0875, low:1.0862, close:1.0870},
+  ];
+  const fvgs = detectFVG(candles);
+  state.fvgMinSizePips = old;
+  assertEq(fvgs.length, 0, 'filtre 100 pips bloque tous les FVG');
+});
+
+section('ICT — OTE (Fibonacci)');
+
+test('detectOTE: jambe haussière → fib 62/70.5/79', () => {
+  const swings = [
+    { type: 'low',  idx: 0, time: 0,   price: 1.0800 },
+    { type: 'high', idx: 5, time: 300, price: 1.0900 },
+  ];
+  const ote = detectOTE(swings);
+  assert(ote !== null, 'OTE should be detected');
+  assertEq(ote.direction, 'up');
+  // 1.09 - (0.01 * 0.62) = 1.0838
+  assertApprox(ote.fib62, 1.0838);
+  assertApprox(ote.fib70, 1.08295, 0.0002); // 1.09 - 0.01*0.705
+  assertApprox(ote.fib79, 1.0821, 0.0002);  // 1.09 - 0.01*0.79
+});
+
+test('detectOTE: jambe baissière → fib inversés', () => {
+  const swings = [
+    { type: 'high', idx: 0, time: 0,   price: 1.0900 },
+    { type: 'low',  idx: 5, time: 300, price: 1.0800 },
+  ];
+  const ote = detectOTE(swings);
+  assertEq(ote.direction, 'down');
+  // 1.08 + (0.01 * 0.62) = 1.0862
+  assertApprox(ote.fib62, 1.0862);
+});
+
+test('detectOTE: pas assez de swings → null', () => {
+  assertEq(detectOTE([]), null);
+  assertEq(detectOTE([{ type: 'low', idx: 0, time: 0, price: 1.08 }]), null);
+});
+
+section('ICT — Premium / Discount');
+
+test('detectPremiumDiscount: equilibrium = milieu du range', () => {
+  const swings = [
+    { type: 'low',  idx: 0, time: 0,   price: 1.0800 },
+    { type: 'high', idx: 5, time: 300, price: 1.0900 },
+  ];
+  const pd = detectPremiumDiscount(swings);
+  assertEq(pd.rangeLow, 1.0800);
+  assertEq(pd.rangeHigh, 1.0900);
+  assertApprox(pd.equilibrium, 1.0850);
+});
+
+// ============================================================
+// TESTS — PAPER TRADING & RISK
+// ============================================================
+
+section('Paper Trading & Risk');
+
+test('calcLotsForRisk: 10k€, 1% risque, 20 pips SL → 0.5 lot', () => {
+  const lots = calcLotsForRisk(10000, 1, 1.0850, 1.0830);
+  assertApprox(lots, 0.5, 0.001);
+});
+
+test('calcLotsForRisk: 5k€, 2% risque, 50 pips SL → 0.2 lot', () => {
+  const lots = calcLotsForRisk(5000, 2, 1.0850, 1.0800);
+  assertApprox(lots, 0.2, 0.001);
+});
+
+test('calcLotsForRisk: SL = entry → 0 lot (évite division par 0)', () => {
+  const lots = calcLotsForRisk(10000, 1, 1.0850, 1.0850);
+  assertEq(lots, 0);
+});
+
+test('calcPositionPnL: long +50 pips × 0.5 lot ≈ 250€', () => {
+  const pos = { side: 'long', entry: 1.0850, lots: 0.5 };
+  const pnl = calcPositionPnL(pos, 1.0900);
+  assertApprox(pnl, 250, 0.1);
+});
+
+test('calcPositionPnL: short -30 pips × 1 lot = -300€ (perte)', () => {
+  const pos = { side: 'short', entry: 1.0850, lots: 1 };
+  const pnl = calcPositionPnL(pos, 1.0880); // prix monté = short perd
+  assertApprox(pnl, -300, 0.1);
+});
+
+test('applyExitSpread: long → exit défavorable (-0.5 pip)', () => {
+  const old = state.paper.spreadPips;
+  state.paper.spreadPips = 1;
+  const exit = applyExitSpread(1.0900, 'long');
+  assertApprox(exit, 1.0900 - 0.00005);
+  state.paper.spreadPips = old;
+});
+
+test('applyExitSpread: short → exit défavorable (+0.5 pip)', () => {
+  const old = state.paper.spreadPips;
+  state.paper.spreadPips = 1;
+  const exit = applyExitSpread(1.0800, 'short');
+  assertApprox(exit, 1.0800 + 0.00005);
+  state.paper.spreadPips = old;
+});
+
+// ============================================================
+// TESTS — BACKTESTER
+// ============================================================
+
+section('Backtester');
+
+test('simulateTrade: SL touché → loss -1R', () => {
+  const candles = [
+    {time:0, open:1.085, high:1.0855, low:1.0848, close:1.0850},
+    {time:1, open:1.0850, high:1.0852, low:1.0830, close:1.0832}, // touche SL
+  ];
+  const sim = simulateTrade('bullish', 1.0850, 1.0830, 1.0890, candles, 0, 50);
+  assertEq(sim.result, 'loss');
+  assertEq(sim.R, -1);
+});
+
+test('simulateTrade: TP touché → win avec R correct', () => {
+  const candles = [
+    {time:0, open:1.0850, high:1.0855, low:1.0848, close:1.0850},
+    {time:1, open:1.0850, high:1.0895, low:1.0848, close:1.0890}, // touche TP
+  ];
+  const sim = simulateTrade('bullish', 1.0850, 1.0830, 1.0890, candles, 0, 50);
+  assertEq(sim.result, 'win');
+  // (1.0890 - 1.0850) / (1.0850 - 1.0830) = 40/20 = 2
+  assertApprox(sim.R, 2, 0.01);
+});
+
+test('simulateTrade: SL d\'abord si SL+TP même bougie (conservateur)', () => {
+  const candles = [
+    {time:0, open:1.0850, high:1.0855, low:1.0848, close:1.0850},
+    {time:1, open:1.0850, high:1.0895, low:1.0830, close:1.0850}, // touche SL ET TP
+  ];
+  const sim = simulateTrade('bullish', 1.0850, 1.0830, 1.0890, candles, 0, 50);
+  assertEq(sim.result, 'loss', 'SL conservateur en priorité');
+});
+
+test('simulateTrade: time stop → "timeout"', () => {
+  const candles = Array.from({length: 60}, (_, i) => ({
+    time: i, open: 1.0850, high: 1.0855, low: 1.0848, close: 1.0850 // pas de mouvement
+  }));
+  const sim = simulateTrade('bullish', 1.0850, 1.0830, 1.0890, candles, 0, 10);
+  assertEq(sim.result, 'timeout');
+});
+
+// ============================================================
+// SUMMARY
+// ============================================================
+
+setTimeout(() => {
+  const total = passed + failed;
+  summary.textContent = `${passed} / ${total} tests passés${failed > 0 ? ` (${failed} échec)` : ' ✓'}`;
+  summary.className = failed === 0 ? 'pass' : 'fail';
+  document.title = `${failed === 0 ? '✓' : '✗'} ${passed}/${total} — Tests`;
+}, 50);
+</script>
+</body>
+</html>
