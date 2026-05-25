@@ -104,6 +104,7 @@
         <button class="annot-btn" data-mode="hline" title="Ligne horizontale (1 clic)">━</button>
         <button class="annot-btn" data-mode="trendline" title="Trendline (drag-to-draw)">↗</button>
         <button class="annot-btn" id="annot-btn-rect" data-mode="rect" title="Rectangle (modèle ICT — clic pour choisir)">▢</button>
+        <button class="annot-btn" data-mode="fib" title="Fibonacci / OTE (drag-to-draw — niveaux 23.6/38.2/50/61.8/79%)">𝔽</button>
         <button class="annot-btn" data-mode="text" title="Texte (1 clic + saisie)">𝐀</button>
         <div class="annot-divider"></div>
         <button class="annot-btn annot-color" data-color="acc" style="background:#10b981" title="Vert"></button>
@@ -173,7 +174,7 @@
           </label>
           <label class="toggle-row">
             <input type="checkbox" data-ind="bos">
-            <div class="toggle-label"><span class="name">BOS / MSS</span><span class="hint">Cassures de structure</span></div>
+            <div class="toggle-label"><span class="name">MSS</span><span class="hint">Changements de structure (contretrend)</span></div>
           </label>
           <label class="toggle-row">
             <input type="checkbox" data-ind="liquidity">
@@ -208,14 +209,6 @@
           <span class="chev">▼</span>
         </button>
         <div class="panel-section-body">
-          <label class="toggle-row">
-            <input type="checkbox" data-ind="breaker">
-            <div class="toggle-label"><span class="name">Breaker Block</span><span class="hint">OB mitigé qui flip</span></div>
-          </label>
-          <label class="toggle-row">
-            <input type="checkbox" data-ind="ifvg">
-            <div class="toggle-label"><span class="name">Inverted FVG</span><span class="hint">FVG comblé → flip</span></div>
-          </label>
           <label class="toggle-row">
             <input type="checkbox" data-ind="ote">
             <div class="toggle-label"><span class="name">OTE</span><span class="hint">Zone fib 62-79%</span></div>
@@ -511,8 +504,6 @@
             <option value="ob">Order Blocks (OB)</option>
             <option value="fvg">Fair Value Gaps (FVG)</option>
             <option value="ob+fvg">OB + FVG</option>
-            <option value="bb">Breaker Blocks</option>
-            <option value="ifvg">Inverted FVG</option>
           </select>
 
           <label style="font-size:0.72rem;color:var(--muted2);margin-top:12px;margin-bottom:4px;display:block">Direction</label>

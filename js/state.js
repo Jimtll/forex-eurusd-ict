@@ -23,7 +23,7 @@ const state = {
   indicators: {
     swings: false, bos: false, liquidity: false,
     ob: false, fvg: false, pd: false, kz: false,
-    breaker: false, ifvg: false, ote: false,
+    ote: false,
     amd: false, pdarrays: false, irlerl: false,
     multitf: false, news: false,
   },
@@ -34,8 +34,6 @@ const state = {
     orderBlocks: [],
     fvgs: [],
     pd: null,
-    breakers: [],
-    ifvgs: [],
     ote: null,
   },
   // Phase 4 — Risk

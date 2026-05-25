@@ -21,13 +21,6 @@ function initChart(){
     rightPriceScale: {
       borderColor: 'rgba(255,255,255,0.07)',
     },
-    timeScale: {
-      borderColor: 'rgba(255,255,255,0.07)',
-      timeVisible: true,
-      secondsVisible: false,
-      rightOffset: 6,
-      barSpacing: 7,
-    },
     crosshair: {
       mode: LightweightCharts.CrosshairMode.Normal,
       vertLine: { color: 'rgba(255,255,255,0.18)', width: 1, style: 3 },
@@ -37,6 +30,36 @@ function initChart(){
     handleScale: true,
     localization: {
       priceFormatter: p => p.toFixed(5),
+      // v1.0.5 — Affichage des timestamps dans le FUSEAU LOCAL du navigateur (au lieu d'UTC par défaut).
+      // Le timestamp interne reste UTC, mais l'affichage est converti en heure locale.
+      timeFormatter: (ts) => {
+        const d = new Date(ts * 1000);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        return `${dd}/${mo} ${hh}:${mm}`;
+      },
+    },
+    timeScale: {
+      borderColor: 'rgba(255,255,255,0.07)',
+      timeVisible: true,
+      secondsVisible: false,
+      rightOffset: 6,
+      barSpacing: 7,
+      // v1.0.5 — Tick marks de l'axe X aussi en heure LOCALE
+      tickMarkFormatter: (ts) => {
+        const d = new Date(ts * 1000);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        if(hh === '00' && mm === '00'){
+          // Marque journalière : afficher la date
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mo = String(d.getMonth() + 1).padStart(2, '0');
+          return `${dd}/${mo}`;
+        }
+        return `${hh}:${mm}`;
+      },
     },
   });
 
@@ -75,7 +98,21 @@ function initChart(){
 
   // Setup overlay canvas + redraw hooks
   setupOverlayCanvas();
-  chart.timeScale().subscribeVisibleLogicalRangeChange(drawCanvasOverlays);
+  // v1.0.5 — Sync overlay au pan/zoom : wrapper requestAnimationFrame pour redraw
+  // sur la même frame que le rendu du chart, élimine le "saccade" des rectangles.
+  let _overlayRafId = null;
+  const overlayRedraw = () => {
+    if(_overlayRafId !== null) return; // déjà queue
+    _overlayRafId = requestAnimationFrame(() => {
+      _overlayRafId = null;
+      drawCanvasOverlays();
+    });
+  };
+  chart.timeScale().subscribeVisibleLogicalRangeChange(overlayRedraw);
+  // Backup : sync aussi sur visibleTimeRange (qui peut firer plus tôt selon les versions)
+  if(chart.timeScale().subscribeVisibleTimeRangeChange){
+    chart.timeScale().subscribeVisibleTimeRangeChange(overlayRedraw);
+  }
 }
 
 function renderOhlc(c){

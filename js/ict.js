@@ -103,9 +103,11 @@ function detectLiquidity(candles, swings){
   return { bsl, ssl, sweeps };
 }
 
-function detectOrderBlocks(candles, structure){
-  // Pour chaque BOS, dernière bougie de couleur opposée juste avant la cassure.
-  // OB bullish = bougie bearish avant un move haussier qui casse structure.
+function detectOrderBlocks(candles, structure, sweeps = []){
+  // ICT — un VRAI Order Block est précédé d'une prise de liquidité (sweep).
+  // OB bullish (bougie bearish avant move up qui casse structure) doit être précédé
+  //   d'un SSL sweep (wick sous un swing low + close au-dessus) = SSL pris.
+  // OB bearish doit être précédé d'un BSL sweep.
   const obs = [];
   for(const ev of structure.events){
     if(ev.type !== 'BOS') continue;
@@ -116,6 +118,12 @@ function detectOrderBlocks(candles, structure){
       const bearishCandle = c.close < c.open;
       const bullishCandle = c.close > c.open;
       if(isBullish && bearishCandle){
+        // Cherche un SSL sweep dans une fenêtre [ob-3, ob+5] (avant ou pendant le move)
+        const requiredDir = 'down';
+        const hasSweep = sweeps.some(sw =>
+          sw.dir === requiredDir && sw.idx >= i - 3 && sw.idx <= i + 5
+        );
+        if(!hasSweep) break; // pas de prise de liquidité → pas un VRAI OB ICT
         obs.push({
           type: 'bullish', idx: i, time: c.time,
           top: Math.max(c.open, c.close), bottom: c.low,
@@ -124,6 +132,11 @@ function detectOrderBlocks(candles, structure){
         break;
       }
       if(!isBullish && bullishCandle){
+        const requiredDir = 'up';
+        const hasSweep = sweeps.some(sw =>
+          sw.dir === requiredDir && sw.idx >= i - 3 && sw.idx <= i + 5
+        );
+        if(!hasSweep) break;
         obs.push({
           type: 'bearish', idx: i, time: c.time,
           top: c.high, bottom: Math.min(c.open, c.close),
@@ -237,44 +250,9 @@ function getKillzonesInRange(fromTime, toTime){
 }
 
 // ============================================================
-// ICT AVANCÉS — Breaker, IFVG, OTE, AMD, PD Arrays, IRL→ERL
+// ICT AVANCÉS — OTE, AMD, PD Arrays, IRL→ERL
+// (Breaker Block + Inverted FVG retirés en v1.0.5 — peu de valeur ajoutée)
 // ============================================================
-
-function detectBreakers(orderBlocks, candles){
-  // OB mitigé devient Breaker Block avec polarité inversée.
-  // Le BB est mitigé quand le prix retraverse complètement la zone (touch le bord opposé).
-  const breakers = orderBlocks.filter(o => o.mitigated && o.mitigatedTime).map(o => ({
-    type: o.type === 'bullish' ? 'bearish' : 'bullish',
-    top: o.top, bottom: o.bottom,
-    time: o.mitigatedTime,
-    mitigated: false,
-  }));
-  for(const bb of breakers){
-    for(const c of candles){
-      if(c.time <= bb.time) continue;
-      if(bb.type === 'bullish' && c.low <= bb.bottom){ bb.mitigated = true; bb.mitigatedTime = c.time; break; }
-      if(bb.type === 'bearish' && c.high >= bb.top){ bb.mitigated = true; bb.mitigatedTime = c.time; break; }
-    }
-  }
-  return breakers;
-}
-
-function detectIFVGs(fvgs, candles){
-  const ifvgs = fvgs.filter(f => f.mitigated && f.mitigatedTime).map(f => ({
-    type: f.type === 'bullish' ? 'bearish' : 'bullish',
-    top: f.top, bottom: f.bottom,
-    time: f.mitigatedTime,
-    mitigated: false,
-  }));
-  for(const ifvg of ifvgs){
-    for(const c of candles){
-      if(c.time <= ifvg.time) continue;
-      if(ifvg.type === 'bullish' && c.low <= ifvg.bottom){ ifvg.mitigated = true; ifvg.mitigatedTime = c.time; break; }
-      if(ifvg.type === 'bearish' && c.high >= ifvg.top){ ifvg.mitigated = true; ifvg.mitigatedTime = c.time; break; }
-    }
-  }
-  return ifvgs;
-}
 
 function detectOTE(swings){
   if(swings.length < 2) return null;
@@ -409,11 +387,10 @@ function _recomputeRaw(){
   state.computed.swings = detectSwings(state.candles);
   state.computed.structure = detectStructure(state.candles, state.computed.swings);
   state.computed.liquidity = detectLiquidity(state.candles, state.computed.swings);
-  state.computed.orderBlocks = detectOrderBlocks(state.candles, state.computed.structure);
+  // OB nécessite les sweeps déjà calculés (prise de liquidité = condition ICT)
+  state.computed.orderBlocks = detectOrderBlocks(state.candles, state.computed.structure, state.computed.liquidity.sweeps);
   state.computed.fvgs = detectFVG(state.candles);
   state.computed.pd = detectPremiumDiscount(state.computed.swings);
-  state.computed.breakers = detectBreakers(state.computed.orderBlocks, state.candles);
-  state.computed.ifvgs = detectIFVGs(state.computed.fvgs, state.candles);
   state.computed.ote = detectOTE(state.computed.swings);
   // Multi-TF (en mode mock uniquement — le live API ne fournit pas la base M15 pour aggréger)
   state.computed.htfZones = (!state.liveMode && state.indicators.multitf) ? computeHtfZones() : [];
@@ -427,8 +404,6 @@ function _recomputeRaw(){
   };
   annotateZones(state.computed.orderBlocks, 'OB', ctx);
   annotateZones(state.computed.fvgs, 'FVG', ctx);
-  annotateZones(state.computed.breakers, 'BB', ctx);
-  annotateZones(state.computed.ifvgs, 'IFVG', ctx);
 }
 
 function recomputeAll(){
@@ -464,8 +439,8 @@ function renderSwings(){
     state.series.setMarkers([]);
     return;
   }
-  // Limite : ne garde que les ~80 derniers swings pour rester lisible
-  const last = state.computed.swings.slice(-80);
+  // v1.0.5 — Limite à 40 derniers swings (au lieu de 80) pour rester lisible
+  const last = state.computed.swings.slice(-40);
   const markers = last.map(s => ({
     time: s.time,
     position: s.type === 'high' ? 'aboveBar' : 'belowBar',
@@ -477,33 +452,9 @@ function renderSwings(){
 }
 
 function renderLiquidity(){
+  // v1.0.5 — Lignes de liquidité dessinées en canvas (drawLiquidityLines) au lieu
+  // de createPriceLine() qui s'étendait sur toute la largeur. Ici on nettoie juste.
   clearPriceLines('liquidity');
-  if(!state.indicators.liquidity) return;
-  // Limite : seulement les niveaux non encore swept (= actifs), + les ~10 plus récents
-  const bsl = state.computed.liquidity.bsl.filter(l => !l.swept).slice(-10);
-  const ssl = state.computed.liquidity.ssl.filter(l => !l.swept).slice(-10);
-  for(const l of bsl){
-    const line = state.series.createPriceLine({
-      price: l.price,
-      color: '#3b82f6',
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: 'BSL',
-    });
-    state.priceLines.push({ kind: 'liquidity', line });
-  }
-  for(const l of ssl){
-    const line = state.series.createPriceLine({
-      price: l.price,
-      color: '#f97316',
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
-      title: 'SSL',
-    });
-    state.priceLines.push({ kind: 'liquidity', line });
-  }
 }
 
 function renderPremiumDiscount(){
@@ -565,12 +516,10 @@ function drawCanvasOverlays(){
   if(state.indicators.amd)       drawAMD(ctx, t2x, p2y, w, h, vr);
   if(state.indicators.kz)        drawKillzones(ctx, t2x, p2y, w, h, vr);
   if(state.indicators.fvg)       drawFVGs(ctx, t2x, p2y, w, h);
-  if(state.indicators.ifvg)      drawIFVGs(ctx, t2x, p2y, w, h);
   if(state.indicators.ob)        drawOrderBlocks(ctx, t2x, p2y, w, h);
-  if(state.indicators.breaker)   drawBreakers(ctx, t2x, p2y, w, h);
   if(state.indicators.ote)       drawOTE(ctx, t2x, p2y, w, h);
   if(state.indicators.bos)       drawBosMss(ctx, t2x, p2y, w, h);
-  if(state.indicators.liquidity) drawSweeps(ctx, t2x, p2y, w, h);
+  if(state.indicators.liquidity){ drawSweeps(ctx, t2x, p2y, w, h); drawLiquidityLines(ctx, t2x, p2y, w, h); }
   if(state.indicators.irlerl)    drawIRLERL(ctx, t2x, p2y, w, h);
   // News events overlay (était un wrapper externe)
   if(state.indicators.news && typeof drawNewsEvents === 'function') drawNewsEvents(ctx, t2x, w, h);
@@ -609,50 +558,6 @@ function drawAMD(ctx, t2x, p2y, w, h, vr){
         ctx.fillText(p.label, x1 + (x2 - x1) / 2 - 3, h - 6);
       }
     }
-  }
-}
-
-function drawBreakers(ctx, t2x, p2y, w, h){
-  ctx.lineWidth = 1;
-  ctx.font = 'bold 9px Segoe UI, system-ui';
-  ctx.textBaseline = 'top';
-  const unmitigated = state.computed.breakers.filter(b => !b.mitigated);
-  for(const bb of unmitigated){
-    const x1 = t2x(bb.time);
-    if(x1 === null) continue;
-    const y1 = p2y(bb.top), y2 = p2y(bb.bottom);
-    if(y1 === null || y2 === null) continue;
-    const isBull = bb.type === 'bullish';
-    ctx.fillStyle = isBull ? 'rgba(167,139,250,0.20)' : 'rgba(244,114,182,0.20)';
-    ctx.fillRect(x1, y1, w - x1, y2 - y1);
-    ctx.strokeStyle = isBull ? 'rgba(167,139,250,0.7)' : 'rgba(244,114,182,0.7)';
-    ctx.setLineDash([5, 2]);
-    ctx.strokeRect(x1, y1, w - x1, y2 - y1);
-    ctx.setLineDash([]);
-    ctx.fillStyle = isBull ? '#a78bfa' : '#f472b6';
-    ctx.fillText('BB', x1 + 3, y1 + 2);
-  }
-}
-
-function drawIFVGs(ctx, t2x, p2y, w, h){
-  ctx.lineWidth = 1;
-  ctx.font = 'bold 9px Segoe UI, system-ui';
-  ctx.textBaseline = 'top';
-  const unmitigated = state.computed.ifvgs.filter(f => !f.mitigated);
-  for(const ifvg of unmitigated){
-    const x1 = t2x(ifvg.time);
-    if(x1 === null) continue;
-    const y1 = p2y(ifvg.top), y2 = p2y(ifvg.bottom);
-    if(y1 === null || y2 === null) continue;
-    const isBull = ifvg.type === 'bullish';
-    ctx.fillStyle = isBull ? 'rgba(125,211,252,0.12)' : 'rgba(252,165,165,0.12)';
-    ctx.fillRect(x1, y1, w - x1, y2 - y1);
-    ctx.strokeStyle = isBull ? 'rgba(125,211,252,0.55)' : 'rgba(252,165,165,0.55)';
-    ctx.setLineDash([3, 2]);
-    ctx.strokeRect(x1, y1, w - x1, y2 - y1);
-    ctx.setLineDash([]);
-    ctx.fillStyle = isBull ? '#7dd3fc' : '#fca5a5';
-    ctx.fillText('IFVG', x1 + 3, y1 + 2);
   }
 }
 
@@ -731,8 +636,6 @@ function renderPDArraysPanel(){
   const arrays = [];
   for(const ob of state.computed.orderBlocks.filter(o => !o.mitigated)) arrays.push({ kind: 'OB ' + (ob.type === 'bullish' ? '▲' : '▼'), price: (ob.top + ob.bottom) / 2 });
   for(const fvg of state.computed.fvgs.filter(f => !f.mitigated)) arrays.push({ kind: 'FVG ' + (fvg.type === 'bullish' ? '▲' : '▼'), price: (fvg.top + fvg.bottom) / 2 });
-  for(const bb of state.computed.breakers.filter(b => !b.mitigated)) arrays.push({ kind: 'BB ' + (bb.type === 'bullish' ? '▲' : '▼'), price: (bb.top + bb.bottom) / 2 });
-  for(const i of state.computed.ifvgs.filter(f => !f.mitigated)) arrays.push({ kind: 'IFVG ' + (i.type === 'bullish' ? '▲' : '▼'), price: (i.top + i.bottom) / 2 });
   const premium = arrays.filter(a => a.price > eq).sort((a, b) => b.price - a.price);
   const discount = arrays.filter(a => a.price <= eq).sort((a, b) => b.price - a.price);
   const renderItems = items => items.length === 0
@@ -806,32 +709,29 @@ function drawScoreBadge(ctx, x, y, score, maxScore, hasHtf){
 
 function drawFVGs(ctx, t2x, p2y, w, h){
   ctx.lineWidth = 1;
-  // Limite le bruit visuel : 10 unmitigated les plus récentes (= les plus pertinentes)
-  // + 15 mitigated récentes pour contexte
-  const unmitigated = state.computed.fvgs.filter(f => !f.mitigated).slice(-10);
-  const recentMitigated = state.computed.fvgs.filter(f => f.mitigated).slice(-15);
-  const list = [...recentMitigated, ...unmitigated];
-  const maxScore = state.indicators.multitf ? 4 : 3; // killzone + PD + OTE (+HTF si multi)
+  // v1.0.5 — Afficher uniquement les FVG ACTUELS (non mitigés). Les anciens sont obsolètes
+  // car déjà comblés par le prix → aucune valeur opérationnelle.
+  const list = state.computed.fvgs.filter(f => !f.mitigated).slice(-10);
+  const maxScore = state.indicators.multitf ? 4 : 3;
   for(const fvg of list){
     const x1 = t2x(fvg.time);
     if(x1 === null) continue;
     const y1 = p2y(fvg.top);
     const y2 = p2y(fvg.bottom);
     if(y1 === null || y2 === null) continue;
-    let xEnd;
-    if(fvg.mitigated && fvg.mitigatedTime){
-      const xm = t2x(fvg.mitigatedTime);
-      xEnd = xm !== null ? xm : w;
-    } else {
-      xEnd = w;
-    }
+    const xEnd = w; // toujours jusqu'au bord droit (non mitigé)
     if(xEnd <= x1) continue;
     const isBull = fvg.type === 'bullish';
     const style = scoreStyle(fvg.score || 0, maxScore);
     const fillBase = isBull ? [16,185,129] : [239,68,68];
-    ctx.fillStyle = `rgba(${fillBase.join(',')},${Math.min(0.10 * style.mult, 0.25)})`;
+    // v1.0.5 — Rouge plus foncé : alpha de fill x1.8 + alpha de stroke x1.5 pour bearish
+    const fillMult = isBull ? 0.10 : 0.22;
+    const strokeMult = isBull ? 0.35 : 0.75;
+    const fillCap = isBull ? 0.25 : 0.45;
+    const strokeCap = isBull ? 0.85 : 1.0;
+    ctx.fillStyle = `rgba(${fillBase.join(',')},${Math.min(fillMult * style.mult, fillCap)})`;
     ctx.fillRect(x1, y1, xEnd - x1, y2 - y1);
-    ctx.strokeStyle = `rgba(${fillBase.join(',')},${Math.min(0.35 * style.mult, 0.85)})`;
+    ctx.strokeStyle = `rgba(${fillBase.join(',')},${Math.min(strokeMult * style.mult, strokeCap)})`;
     ctx.setLineDash([2, 2]);
     if(style.glow){
       ctx.shadowColor = `rgba(${fillBase.join(',')},0.5)`;
@@ -840,8 +740,7 @@ function drawFVGs(ctx, t2x, p2y, w, h){
     ctx.strokeRect(x1, y1, xEnd - x1, y2 - y1);
     ctx.shadowBlur = 0;
     ctx.setLineDash([]);
-    // Score badge (only for unmitigated, sinon trop chargé)
-    if(!fvg.mitigated && fvg.score !== undefined){
+    if(fvg.score !== undefined){
       drawScoreBadge(ctx, Math.min(xEnd, w - 2), y1, fvg.score, maxScore, fvg.scoreDetails && fvg.scoreDetails.htf);
     }
   }
@@ -896,8 +795,9 @@ function drawBosMss(ctx, t2x, p2y, w, h){
   ctx.lineWidth = 1;
   ctx.font = 'bold 9px Segoe UI, system-ui';
   ctx.textBaseline = 'bottom';
-  // Limit aux derniers événements pour clarté
-  const recent = state.computed.structure.events.slice(-25);
+  // v1.0.5 — Seulement MSS (changements de structure marquants). Les BOS sont retirés
+  // car trop nombreux et bruyants dans un swing trend.
+  const recent = state.computed.structure.events.filter(e => e.type === 'MSS').slice(-15);
   for(const ev of recent){
     const xS = t2x(ev.swingTime);
     const xB = t2x(ev.breakTime);
@@ -906,20 +806,17 @@ function drawBosMss(ctx, t2x, p2y, w, h){
     const X1 = xS !== null ? xS : 0;
     const X2 = xB !== null ? xB : w;
     if(X2 <= X1) continue;
-    const isBos = ev.type === 'BOS';
     const isUp = ev.dir === 'up';
-    const color = isBos
-      ? (isUp ? '#10b981' : '#ef4444')
-      : (isUp ? '#fbbf24' : '#fbbf24'); // MSS jaune (= changement de structure marquant)
+    const color = isUp ? '#fbbf24' : '#fb923c'; // MSS jaune/orange selon direction
     ctx.strokeStyle = color;
-    ctx.setLineDash(isBos ? [4, 3] : [6, 3, 2, 3]);
+    ctx.setLineDash([6, 3, 2, 3]);
     ctx.beginPath();
     ctx.moveTo(X1, y);
     ctx.lineTo(X2, y);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = color;
-    ctx.fillText(ev.type, X2 + 4, y - 2);
+    ctx.fillText('MSS', X2 + 4, y - 2);
   }
 }
 
@@ -937,6 +834,40 @@ function drawSweeps(ctx, t2x, p2y, w, h){
     ctx.lineWidth = 1;
     ctx.stroke();
   }
+}
+
+// v1.0.5 — Lignes de liquidité (BSL/SSL) en canvas : partent du swing jusqu'au bord droit
+function drawLiquidityLines(ctx, t2x, p2y, w, h){
+  ctx.lineWidth = 1;
+  ctx.font = 'bold 9px Segoe UI, system-ui';
+  ctx.textBaseline = 'middle';
+  const drawSet = (levels, color, label) => {
+    // Garde les ~10 plus récents non encore swept
+    const list = levels.filter(l => !l.swept).slice(-10);
+    for(const l of list){
+      const x = t2x(l.time);
+      const y = p2y(l.price);
+      if(y === null) continue;
+      const xStart = (x === null || x < 0) ? 0 : x;
+      // Trait dashed de xStart à w (bord droit)
+      ctx.strokeStyle = color;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      ctx.moveTo(xStart, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Badge label à droite
+      const m = ctx.measureText(label);
+      const bw = m.width + 8, bh = 14;
+      ctx.fillStyle = color;
+      ctx.fillRect(w - bw - 2, y - bh/2, bw, bh);
+      ctx.fillStyle = '#0f1117';
+      ctx.fillText(label, w - bw + 2, y);
+    }
+  };
+  drawSet(state.computed.liquidity.bsl, 'rgba(59,130,246,0.85)', 'BSL');
+  drawSet(state.computed.liquidity.ssl, 'rgba(249,115,22,0.85)', 'SSL');
 }
 
 function renderAll(){

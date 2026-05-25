@@ -11,6 +11,18 @@ const ANNOT_COLORS = {
   acc: '#10b981', red: '#ef4444', blue: '#3b82f6', yellow: '#fbbf24'
 };
 
+// Niveaux Fibonacci / OTE (du point haut au point bas — % de retrace)
+const FIB_LEVELS = [
+  { p: 0,     label: '0%',    color: '#94a3b8' },
+  { p: 0.236, label: '23.6%', color: '#94a3b8' },
+  { p: 0.382, label: '38.2%', color: '#94a3b8' },
+  { p: 0.5,   label: '50%',   color: '#94a3b8' },
+  { p: 0.618, label: '61.8%', color: '#3b82f6' },
+  { p: 0.705, label: '70.5%', color: '#fbbf24' }, // sweet spot OTE
+  { p: 0.79,  label: '79%',   color: '#fbbf24' },
+  { p: 1,     label: '100%',  color: '#94a3b8' },
+];
+
 // ── Presets ICT pour le rectangle (style TradingView "Modèle de Dessin") ──
 const RECT_PRESETS = [
   { id: 'plain',   label: 'Carré (sans label)',     color: 'acc',    text: '' },
@@ -93,7 +105,7 @@ function getAnnotHandles(a){
   } else if(a.type === 'text'){
     const x = t2x(a.time), y = p2y(a.price);
     if(x !== null && y !== null) handles.push({ kind: 'move', x, y, cursor: 'move' });
-  } else if(a.type === 'trendline'){
+  } else if(a.type === 'trendline' || a.type === 'fib'){
     const x1 = t2x(a.time1), y1 = p2y(a.price1);
     const x2 = t2x(a.time2), y2 = p2y(a.price2);
     if(x1 !== null && y1 !== null) handles.push({ kind: 'end1', x: x1, y: y1, cursor: 'crosshair' });
@@ -141,6 +153,17 @@ function distanceToAnnot(x, y, a){
     const x2 = t2x(a.time2), y2 = p2y(a.price2);
     if(x1 === null || y1 === null || x2 === null || y2 === null) return Infinity;
     return distanceToSegment(x, y, x1, y1, x2, y2);
+  }
+  if(a.type === 'fib'){
+    // Boîte englobante des niveaux de fib (entre les 2 points)
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 === null || y1 === null || x2 === null || y2 === null) return Infinity;
+    const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+    const dxIn = (x >= minX && x <= maxX) ? 0 : Math.min(Math.abs(x - minX), Math.abs(x - maxX));
+    const dyIn = (y >= minY && y <= maxY) ? 0 : Math.min(Math.abs(y - minY), Math.abs(y - maxY));
+    return Math.hypot(dxIn, dyIn);
   }
   if(a.type === 'rect'){
     const x1 = t2x(a.time1), y1 = p2y(a.price1);
@@ -291,7 +314,7 @@ function onChartMouseDown(e){
     state.selectedAnnotId = state.annotations[state.annotations.length - 1].id;
     saveAnnotations();
     setAnnotMode('pan');
-  } else if(state.annotMode === 'trendline' || state.annotMode === 'rect'){
+  } else if(state.annotMode === 'trendline' || state.annotMode === 'rect' || state.annotMode === 'fib'){
     state.annotDraft = {
       type: state.annotMode, color: state.annotColor,
       time1: pos.time, price1: pos.price,
@@ -492,6 +515,58 @@ function drawSingleAnnotation(ctx, t2x, p2y, w, h, a, selected, isDraft){
     ctx.textBaseline = 'middle';
     ctx.fillText(a.text, x + 2, y - 5);
     ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fill();
+  } else if(a.type === 'fib'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 === null || y1 === null || x2 === null || y2 === null) return;
+    const X1 = Math.min(x1, x2), X2 = Math.max(x1, x2);
+    // price1 = high (0%), price2 = low (100%) — détecté automatiquement
+    const hi = Math.max(a.price1, a.price2);
+    const lo = Math.min(a.price1, a.price2);
+    const range = hi - lo;
+    if(range <= 0) return;
+    // OTE zone fill (62-79%)
+    const yOte62 = p2y(hi - range * 0.618);
+    const yOte79 = p2y(hi - range * 0.79);
+    if(yOte62 !== null && yOte79 !== null){
+      const otY = Math.min(yOte62, yOte79);
+      const otH = Math.abs(yOte79 - yOte62);
+      ctx.fillStyle = 'rgba(251,191,36,0.10)';
+      ctx.fillRect(X1, otY, X2 - X1, otH);
+    }
+    // Trace tous les niveaux
+    ctx.font = 'bold 10px Segoe UI, system-ui';
+    ctx.textBaseline = 'middle';
+    for(const lvl of FIB_LEVELS){
+      const px = hi - range * lvl.p;
+      const y = p2y(px);
+      if(y === null) continue;
+      // Highlight si dans zone OTE
+      const isOte = lvl.p >= 0.618 && lvl.p <= 0.79;
+      ctx.strokeStyle = isOte ? lvl.color : `${lvl.color}88`;
+      ctx.lineWidth = isOte ? 1.5 : 1;
+      ctx.setLineDash(isOte ? [] : [3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(X1, y);
+      ctx.lineTo(X2, y);
+      ctx.stroke();
+      // Label : "62% — 1.16432"
+      const label = `${lvl.label}  ${px.toFixed(5)}`;
+      const m = ctx.measureText(label);
+      ctx.fillStyle = 'rgba(15,17,23,0.85)';
+      ctx.fillRect(X1 + 3, y - 8, m.width + 8, 14);
+      ctx.fillStyle = lvl.color;
+      ctx.fillText(label, X1 + 7, y - 1);
+    }
+    ctx.setLineDash([]);
+    // Label OTE en haut-droite
+    ctx.font = 'bold 10px Segoe UI, system-ui';
+    const ote = 'OTE';
+    const mo = ctx.measureText(ote);
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillRect(X2 - mo.width - 8, p2y(hi) || 0, mo.width + 8, 14);
+    ctx.fillStyle = '#0f1117';
+    ctx.fillText(ote, X2 - mo.width - 4, (p2y(hi) || 0) + 7);
   }
 
   // Handles si sélectionné (pas pour le draft)
@@ -677,8 +752,6 @@ function rebuildHoverableZones(){
 
   if(state.indicators.ob) addZones(state.computed.orderBlocks, 'OB', true);
   if(state.indicators.fvg) addZones(state.computed.fvgs, 'FVG', true);
-  if(state.indicators.breaker) addZones(state.computed.breakers, 'BB', false);
-  if(state.indicators.ifvg) addZones(state.computed.ifvgs, 'IFVG', false);
 }
 
 function showZoneTooltip(zone, kind, clientX, clientY){

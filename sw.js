@@ -1,5 +1,5 @@
 // Service Worker — EUR/USD ICT Dashboard
-const CACHE = 'eurusd-ict-v1.0.4';
+const CACHE = 'eurusd-ict-v1.0.5';
 const APP_SHELL = [
   './',
   './index.html',

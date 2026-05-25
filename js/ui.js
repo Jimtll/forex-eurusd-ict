@@ -165,7 +165,7 @@ function autoSavePrefs(){
 const TOGGLE_TO_CHAPTER = {
   swings: '2.2', bos: '2.3', liquidity: '2.4', ob: '2.6',
   fvg: '2.7', pd: '2.8', kz: '2.9',
-  breaker: '3.1', ifvg: '3.2', ote: '3.3',
+  ote: '3.3',
   amd: '3.4', pdarrays: '3.5', irlerl: '3.6',
   multitf: '5.1',
 };
@@ -200,7 +200,7 @@ const PRESETS = {
     name: 'Reset',
     tf: null, // ne change pas le TF
     indicators: { swings: false, bos: false, liquidity: false, ob: false, fvg: false, pd: false, kz: false,
-                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false,
+ote: false, amd: false, pdarrays: false, irlerl: false,
                   multitf: false, news: false },
   },
   learn: {
@@ -208,7 +208,7 @@ const PRESETS = {
     name: 'Contexte',
     tf: 'H1',
     indicators: { swings: true, bos: true, liquidity: false, ob: false, fvg: false, pd: true, kz: true,
-                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false,
+ote: false, amd: false, pdarrays: false, irlerl: false,
                   multitf: false, news: false },
   },
   swing: {
@@ -216,7 +216,7 @@ const PRESETS = {
     name: 'Setup',
     tf: 'H4',
     indicators: { swings: false, bos: false, liquidity: true, ob: true, fvg: false, pd: true, kz: false,
-                  breaker: false, ifvg: false, ote: true, amd: false, pdarrays: false, irlerl: false,
+ote: true, amd: false, pdarrays: false, irlerl: false,
                   multitf: true, news: false },
   },
   scalp: {
@@ -224,7 +224,7 @@ const PRESETS = {
     name: 'Entrée',
     tf: 'M15',
     indicators: { swings: false, bos: true, liquidity: true, ob: true, fvg: true, pd: false, kz: true,
-                  breaker: false, ifvg: false, ote: false, amd: false, pdarrays: false, irlerl: false,
+ote: false, amd: false, pdarrays: false, irlerl: false,
                   multitf: false, news: true },
   },
 };

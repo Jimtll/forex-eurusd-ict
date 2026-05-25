@@ -12,8 +12,6 @@ function getZonesForBacktest(type){
   const tag = (arr, kind) => arr.map(z => ({ ...z, kind }));
   if(type === 'ob' || type === 'ob+fvg') all.push(...tag(state.computed.orderBlocks, 'OB'));
   if(type === 'fvg' || type === 'ob+fvg') all.push(...tag(state.computed.fvgs, 'FVG'));
-  if(type === 'bb') all.push(...tag(state.computed.breakers, 'BB'));
-  if(type === 'ifvg') all.push(...tag(state.computed.ifvgs, 'IFVG'));
   return all;
 }
 
