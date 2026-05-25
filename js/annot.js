@@ -4,7 +4,7 @@
 // ============================================================
 
 // ============================================================
-// ANNOTATIONS — dessin manuel sur le chart
+// ANNOTATIONS — dessin manuel sur le chart (drag-to-draw + handles)
 // ============================================================
 
 const ANNOT_COLORS = {
@@ -14,22 +14,32 @@ const ANNOT_COLORS = {
 state.annotations = JSON.parse(localStorage.getItem('annotations') || '[]');
 state.annotMode = 'pan';
 state.annotColor = 'acc';
-state.annotDrawing = null; // { type, time1, price1 } pour les 2-clics
-let _annotHoverIdx = -1;
+state.annotDraft = null;          // annotation en cours de création
+state.annotDrag = null;           // { id, kind, startX/Y, startTime/Price, startData }
+state.selectedAnnotId = null;     // id de l'annotation sélectionnée
+let _annotCrosshair = null;       // { x, y, time, price } pour la croix magnétique
 
 function saveAnnotations(){ localStorage.setItem('annotations', JSON.stringify(state.annotations)); scheduleAutoSync(); }
 
 function setAnnotMode(mode){
   state.annotMode = mode;
-  state.annotDrawing = null;
+  state.annotDraft = null;
+  state.selectedAnnotId = null;
   document.querySelectorAll('.annot-btn[data-mode]').forEach(b => {
     b.classList.toggle('active', b.dataset.mode === mode);
   });
+  // Désactive le pan/zoom du chart quand un outil de dessin est actif
+  if(state.chart){
+    const allowPan = (mode === 'pan');
+    state.chart.applyOptions({ handleScroll: allowPan, handleScale: allowPan });
+  }
   // Cursor adapté
   const chartEl = document.getElementById('chart');
   if(mode === 'pan') chartEl.style.cursor = '';
   else if(mode === 'erase') chartEl.style.cursor = 'not-allowed';
   else chartEl.style.cursor = 'crosshair';
+  _annotCrosshair = null;
+  renderAll();
 }
 
 function setAnnotColor(color){
@@ -39,87 +49,53 @@ function setAnnotColor(color){
   });
 }
 
-function handleChartClick(param){
-  if(state.annotMode === 'pan' || !param || !param.time || !param.point) return;
-  const price = state.series.coordinateToPrice(param.point.y);
-  if(price === null) return;
-  const time = param.time;
-
-  if(state.annotMode === 'erase'){
-    eraseAnnotationAt(param.point.x, param.point.y);
-    return;
-  }
-
-  if(state.annotMode === 'hline'){
-    state.annotations.push({ id: Date.now(), type: 'hline', color: state.annotColor, price });
-    saveAnnotations();
-    renderAll();
-  } else if(state.annotMode === 'text'){
-    const txt = prompt('Texte du label :', '');
-    if(!txt) return;
-    state.annotations.push({ id: Date.now(), type: 'text', color: state.annotColor, time, price, text: txt });
-    saveAnnotations();
-    renderAll();
-  } else if(state.annotMode === 'trendline' || state.annotMode === 'rect'){
-    if(!state.annotDrawing){
-      // 1er clic
-      state.annotDrawing = { type: state.annotMode, color: state.annotColor, time1: time, price1: price };
-      showToast(`📍 ${state.annotMode === 'trendline' ? 'Trendline' : 'Rectangle'} : clique le 2e point`);
-    } else {
-      // 2e clic, finalise
-      state.annotations.push({
-        id: Date.now(),
-        type: state.annotDrawing.type,
-        color: state.annotDrawing.color,
-        time1: state.annotDrawing.time1, price1: state.annotDrawing.price1,
-        time2: time, price2: price,
-      });
-      state.annotDrawing = null;
-      saveAnnotations();
-      renderAll();
-    }
-  }
+// ── Conversion event → coords (time/price) ──
+function eventToTimePrice(e){
+  const chartEl = document.getElementById('chart');
+  const rect = chartEl.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+  const clientX = t.clientX, clientY = t.clientY;
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  if(x < 0 || x > rect.width || y < 0 || y > rect.height) return null;
+  const time = state.chart.timeScale().coordinateToTime(x);
+  const price = state.series.coordinateToPrice(y);
+  if(time === null || price === null) return null;
+  return { x, y, time, price };
 }
 
-function eraseAnnotationAt(x, y){
+// ── Hit-test : trouve ce qui se trouve sous (x,y) ──
+function getAnnotHandles(a){
   const timeScale = state.chart.timeScale();
   const t2x = t => timeScale.timeToCoordinate(t);
   const p2y = p => state.series.priceToCoordinate(p);
-  // Trouve l'annotation la plus proche (dans un rayon de 10px)
-  let bestIdx = -1, bestDist = 12;
-  for(let i = 0; i < state.annotations.length; i++){
-    const a = state.annotations[i];
-    let dist = Infinity;
-    if(a.type === 'hline'){
-      const ay = p2y(a.price);
-      if(ay !== null) dist = Math.abs(y - ay);
-    } else if(a.type === 'text'){
-      const ax = t2x(a.time), ay = p2y(a.price);
-      if(ax !== null && ay !== null) dist = Math.hypot(x - ax, y - ay);
-    } else if(a.type === 'trendline'){
-      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
-      if(x1 !== null && x2 !== null && y1 !== null && y2 !== null){
-        dist = distanceToSegment(x, y, x1, y1, x2, y2);
-      }
-    } else if(a.type === 'rect'){
-      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
-      if(x1 !== null && x2 !== null && y1 !== null && y2 !== null){
-        // Distance à un bord du rectangle
-        const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
-        const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
-        const dxIn = (x >= minX && x <= maxX) ? 0 : Math.min(Math.abs(x - minX), Math.abs(x - maxX));
-        const dyIn = (y >= minY && y <= maxY) ? 0 : Math.min(Math.abs(y - minY), Math.abs(y - maxY));
-        dist = Math.hypot(dxIn, dyIn);
-      }
+  const handles = [];
+  if(a.type === 'hline'){
+    const y = p2y(a.price);
+    if(y !== null) handles.push({ kind: 'move', x: 60, y, cursor: 'ns-resize' });
+  } else if(a.type === 'text'){
+    const x = t2x(a.time), y = p2y(a.price);
+    if(x !== null && y !== null) handles.push({ kind: 'move', x, y, cursor: 'move' });
+  } else if(a.type === 'trendline'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 !== null && y1 !== null) handles.push({ kind: 'end1', x: x1, y: y1, cursor: 'crosshair' });
+    if(x2 !== null && y2 !== null) handles.push({ kind: 'end2', x: x2, y: y2, cursor: 'crosshair' });
+  } else if(a.type === 'rect'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 !== null && y1 !== null && x2 !== null && y2 !== null){
+      const minX = Math.min(x1,x2), maxX = Math.max(x1,x2);
+      const minY = Math.min(y1,y2), maxY = Math.max(y1,y2);
+      handles.push(
+        { kind: 'tl', x: minX, y: minY, cursor: 'nwse-resize' },
+        { kind: 'tr', x: maxX, y: minY, cursor: 'nesw-resize' },
+        { kind: 'bl', x: minX, y: maxY, cursor: 'nesw-resize' },
+        { kind: 'br', x: maxX, y: maxY, cursor: 'nwse-resize' },
+      );
     }
-    if(dist < bestDist){ bestDist = dist; bestIdx = i; }
   }
-  if(bestIdx !== -1){
-    state.annotations.splice(bestIdx, 1);
-    saveAnnotations();
-    renderAll();
-    showToast('🗑 Annotation supprimée');
-  }
+  return handles;
 }
 
 function distanceToSegment(px, py, x1, y1, x2, y2){
@@ -131,68 +107,392 @@ function distanceToSegment(px, py, x1, y1, x2, y2){
   return Math.hypot(px - (x1 + t*dx), py - (y1 + t*dy));
 }
 
-function drawAnnotations(ctx, t2x, p2y, w, h){
-  ctx.lineWidth = 1.5;
-  ctx.font = 'bold 11px Segoe UI, system-ui';
-  for(const a of state.annotations){
-    const color = ANNOT_COLORS[a.color] || ANNOT_COLORS.acc;
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    if(a.type === 'hline'){
-      const y = p2y(a.price);
-      if(y === null) continue;
-      ctx.setLineDash([6, 3]);
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(a.price.toFixed(5), 6, y - 3);
-    } else if(a.type === 'trendline'){
-      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
-      if(x1 === null || x2 === null || y1 === null || y2 === null) continue;
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(x1, y1, 4, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x2, y2, 4, 0, Math.PI*2); ctx.fill();
-    } else if(a.type === 'rect'){
-      const x1 = t2x(a.time1), y1 = p2y(a.price1), x2 = t2x(a.time2), y2 = p2y(a.price2);
-      if(x1 === null || x2 === null || y1 === null || y2 === null) continue;
-      const X = Math.min(x1, x2), Y = Math.min(y1, y2);
-      const W = Math.abs(x2 - x1), H = Math.abs(y2 - y1);
-      ctx.globalAlpha = 0.12;
-      ctx.fillRect(X, Y, W, H);
-      ctx.globalAlpha = 1;
-      ctx.strokeRect(X, Y, W, H);
-    } else if(a.type === 'text'){
-      const x = t2x(a.time), y = p2y(a.price);
-      if(x === null || y === null) continue;
-      // background pour lisibilité
-      const m = ctx.measureText(a.text);
-      ctx.fillStyle = 'rgba(15,17,23,0.85)';
-      ctx.fillRect(x - 2, y - 14, m.width + 8, 18);
-      ctx.fillStyle = color;
-      ctx.textBaseline = 'middle';
-      ctx.fillText(a.text, x + 2, y - 5);
-      // petit pointeur
-      ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fill();
+function distanceToAnnot(x, y, a){
+  const timeScale = state.chart.timeScale();
+  const t2x = t => timeScale.timeToCoordinate(t);
+  const p2y = p => state.series.priceToCoordinate(p);
+  if(a.type === 'hline'){
+    const ay = p2y(a.price);
+    return ay !== null ? Math.abs(y - ay) : Infinity;
+  }
+  if(a.type === 'text'){
+    const ax = t2x(a.time), ay = p2y(a.price);
+    return (ax !== null && ay !== null) ? Math.hypot(x - ax, y - ay) : Infinity;
+  }
+  if(a.type === 'trendline'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 === null || y1 === null || x2 === null || y2 === null) return Infinity;
+    return distanceToSegment(x, y, x1, y1, x2, y2);
+  }
+  if(a.type === 'rect'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 === null || y1 === null || x2 === null || y2 === null) return Infinity;
+    const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+    const dxIn = (x >= minX && x <= maxX) ? 0 : Math.min(Math.abs(x - minX), Math.abs(x - maxX));
+    const dyIn = (y >= minY && y <= maxY) ? 0 : Math.min(Math.abs(y - minY), Math.abs(y - maxY));
+    return Math.hypot(dxIn, dyIn);
+  }
+  return Infinity;
+}
+
+function hitTest(x, y){
+  // Priorité 1 : handles de l'annotation sélectionnée
+  if(state.selectedAnnotId){
+    const a = state.annotations.find(a => a.id === state.selectedAnnotId);
+    if(a){
+      const handles = getAnnotHandles(a);
+      for(const h of handles){
+        if(Math.hypot(x - h.x, y - h.y) < 14){
+          return { type: 'handle', id: a.id, handle: h.kind, cursor: h.cursor };
+        }
+      }
     }
   }
-  // Drawing en cours (trendline/rect)
-  if(state.annotDrawing){
-    const color = ANNOT_COLORS[state.annotDrawing.color];
-    const x1 = t2x(state.annotDrawing.time1), y1 = p2y(state.annotDrawing.price1);
-    if(x1 !== null && y1 !== null){
-      ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(x1, y1, 5, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-      ctx.beginPath(); ctx.arc(x1, y1, 12, 0, Math.PI*2); ctx.stroke();
-      ctx.setLineDash([]);
+  // Priorité 2 : corps des annotations (de la plus récente à la plus ancienne)
+  for(let i = state.annotations.length - 1; i >= 0; i--){
+    const a = state.annotations[i];
+    if(distanceToAnnot(x, y, a) < 8){
+      return { type: 'body', id: a.id };
+    }
+  }
+  return null;
+}
+
+function eraseAnnotationAt(x, y){
+  const hit = hitTest(x, y);
+  if(!hit) return;
+  state.annotations = state.annotations.filter(a => a.id !== hit.id);
+  saveAnnotations();
+  renderAll();
+  showToast('🗑 Annotation supprimée');
+}
+
+// ── Apply drag (resize/move) ──
+function applyDrag(pos){
+  const drag = state.annotDrag;
+  const a = state.annotations.find(a => a.id === drag.id);
+  if(!a) return;
+  const dTime = pos.time - drag.startTime;
+  const dPrice = pos.price - drag.startPrice;
+  const orig = drag.startData;
+
+  if(drag.kind === 'move'){
+    if(a.type === 'hline'){
+      a.price = orig.price + dPrice;
+    } else if(a.type === 'text'){
+      a.time = orig.time + dTime;
+      a.price = orig.price + dPrice;
+    } else {
+      a.time1 = orig.time1 + dTime;
+      a.price1 = orig.price1 + dPrice;
+      a.time2 = orig.time2 + dTime;
+      a.price2 = orig.price2 + dPrice;
+    }
+  } else if(drag.kind === 'resize:end1'){
+    a.time1 = pos.time;
+    a.price1 = pos.price;
+  } else if(drag.kind === 'resize:end2'){
+    a.time2 = pos.time;
+    a.price2 = pos.price;
+  } else if(drag.kind.startsWith('resize:')){
+    // tl / tr / bl / br pour rectangle
+    const corner = drag.kind.slice(7);
+    // On manipule la paire (time1,price1)-(time2,price2) — la normalisation visuelle est faite au render
+    // Stratégie : modifier les bons côtés selon la corner
+    const t1Was1 = orig.time1 < orig.time2;
+    const p1WasMin = orig.price1 < orig.price2;
+    if(corner === 'tl'){
+      if(t1Was1){ a.time1 = pos.time; } else { a.time2 = pos.time; }
+      if(p1WasMin){ a.price2 = pos.price; } else { a.price1 = pos.price; }
+    } else if(corner === 'tr'){
+      if(t1Was1){ a.time2 = pos.time; } else { a.time1 = pos.time; }
+      if(p1WasMin){ a.price2 = pos.price; } else { a.price1 = pos.price; }
+    } else if(corner === 'bl'){
+      if(t1Was1){ a.time1 = pos.time; } else { a.time2 = pos.time; }
+      if(p1WasMin){ a.price1 = pos.price; } else { a.price2 = pos.price; }
+    } else if(corner === 'br'){
+      if(t1Was1){ a.time2 = pos.time; } else { a.time1 = pos.time; }
+      if(p1WasMin){ a.price1 = pos.price; } else { a.price2 = pos.price; }
     }
   }
 }
 
+// ── Events handlers ──
+function onChartMouseDown(e){
+  const pos = eventToTimePrice(e);
+  if(!pos) return;
+
+  // Mode pan : sélection / drag d'annotation existante
+  if(state.annotMode === 'pan'){
+    const hit = hitTest(pos.x, pos.y);
+    if(!hit){
+      // Clic ailleurs : désélectionne et laisse le chart pan normalement
+      if(state.selectedAnnotId){
+        state.selectedAnnotId = null;
+        renderAll();
+      }
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    state.selectedAnnotId = hit.id;
+    const a = state.annotations.find(a => a.id === hit.id);
+    state.annotDrag = {
+      id: hit.id,
+      kind: hit.type === 'handle' ? 'resize:' + hit.handle : 'move',
+      startX: pos.x, startY: pos.y,
+      startTime: pos.time, startPrice: pos.price,
+      startData: JSON.parse(JSON.stringify(a)),
+    };
+    // Désactive scroll/scale pendant le drag
+    state.chart.applyOptions({ handleScroll: false, handleScale: false });
+    renderAll();
+    return;
+  }
+
+  // Mode erase : supprime sous le curseur
+  if(state.annotMode === 'erase'){
+    e.preventDefault();
+    eraseAnnotationAt(pos.x, pos.y);
+    return;
+  }
+
+  // Mode dessin : commence un draft
+  e.preventDefault();
+  if(state.annotMode === 'hline'){
+    state.annotations.push({ id: Date.now(), type: 'hline', color: state.annotColor, price: pos.price });
+    state.selectedAnnotId = state.annotations[state.annotations.length - 1].id;
+    saveAnnotations();
+    setAnnotMode('pan');
+  } else if(state.annotMode === 'text'){
+    const txt = prompt('Texte du label :', '');
+    if(!txt){ setAnnotMode('pan'); return; }
+    state.annotations.push({ id: Date.now(), type: 'text', color: state.annotColor, time: pos.time, price: pos.price, text: txt });
+    state.selectedAnnotId = state.annotations[state.annotations.length - 1].id;
+    saveAnnotations();
+    setAnnotMode('pan');
+  } else if(state.annotMode === 'trendline' || state.annotMode === 'rect'){
+    state.annotDraft = {
+      type: state.annotMode, color: state.annotColor,
+      time1: pos.time, price1: pos.price,
+      time2: pos.time, price2: pos.price,
+    };
+    renderAll();
+  }
+}
+
+function onChartMouseMove(e){
+  const pos = eventToTimePrice(e);
+
+  // Update crosshair (uniquement quand outil de dessin actif)
+  if(pos && state.annotMode !== 'pan' && state.annotMode !== 'erase'){
+    _annotCrosshair = pos;
+    renderAll();
+  } else if(_annotCrosshair){
+    _annotCrosshair = null;
+    renderAll();
+  }
+
+  // Drag d'annotation en cours
+  if(state.annotDrag && pos){
+    e.preventDefault();
+    applyDrag(pos);
+    renderAll();
+    return;
+  }
+
+  // Draft en cours
+  if(state.annotDraft && pos){
+    e.preventDefault();
+    state.annotDraft.time2 = pos.time;
+    state.annotDraft.price2 = pos.price;
+    renderAll();
+    return;
+  }
+
+  // Hover en mode pan : update cursor
+  if(state.annotMode === 'pan' && pos){
+    const hit = hitTest(pos.x, pos.y);
+    const chartEl = document.getElementById('chart');
+    if(hit){
+      chartEl.style.cursor = hit.cursor || 'move';
+    } else {
+      chartEl.style.cursor = '';
+    }
+  }
+}
+
+function onChartMouseUp(e){
+  // Fin de drag
+  if(state.annotDrag){
+    state.annotDrag = null;
+    saveAnnotations();
+    // Réactive scroll/scale en mode pan
+    if(state.annotMode === 'pan'){
+      state.chart.applyOptions({ handleScroll: true, handleScale: true });
+    }
+    renderAll();
+    return;
+  }
+  // Fin de draft (drag-to-draw)
+  if(state.annotDraft){
+    const draft = state.annotDraft;
+    const t2x = t => state.chart.timeScale().timeToCoordinate(t);
+    const x1 = t2x(draft.time1), x2 = t2x(draft.time2);
+    // Annule si trop petit (clic accidentel)
+    if(x1 !== null && x2 !== null && Math.abs(x2 - x1) < 4){
+      state.annotDraft = null;
+      renderAll();
+      return;
+    }
+    const newAnnot = {
+      id: Date.now(),
+      type: draft.type,
+      color: draft.color,
+      time1: draft.time1, price1: draft.price1,
+      time2: draft.time2, price2: draft.price2,
+    };
+    state.annotations.push(newAnnot);
+    state.selectedAnnotId = newAnnot.id;
+    state.annotDraft = null;
+    saveAnnotations();
+    setAnnotMode('pan');  // retour pan + sélection auto pour édition
+  }
+}
+
+function onChartMouseLeave(){
+  if(_annotCrosshair){
+    _annotCrosshair = null;
+    renderAll();
+  }
+}
+
+// ── Rendu ──
+function drawCrosshair(ctx, w, h){
+  if(!_annotCrosshair || state.annotMode === 'pan' || state.annotMode === 'erase') return;
+  const { x, y, price, time } = _annotCrosshair;
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, y); ctx.lineTo(w, y);
+  ctx.moveTo(x, 0); ctx.lineTo(x, h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Label prix à droite
+  ctx.font = 'bold 10px Segoe UI';
+  const priceTxt = price.toFixed(5);
+  const mPrice = ctx.measureText(priceTxt);
+  ctx.fillStyle = 'rgba(15,17,23,0.92)';
+  ctx.fillRect(w - mPrice.width - 14, y - 9, mPrice.width + 10, 18);
+  ctx.fillStyle = '#10b981';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(priceTxt, w - mPrice.width - 9, y);
+  // Label time en bas
+  if(time){
+    const ts = typeof time === 'number' ? time : (time.timestamp || 0);
+    if(ts > 0){
+      const dt = new Date(ts * 1000);
+      const timeTxt = dt.toISOString().slice(5, 16).replace('T', ' ');
+      const mTime = ctx.measureText(timeTxt);
+      ctx.fillStyle = 'rgba(15,17,23,0.92)';
+      ctx.fillRect(x - mTime.width/2 - 5, h - 22, mTime.width + 10, 18);
+      ctx.fillStyle = '#10b981';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(timeTxt, x - mTime.width/2, h - 13);
+    }
+  }
+}
+
+function drawSingleAnnotation(ctx, t2x, p2y, w, h, a, selected, isDraft){
+  const color = ANNOT_COLORS[a.color] || ANNOT_COLORS.acc;
+  ctx.lineWidth = selected ? 2 : 1.5;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+
+  if(a.type === 'hline'){
+    const y = p2y(a.price);
+    if(y === null) return;
+    ctx.setLineDash([6, 3]);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = 'bold 11px Segoe UI, system-ui';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(a.price.toFixed(5), 6, y - 3);
+  } else if(a.type === 'trendline'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 === null || y1 === null || x2 === null || y2 === null) return;
+    if(isDraft) ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.setLineDash([]);
+  } else if(a.type === 'rect'){
+    const x1 = t2x(a.time1), y1 = p2y(a.price1);
+    const x2 = t2x(a.time2), y2 = p2y(a.price2);
+    if(x1 === null || y1 === null || x2 === null || y2 === null) return;
+    const X = Math.min(x1, x2), Y = Math.min(y1, y2);
+    const W = Math.abs(x2 - x1), H = Math.abs(y2 - y1);
+    ctx.globalAlpha = 0.12;
+    ctx.fillRect(X, Y, W, H);
+    ctx.globalAlpha = 1;
+    if(isDraft) ctx.setLineDash([4, 3]);
+    ctx.strokeRect(X, Y, W, H);
+    ctx.setLineDash([]);
+  } else if(a.type === 'text'){
+    const x = t2x(a.time), y = p2y(a.price);
+    if(x === null || y === null) return;
+    ctx.font = 'bold 11px Segoe UI, system-ui';
+    const m = ctx.measureText(a.text);
+    ctx.fillStyle = 'rgba(15,17,23,0.85)';
+    ctx.fillRect(x - 2, y - 14, m.width + 8, 18);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(a.text, x + 2, y - 5);
+    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Handles si sélectionné (pas pour le draft)
+  if(selected && !isDraft){
+    const handles = getAnnotHandles(a);
+    for(const hnd of handles){
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(hnd.x, hnd.y, 6, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+    }
+  }
+}
+
+function drawAnnotations(ctx, t2x, p2y, w, h){
+  // Crosshair derrière
+  drawCrosshair(ctx, w, h);
+  // Annotations
+  for(const a of state.annotations){
+    const selected = a.id === state.selectedAnnotId;
+    drawSingleAnnotation(ctx, t2x, p2y, w, h, a, selected, false);
+  }
+  // Draft en cours
+  if(state.annotDraft){
+    drawSingleAnnotation(ctx, t2x, p2y, w, h, state.annotDraft, false, true);
+  }
+}
+
 function wireAnnotations(){
-  // Subscribe au click du chart
-  state.chart.subscribeClick(param => handleChartClick(param));
+  const chartEl = document.getElementById('chart');
+  // Capture phase pour intercepter avant Lightweight Charts en mode dessin
+  chartEl.addEventListener('mousedown', onChartMouseDown, true);
+  document.addEventListener('mousemove', onChartMouseMove);
+  document.addEventListener('mouseup', onChartMouseUp);
+  chartEl.addEventListener('mouseleave', onChartMouseLeave);
+  // Touch (mobile)
+  chartEl.addEventListener('touchstart', onChartMouseDown, { passive: false, capture: true });
+  document.addEventListener('touchmove', onChartMouseMove, { passive: false });
+  document.addEventListener('touchend', onChartMouseUp);
+
   // Boutons mode
   document.querySelectorAll('.annot-btn[data-mode]').forEach(b => {
     b.addEventListener('click', () => setAnnotMode(b.dataset.mode));
@@ -201,21 +501,32 @@ function wireAnnotations(){
   document.querySelectorAll('.annot-btn.annot-color').forEach(b => {
     b.addEventListener('click', () => setAnnotColor(b.dataset.color));
   });
-  setAnnotColor('acc'); // couleur active par défaut
-  // Bouton tout effacer
+  setAnnotColor('acc');
+  // Tout effacer
   document.getElementById('annot-clear-all').addEventListener('click', () => {
     if(state.annotations.length === 0){ showToast('Aucune annotation à effacer'); return; }
     if(!confirm(`Effacer toutes les annotations (${state.annotations.length}) ?`)) return;
     state.annotations = [];
+    state.selectedAnnotId = null;
     saveAnnotations();
     renderAll();
     showToast('🗑 Toutes les annotations effacées');
   });
-  // Escape pour annuler un drawing en cours
+  // Clavier : Escape (annule), Delete/Backspace (supprime sélection)
   document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && state.annotDrawing){
-      state.annotDrawing = null;
+    if(e.key === 'Escape'){
+      if(state.annotDraft){ state.annotDraft = null; renderAll(); }
+      else if(state.selectedAnnotId){ state.selectedAnnotId = null; renderAll(); }
+      else if(state.annotMode !== 'pan'){ setAnnotMode('pan'); }
+    } else if((e.key === 'Delete' || e.key === 'Backspace') && state.selectedAnnotId){
+      // Pas dans un input
+      const ae = document.activeElement;
+      if(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
+      state.annotations = state.annotations.filter(a => a.id !== state.selectedAnnotId);
+      state.selectedAnnotId = null;
+      saveAnnotations();
       renderAll();
+      showToast('🗑 Annotation supprimée');
     }
   });
 }

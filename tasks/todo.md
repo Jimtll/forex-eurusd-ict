@@ -354,6 +354,60 @@ SW bump v4 pour propager.
 
 ---
 
+## Session 8 — Refonte dessin annotations (v1.0.3) ✅
+
+### Feature — Drag-to-draw + handles + crosshair
+Refonte complète du système d'annotations (`js/annot.js`) pour un workflow plus naturel "à la Windows / TradingView".
+
+**Drag-to-draw** :
+- Avant : 2 clics (clic1=début, clic2=fin) — peu intuitif, pas de preview pendant l'attente entre les 2 clics
+- Maintenant : `mousedown` → drag → `mouseup` comme une sélection bureau Windows
+- Pour rectangle et trendline (hline reste 1-clic, text demande prompt)
+- Annule si trop petit (<4px) → considère comme un clic accidentel
+
+**Crosshair magnétique** :
+- Quand un outil de dessin est actif (pas en mode pan/erase), affichage d'une croix en pointillés blancs
+- Label prix `#10b981` à droite (5 décimales)
+- Label datetime `#10b981` en bas (`MM-DD HH:MM`)
+- Couleur d'accent verte (couleur app)
+
+**Sélection + édition** :
+- Clic sur une annotation → la sélectionne (bordure plus épaisse + poignées blanches aux coins)
+- Drag du corps → déplace toute l'annotation (préserve la forme)
+- Drag d'une poignée → redimensionne
+  - Rectangle : 4 poignées (tl/tr/bl/br) avec curseur `nwse-resize`/`nesw-resize`
+  - Trendline : 2 poignées endpoints avec curseur `crosshair`
+  - hline / text : 1 poignée move
+- Clic ailleurs → désélectionne
+- Auto-sélection après création pour édition immédiate
+
+**Pan/zoom du chart** :
+- Désactivé (`handleScroll: false, handleScale: false`) quand outil de dessin actif
+- Désactivé pendant un drag actif d'annotation (sinon le chart pan en même temps)
+- Réactivé au retour en mode pan
+- Captureurs `mousedown` en capture phase pour intercepter avant Lightweight Charts
+
+**Clavier** :
+- `Escape` → annule draft / désélectionne / retour mode pan (en cascade)
+- `Delete` ou `Backspace` → supprime l'annotation sélectionnée (sauf si focus dans input/textarea)
+
+**Touch (mobile)** :
+- Support `touchstart` / `touchmove` / `touchend` avec `passive: false`
+- Conversion event → coordonnées via `e.touches[0]` ou `e.changedTouches[0]`
+
+**Mode erase** :
+- Curseur `not-allowed`
+- Clic sur une annotation → suppression directe avec toast
+
+**Persistance** :
+- `saveAnnotations()` appelé à chaque fin de drag / fin de draft / suppression
+- Inclut `scheduleAutoSync()` pour push Gist
+- localStorage `annotations` (JSON array)
+
+SW bump v1.0.2 → **v1.0.3** pour propager.
+
+---
+
 ## ⏱ Estimation
 - Phase 1 : socle visuel — court (1 itération)
 - Phase 2 : ICT essentiels — gros morceau (probablement 2-3 itérations, c'est le cœur)
